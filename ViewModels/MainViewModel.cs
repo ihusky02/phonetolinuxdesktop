@@ -132,7 +132,7 @@ public partial class MainViewModel : ViewModelBase
                 CreateNoWindow = true
             });
         }
-        catch (System.Exception ex)
+        catch (System.Exception)
         {
             // Awaryjne fallback, gdyby cros-sensible-browser nie zadziałał
             try

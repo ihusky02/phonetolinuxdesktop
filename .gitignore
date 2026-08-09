@@ -1,0 +1,5 @@
+bin/
+obj/
+*.deb
+.DS_Store
+.vscode/

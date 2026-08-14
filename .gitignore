@@ -3,3 +3,6 @@ obj/
 *.deb
 .DS_Store
 .vscode/
+
+/Views/DebugWindow.axaml
+/Views/DebugWindow.axaml.cs

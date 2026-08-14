@@ -1,0 +1,39 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.openxmlformats.org/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" 
+        x:Class="phonetolinux.Views.IpConfigWindow"
+        Title="Konfiguracja połączenia z telefonem"
+        Width="380" Height="200"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        SystemDecorations="BorderOnly"
+        Background="#121212">
+    
+    <StackPanel Margin="20" VerticalAlignment="Center" Spacing="12">
+        <TextBlock Text="Wprowadź adres IP telefonu:" 
+                   Foreground="White" 
+                   FontSize="14" 
+                   FontWeight="SemiBold"/>
+        
+        <TextBox x:Name="IpTextBox" 
+                 Watermark="np. 192.168.1.50" 
+                 Background="#2C2C2C" 
+                 Foreground="White" 
+                 CaretBrush="White"
+                 BorderBrush="#444444"
+                 CornerRadius="8"
+                 Height="35"/>
+
+        <Button Content="Połącz / Zapisz" 
+                Background="#1E88E5" 
+                Foreground="White" 
+                CornerRadius="8"
+                Height="38"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Click="Save_Click"/>
+    </StackPanel>
+</Window>

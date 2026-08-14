@@ -1,4 +1,4 @@
-namespace AndroidCallBridge.Models;
+namespace phonetolinux.Models;
 
 public class ContactItem
 {

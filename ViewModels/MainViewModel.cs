@@ -97,7 +97,12 @@ public partial class MainViewModel : ViewModelBase
 
             if (phoneConversations != null && phoneConversations.Count > 0)
             {
-                foreach (var conv in phoneConversations)
+                // Zabezpieczenie przed duplikatami z telefonu (grupowanie po nazwie/numerze, ignorując wielkość liter)
+                var uniqueConversations = phoneConversations
+                    .GroupBy(c => (c.contactName ?? c.phoneNumber)?.Trim(), StringComparer.OrdinalIgnoreCase)
+                    .Select(g => g.First());
+
+                foreach (var conv in uniqueConversations)
                 {
                     list.Add(new ChatConversationItem 
                     { 
@@ -187,7 +192,7 @@ public partial class MainViewModel : ViewModelBase
         string targetName = targetConversation?.ContactName ?? ContactName;
         string targetPhone = targetConversation?.PhoneNumber ?? PhoneNumber;
 
-        // 1. Czyszczenie widoku wiadomości w interfejsie, jeśli usuwamy aktywny czat
+        // 1. Czyszczenie widoku wiadomości w interfejsie
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             if (SelectedConversation == targetConversation || SelectedConversation == null)

@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace AndroidCallBridge.ViewModels;
+namespace phonetolinux.ViewModels;
 
-public abstract class ViewModelBase : ObservableObject
+public class ViewModelBase : ObservableObject
 {
 }

@@ -1,10 +1,10 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using AndroidCallBridge.ViewModels;
-using AndroidCallBridge.Views;
+using phonetolinux.ViewModels;
+using phonetolinux.Views;
 
-namespace AndroidCallBridge;
+namespace phonetolinux;
 
 public partial class App : Application
 {
@@ -19,7 +19,7 @@ public partial class App : Application
         {
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainViewModel(),
+                DataContext = new MainViewModel()
             };
         }
 

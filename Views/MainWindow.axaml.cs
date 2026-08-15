@@ -1,8 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Input;
-using AndroidCallBridge.ViewModels;
+using Avalonia.Interactivity;
+using phonetolinux.ViewModels;
 
-namespace AndroidCallBridge.Views;
+namespace phonetolinux.Views;
 
 public partial class MainWindow : Window
 {
@@ -11,35 +12,27 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
-    // Bezpośrednie chwytanie wpisywanego tekstu na poziomie całego okna
-    protected override void OnTextInput(TextInputEventArgs e)
+    // Obsługa przesuwania okna za własny pasek tytułowy
+    private void TitleBar_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (DataContext is MainViewModel vm && vm.SelectedTabIndex == 1)
+        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
         {
-            if (!string.IsNullOrEmpty(e.Text) && char.IsLetterOrDigit(e.Text[0]))
-            {
-                vm.SearchQuery += e.Text;
-                vm.FilterContacts();
-                e.Handled = true; // Blokujemy przekazanie znaku dalej
-            }
+            BeginMoveDrag(e);
         }
-        
-        base.OnTextInput(e);
     }
 
-    // Bezpośrednie chwytanie Backspace'a
-    protected override void OnKeyDown(KeyEventArgs e)
+    private void Minimize_Click(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is MainViewModel vm && vm.SelectedTabIndex == 1)
-        {
-            if (e.Key == Key.Back && vm.SearchQuery.Length > 0)
-            {
-                vm.SearchQuery = vm.SearchQuery.Substring(0, vm.SearchQuery.Length - 1);
-                vm.FilterContacts();
-                e.Handled = true;
-            }
-        }
-        
-        base.OnKeyDown(e);
+        WindowState = WindowState.Minimized;
+    }
+
+    private void Maximize_Click(object? sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+    }
+
+    private void Close_Click(object? sender, RoutedEventArgs e)
+    {
+        Close();
     }
 }

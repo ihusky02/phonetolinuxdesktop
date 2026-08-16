@@ -96,15 +96,18 @@ public partial class MainViewModel : ViewModelBase
     {
         try
         {
-            // Pobieramy IP wyłącznie dynamicznie z konfiguracji (bez domyślnych adresów IP w kodzie)
-            string? phoneIp = PhoneConfig.GetHostIp();
-            int port = 5000;
-
-            if (string.IsNullOrEmpty(phoneIp))
+            // Pobieramy bazowy URL z klasy PhoneConfig i wyciągamy z niego IP oraz port
+            string baseUrl = PhoneConfig.GetBaseUrl(); 
+            
+            if (string.IsNullOrEmpty(baseUrl))
             {
-                Console.WriteLine("Brak adresu IP telefonu w konfiguracji. Nasłuch SMS nie został uruchomiony.");
+                Console.WriteLine("Brak skonfigurowanego adresu telefonu w PhoneConfig.");
                 return;
             }
+
+            Uri uri = new Uri(baseUrl);
+            string phoneIp = uri.Host;
+            int port = uri.Port > 0 ? uri.Port : 5000;
 
             _smsStreamService.StartListening(phoneIp, port, (sender, message) =>
             {

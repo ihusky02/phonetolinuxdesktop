@@ -35,6 +35,15 @@ namespace phonetolinux.Services
                         await writer.WriteLineAsync("Connection: keep-alive");
                         await writer.WriteLineAsync();
 
+                        // Odrzucamy nagłówki HTTP na początku odpowiedzi serwera (200 OK, Content-Type itp.)
+                        string? responseLine;
+                        while (!string.IsNullOrEmpty(responseLine = await reader.ReadLineAsync()))
+                        {
+                            Console.WriteLine($"[STREAM HEADER] {responseLine}");
+                        }
+
+                        Console.WriteLine("[STREAM] Nagłówki pominięte. Nasłuchuję zdarzeń SMS...");
+
                         while (!_cts.Token.IsCancellationRequested)
                         {
                             try
@@ -52,7 +61,7 @@ namespace phonetolinux.Services
                                 }
 
                                 // Diagnostyka: logujemy każdą surową linię odebraną ze strumienia
-                                Console.WriteLine($"[DEBUG STREAM] Odebrano linię: {line}");
+                                Console.WriteLine($"[DEBUG STREAM] Odebrano zdarzenie: {line}");
 
                                 // Proste parsowanie przychodzącego JSON-a: {"event":"incoming_sms","sender":"...","message":"..."}
                                 if (line.Contains("incoming_sms"))

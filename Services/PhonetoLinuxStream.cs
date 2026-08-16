@@ -37,41 +37,49 @@ namespace phonetolinux.Services
 
                         while (!_cts.Token.IsCancellationRequested)
                         {
-                            string? line = await reader.ReadLineAsync();
-                            if (string.IsNullOrEmpty(line)) continue;
-
-                            // Pomijamy piny serwerowe SSE
-                            if (line.StartsWith(":")) continue;
-
-                            // Jeśli linijka zaczyna się od "data: ", wycinamy ten prefiks, aby odsłonić czysty JSON
-                            if (line.StartsWith("data: "))
+                            try
                             {
-                                line = line.Substring(6);
-                            }
+                                string? line = await reader.ReadLineAsync();
+                                if (string.IsNullOrEmpty(line)) continue;
 
-                            // Diagnostyka: logujemy każdą surową linię odebraną ze strumienia
-                            Console.WriteLine($"[DEBUG STREAM] Odebrano linię: {line}");
+                                // Pomijamy piny serwerowe SSE
+                                if (line.StartsWith(":")) continue;
 
-                            // Proste parsowanie przychodzącego JSON-a: {"event":"incoming_sms","sender":"...","message":"..."}
-                            if (line.Contains("incoming_sms"))
-                            {
-                                string sender = ExtractJsonField(line, "sender");
-                                string message = ExtractJsonField(line, "message");
-
-                                Console.WriteLine($"[PARSER DEBUG] Nadawca: '{sender}' | Wiadomość: '{message}'");
-
-                                if (!string.IsNullOrEmpty(message))
+                                // Jeśli linijka zaczyna się od "data: ", wycinamy ten prefiks, aby odsłonić czysty JSON
+                                if (line.StartsWith("data: "))
                                 {
-                                    Console.WriteLine($"[STREAM SMS] Od: {sender} | Treść: {message}");
-                                    onSmsReceived(sender, message);
+                                    line = line.Substring(6);
                                 }
+
+                                // Diagnostyka: logujemy każdą surową linię odebraną ze strumienia
+                                Console.WriteLine($"[DEBUG STREAM] Odebrano linię: {line}");
+
+                                // Proste parsowanie przychodzącego JSON-a: {"event":"incoming_sms","sender":"...","message":"..."}
+                                if (line.Contains("incoming_sms"))
+                                {
+                                    string sender = ExtractJsonField(line, "sender");
+                                    string message = ExtractJsonField(line, "message");
+
+                                    Console.WriteLine($"[PARSER DEBUG] Nadawca: '{sender}' | Wiadomość: '{message}'");
+
+                                    if (!string.IsNullOrEmpty(message))
+                                    {
+                                        Console.WriteLine($"[STREAM SMS] Od: {sender} | Treść: {message}");
+                                        onSmsReceived(sender, message);
+                                    }
+                                }
+                            }
+                            catch (Exception readEx)
+                            {
+                                // Zabezpieczenie pojedynczej iteracji odczytu
+                                Console.WriteLine($"[STREAM READ BŁĄD]: {readEx.Message}");
                             }
                         }
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine($"[STREAM BŁĄD] Utracono połączenie lub błąd: {ex.Message}. Natychmiastowa ponowna próba...");
-                        // Natychmiastowe ponowienie połączenia po 0.5 sekundy, aby zminimalizować przerwę w nasłuchu
+                        // Natychmiastowe ponowienie połączenia po 0.5 sekundy
                         await Task.Delay(500, _cts.Token);
                     }
                 }

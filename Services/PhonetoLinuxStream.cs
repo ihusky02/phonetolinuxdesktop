@@ -40,11 +40,17 @@ namespace phonetolinux.Services
                             string? line = await reader.ReadLineAsync();
                             if (string.IsNullOrEmpty(line)) continue;
 
-                            // Pomijamy piny serwerowe SSE, żeby nie śmiecić logów
+                            // Pomijamy piny serwerowe SSE
                             if (line.StartsWith(":")) continue;
 
+                            // Jeśli linijka zaczyna się od "data: ", wycinamy ten prefiks, aby odsłonić czysty JSON
+                            if (line.StartsWith("data: "))
+                            {
+                                line = line.Substring(6);
+                            }
+
                             // Diagnostyka: logujemy każdą surową linię odebraną ze strumienia
-                            Console.WriteLine($"[DEBUG STREAM] Odebrano surową linię: {line}");
+                            Console.WriteLine($"[DEBUG STREAM] Odebrano linię: {line}");
 
                             // Proste parsowanie przychodzącego JSON-a: {"event":"incoming_sms","sender":"...","message":"..."}
                             if (line.Contains("incoming_sms"))
@@ -52,7 +58,7 @@ namespace phonetolinux.Services
                                 string sender = ExtractJsonField(line, "sender");
                                 string message = ExtractJsonField(line, "message");
 
-                                Console.WriteLine($"[PARSER DEBUG] Wyciągnięto -> Nadawca: '{sender}' | Wiadomość: '{message}'");
+                                Console.WriteLine($"[PARSER DEBUG] Nadawca: '{sender}' | Treść: '{message}'");
 
                                 if (!string.IsNullOrEmpty(message))
                                 {

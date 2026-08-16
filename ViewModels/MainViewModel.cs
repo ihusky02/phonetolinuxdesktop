@@ -479,6 +479,18 @@ public partial class MainViewModel : ViewModelBase
         string targetPhone = PhoneNumber; 
         if (string.IsNullOrEmpty(targetPhone)) return;
 
+        // POPRAWKA: Bezpośrednie wyszukiwanie w kontaktach po nazwie lub numerze, ignorując obecność cyfr w nazwie (np. "Stasiu 2")
+        var matchedContact = _allContacts.FirstOrDefault(x => 
+            string.Equals(x.Name?.Trim(), targetPhone.Trim(), StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(ContactName?.Trim(), x.Name?.Trim(), StringComparison.OrdinalIgnoreCase));
+
+        if (matchedContact != null && !string.IsNullOrEmpty(matchedContact.PhoneNumber))
+        {
+            targetPhone = matchedContact.PhoneNumber;
+        }
+
+        Console.WriteLine($"[DEBUG SEND] Wysyłam SMS do: {targetPhone} | Treść: {CurrentMessageText}");
+
         bool success = await _smsService.SendSmsAsync(targetPhone, CurrentMessageText);
         
         if (success)

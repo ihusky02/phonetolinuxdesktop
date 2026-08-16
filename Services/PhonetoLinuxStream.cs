@@ -20,8 +20,10 @@ namespace phonetolinux.Services
                 {
                     try
                     {
+                        Console.WriteLine($"[STREAM] Próbuję połączyć się z telefonem {phoneIp}:{port}...");
                         using var client = new TcpClient();
                         await client.ConnectAsync(phoneIp, port, _cts.Token);
+                        Console.WriteLine("[STREAM] Połączono pomyślnie z telefonem! Nasłuchuję powiadomień...");
                         
                         using var stream = client.GetStream();
                         using var reader = new StreamReader(stream);
@@ -38,23 +40,31 @@ namespace phonetolinux.Services
                             string? line = await reader.ReadLineAsync();
                             if (string.IsNullOrEmpty(line)) continue;
 
+                            // Pomijamy piny serwerowe SSE, żeby nie śmiecić logów
+                            if (line.StartsWith(":")) continue;
+
+                            // Diagnostyka: logujemy każdą surową linię odebraną ze strumienia
+                            Console.WriteLine($"[DEBUG STREAM] Odebrano surową linię: {line}");
+
                             // Proste parsowanie przychodzącego JSON-a: {"event":"incoming_sms","sender":"...","message":"..."}
                             if (line.Contains("incoming_sms"))
                             {
-                                // Możesz użyć System.Text.Json lub prostego wyciągania wartości
-                                // Na potrzeby uproszczenia zakładamy, że odbieramy treść
                                 string sender = ExtractJsonField(line, "sender");
                                 string message = ExtractJsonField(line, "message");
 
+                                Console.WriteLine($"[PARSER DEBUG] Wyciągnięto -> Nadawca: '{sender}' | Wiadomość: '{message}'");
+
                                 if (!string.IsNullOrEmpty(message))
                                 {
+                                    Console.WriteLine($"[STREAM SMS] Od: {sender} | Treść: {message}");
                                     onSmsReceived(sender, message);
                                 }
                             }
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
+                        Console.WriteLine($"[STREAM BŁĄD] Utracono połączenie lub błąd: {ex.Message}. Ponowna próba za 3 sekundy...");
                         // Jeśli połączenie zerwie się, próbuje ponowić po 3 sekundach
                         await Task.Delay(3000, _cts.Token);
                     }
@@ -65,21 +75,29 @@ namespace phonetolinux.Services
         public void StopListening()
         {
             _cts?.Cancel();
+            Console.WriteLine("[STREAM] Zatrzymano nasłuch.");
         }
 
         private string ExtractJsonField(string json, string fieldName)
         {
             try
             {
-                int keyIndex = json.IndexOf($"\"{fieldName}\":");
+                string pattern = $"\"{fieldName}\":";
+                int keyIndex = json.IndexOf(pattern);
                 if (keyIndex == -1) return "";
-                int startIndex = json.IndexOf('"', keyIndex + fieldName.Length + 3);
+
+                int startIndex = json.IndexOf('"', keyIndex + pattern.Length);
                 if (startIndex == -1) return "";
+
                 int endIndex = json.IndexOf('"', startIndex + 1);
                 if (endIndex == -1) return "";
+
                 return json.Substring(startIndex + 1, endIndex - startIndex - 1);
             }
-            catch { return ""; }
+            catch 
+            { 
+                return ""; 
+            }
         }
     }
 }

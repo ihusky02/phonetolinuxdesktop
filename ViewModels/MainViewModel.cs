@@ -104,11 +104,25 @@ public partial class MainViewModel : ViewModelBase
                 {
                     if (!string.IsNullOrEmpty(PhoneNumber) && PhoneNumber != "Wybierz kontakt")
                     {
-                        var freshHistory = await _smsHistoryService.GetChatHistoryFromServerAsync(PhoneNumber);
+                        // Ustalamy właściwy numer telefonu (jeśli PhoneNumber to nazwa, szukamy w kontaktach)
+                        string targetNumber = PhoneNumber;
+                        var match = _allContacts.FirstOrDefault(x => 
+                            string.Equals(x.Name?.Trim(), ContactName?.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(x.Name?.Trim(), PhoneNumber?.Trim(), StringComparison.OrdinalIgnoreCase));
+
+                        if (match != null && !string.IsNullOrEmpty(match.PhoneNumber))
+                        {
+                            targetNumber = match.PhoneNumber;
+                        }
+
+                        // Pobieramy historię używając WYŁĄCZNIE czystego numeru telefonu
+                        var freshHistory = await _smsHistoryService.GetChatHistoryFromServerAsync(targetNumber);
+                        
                         if (freshHistory != null && freshHistory.Count > 0)
                         {
                             await Dispatcher.UIThread.InvokeAsync(() =>
                             {
+                                // Jeśli liczba wiadomości na serwerze jest inna niż na ekranie (np. doszło "Siemka")
                                 if (freshHistory.Count != MessagesList.Count)
                                 {
                                     MessagesList.Clear();

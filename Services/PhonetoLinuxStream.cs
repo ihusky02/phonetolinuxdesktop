@@ -58,7 +58,7 @@ namespace phonetolinux.Services
                                 string sender = ExtractJsonField(line, "sender");
                                 string message = ExtractJsonField(line, "message");
 
-                                Console.WriteLine($"[PARSER DEBUG] Nadawca: '{sender}' | Treść: '{message}'");
+                                Console.WriteLine($"[PARSER DEBUG] Nadawca: '{sender}' | Wiadomość: '{message}'");
 
                                 if (!string.IsNullOrEmpty(message))
                                 {
@@ -70,9 +70,9 @@ namespace phonetolinux.Services
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"[STREAM BŁĄD] Utracono połączenie lub błąd: {ex.Message}. Ponowna próba za 3 sekundy...");
-                        // Jeśli połączenie zerwie się, próbuje ponowić po 3 sekundach
-                        await Task.Delay(3000, _cts.Token);
+                        Console.WriteLine($"[STREAM BŁĄD] Utracono połączenie lub błąd: {ex.Message}. Natychmiastowa ponowna próba...");
+                        // Natychmiastowe ponowienie połączenia po 0.5 sekundy, aby zminimalizować przerwę w nasłuchu
+                        await Task.Delay(500, _cts.Token);
                     }
                 }
             }, _cts.Token);

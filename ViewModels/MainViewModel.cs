@@ -367,16 +367,22 @@ public partial class MainViewModel : ViewModelBase
 
     public async void AddIncomingSms(string sender, string text)
     {
-        ContactName = sender;
-        var newMsg = new ChatMessageItem 
-        { 
-            Text = text, 
-            IsOutgoing = false 
-        };
-        
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            MessagesList.Add(newMsg);
+            // Sprawdzamy, czy SMS pochodzi od osoby/numeru, z którą obecnie rozmawiamy
+            bool isCurrentChat = string.Equals(ContactName?.Trim(), sender?.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                                 string.Equals(PhoneNumber?.Trim(), sender?.Trim(), StringComparison.OrdinalIgnoreCase);
+
+            if (isCurrentChat)
+            {
+                var newMsg = new ChatMessageItem 
+                { 
+                    Text = text, 
+                    IsOutgoing = false 
+                };
+                MessagesList.Add(newMsg);
+            }
+
             UpdateRecentConversations(sender, text);
         });
 
@@ -479,7 +485,6 @@ public partial class MainViewModel : ViewModelBase
         string targetPhone = PhoneNumber; 
         if (string.IsNullOrEmpty(targetPhone)) return;
 
-        // POPRAWKA: Bezpośrednie wyszukiwanie w kontaktach po nazwie lub numerze, ignorując obecność cyfr w nazwie (np. "Stasiu 2")
         var matchedContact = _allContacts.FirstOrDefault(x => 
             string.Equals(x.Name?.Trim(), targetPhone.Trim(), StringComparison.OrdinalIgnoreCase) ||
             string.Equals(ContactName?.Trim(), x.Name?.Trim(), StringComparison.OrdinalIgnoreCase));

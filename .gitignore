@@ -5,4 +5,6 @@ obj/
 .vscode/
 
 /Views/DebugWindow.axaml
-/Views/DebugWindow.axaml.csgi
+/Views/DebugWindow.axaml.cs
+/ViewModels/DebugSecurityManager.cs
+/Services/SmsDebugModule.cs

@@ -32,6 +32,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly phonetolinuxchathistory _historyService;
     private readonly phonetolinuxconversations _conversationsService;
     private readonly phonetolinuxsmshistory _smsHistoryService;
+    private readonly PhonetoLinuxStream _smsStreamService; // Usługa nasłuchu w czasie rzeczywistym
 
     [ObservableProperty]
     private string _phoneNumber = "";
@@ -79,12 +80,39 @@ public partial class MainViewModel : ViewModelBase
         _historyService = new phonetolinuxchathistory();
         _conversationsService = new phonetolinuxconversations();
         _smsHistoryService = new phonetolinuxsmshistory();
+        _smsStreamService = new PhonetoLinuxStream();
 
         IsInCall = false;
         IsIncomingCall = false;
 
         _ = LoadContactsFromPhoneAsync();
         _ = LoadRecentConversationsAsync();
+
+        // Uruchomienie nasłuchu przychodzących SMS-ów w czasie rzeczywistym
+        StartRealtimeSmsListener();
+    }
+
+    private void StartRealtimeSmsListener()
+    {
+        try
+        {
+            // Pobieramy IP telefonu z konfiguracji lub domyślny adres
+            // W razie potrzeby zmień metodę pobierania IP zgodnie ze swoją klasą PhoneConfig
+            string phoneIp = PhoneConfig.GetHostIp() ?? "192.168.100.90"; 
+            int port = 5000;
+
+            _smsStreamService.StartListening(phoneIp, port, (sender, message) =>
+            {
+                Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    AddIncomingSms(sender, message);
+                });
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Błąd uruchamiania strumienia SMS: {ex.Message}");
+        }
     }
 
     private async Task LoadRecentConversationsAsync()

@@ -32,7 +32,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly phonetolinuxchathistory _historyService;
     private readonly phonetolinuxconversations _conversationsService;
     private readonly phonetolinuxsmshistory _smsHistoryService;
-    private readonly PhonetoLinuxStream _smsStreamService; // Usługa nasłuchu w czasie rzeczywistym
+    private readonly PhonetoLinuxStream _smsStreamService;
 
     [ObservableProperty]
     private string _phoneNumber = "";
@@ -88,39 +88,42 @@ public partial class MainViewModel : ViewModelBase
         _ = LoadContactsFromPhoneAsync();
         _ = LoadRecentConversationsAsync();
 
-        // Uruchomienie nasłuchu przychodzących SMS-ów w czasie rzeczywistym
+        // Uruchomienie niezawodnego odpytywania o nowe wiadomości (Long Polling)
         StartRealtimeSmsListener();
     }
 
     private void StartRealtimeSmsListener()
     {
-        try
+        // Odpytujemy telefon co 2 sekundy o nowe wiadomości dla aktywnego numeru
+        Task.Run(async () =>
         {
-            // Pobieramy bazowy URL z klasy PhoneConfig i wyciągamy z niego IP oraz port
-            string baseUrl = PhoneConfig.GetBaseUrl(); 
-            
-            if (string.IsNullOrEmpty(baseUrl))
+            while (true)
             {
-                Console.WriteLine("Brak skonfigurowanego adresu telefonu w PhoneConfig.");
-                return;
-            }
-
-            Uri uri = new Uri(baseUrl);
-            string phoneIp = uri.Host;
-            int port = uri.Port > 0 ? uri.Port : 5000;
-
-            _smsStreamService.StartListening(phoneIp, port, (sender, message) =>
-            {
-                Dispatcher.UIThread.InvokeAsync(() =>
+                await Task.Delay(2000);
+                try
                 {
-                    AddIncomingSms(sender, message);
-                });
-            });
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Błąd uruchamiania strumienia SMS: {ex.Message}");
-        }
+                    if (!string.IsNullOrEmpty(PhoneNumber) && PhoneNumber != "Wybierz kontakt")
+                    {
+                        var freshHistory = await _smsHistoryService.GetChatHistoryFromServerAsync(PhoneNumber);
+                        if (freshHistory != null && freshHistory.Count > 0)
+                        {
+                            await Dispatcher.UIThread.InvokeAsync(() =>
+                            {
+                                if (freshHistory.Count != MessagesList.Count)
+                                {
+                                    MessagesList.Clear();
+                                    foreach (var msg in freshHistory)
+                                    {
+                                        MessagesList.Add(msg);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+                catch { }
+            }
+        });
     }
 
     private async Task LoadRecentConversationsAsync()
@@ -369,7 +372,6 @@ public partial class MainViewModel : ViewModelBase
     {
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            // Sprawdzamy, czy SMS pochodzi od osoby/numeru, z którą obecnie rozmawiamy
             bool isCurrentChat = string.Equals(ContactName?.Trim(), sender?.Trim(), StringComparison.OrdinalIgnoreCase) ||
                                  string.Equals(PhoneNumber?.Trim(), sender?.Trim(), StringComparison.OrdinalIgnoreCase);
 

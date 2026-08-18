@@ -15,11 +15,19 @@ public class phonetolinuxconversations
         try
         {
             string url = $"{PhoneConfig.GetBaseUrl()}/conversations";
+            Console.WriteLine($"[DEBUG CONVERSATIONS] Pobieram z: {url}");
+            
             string json = await _httpClient.GetStringAsync(url);
+            Console.WriteLine($"[DEBUG CONVERSATIONS] Odpowiedź JSON: {json}");
+
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             return JsonSerializer.Deserialize<List<ConversationDto>>(json, options) ?? new List<ConversationDto>();
         }
-        catch { return new List<ConversationDto>(); }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CONVERSATIONS ERROR] Nie udało się pobrać konwersacji z serwera: {ex.Message}");
+            return new List<ConversationDto>();
+        }
     }
 }
 

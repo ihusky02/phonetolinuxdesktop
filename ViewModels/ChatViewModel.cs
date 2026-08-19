@@ -91,12 +91,10 @@ public partial class ChatViewModel : ObservableObject
             {
                 string homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
                 string storageDir = Path.Combine(homeDir, ".phonetolinux", "chats");
-                Console.WriteLine($"[DEBUG] Sprawdzam folder lokalny: {storageDir}");
                 
                 if (Directory.Exists(storageDir))
                 {
                     var files = Directory.GetFiles(storageDir, "*.json");
-                    Console.WriteLine($"[DEBUG] Znaleziono plików lokalnych: {files.Length}");
                     foreach (var file in files)
                     {
                         string name = Path.GetFileNameWithoutExtension(file);
@@ -112,7 +110,6 @@ public partial class ChatViewModel : ObservableObject
                 {
                     RecentConversations.Add(item);
                 }
-                Console.WriteLine($"[DEBUG] Załadowano do RecentConversations: {RecentConversations.Count} elementów.");
 
                 if (SelectedConversation == null && RecentConversations.Count > 0)
                 {
@@ -121,12 +118,22 @@ public partial class ChatViewModel : ObservableObject
                         RecentConversations = RecentConversations
                     };
 
-                    string pluginPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "plugins", "chatsync.dnn");
+                    // --- ŁADOWANIE WTYCZKI Z FOLDERU Library ---
+                    string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                    string rootDir = Path.GetFullPath(Path.Combine(baseDir, "../../../.."));
+                    string libraryDir = Path.Combine(rootDir, "Library");
                     
-                    // --- BEZPIECZNE ŁADOWANIE WTYCZKI Z CICHYM FALLBACKIEM ---
-                    // Sprawdzamy, czy plik istnieje oraz czy nie jest pusty (np. w trakcie kompilacji w tle)
-                    if (File.Exists(pluginPath) && new FileInfo(pluginPath).Length > 0)
+                    if (!Directory.Exists(libraryDir))
                     {
+                        libraryDir = Path.Combine(baseDir, "Library");
+                    }
+
+                    var pluginFiles = Directory.Exists(libraryDir) ? Directory.GetFiles(libraryDir, "*.dll") : Array.Empty<string>();
+                    bool pluginLoaded = false;
+
+                    if (pluginFiles.Length > 0)
+                    {
+                        string pluginPath = pluginFiles[0];
                         try
                         {
                             var pluginResult = DnnPluginLoader.ExecutePlugin(
@@ -139,23 +146,19 @@ public partial class ChatViewModel : ObservableObject
                             if (pluginResult is ChatConversationItem defaultConv)
                             {
                                 SelectedConversation = defaultConv;
-                                Console.WriteLine($"[DEBUG] Wtyczka .dnn wybrała domyślny czat: {defaultConv.ContactName}");
+                                pluginLoaded = true;
                             }
                         }
                         catch (Exception pluginEx)
                         {
-                            // Awaryjne przejście na pierwszą konwersację w przypadku błędu wykonania wtyczki
                             Console.WriteLine($"[Plugin Ostrzeżenie]: {pluginEx.Message}");
-                            SelectedConversation = RecentConversations[0];
                         }
                     }
-                    else
+
+                    if (!pluginLoaded)
                     {
-                        // Cichy fallback informacyjny zamiast krytycznego błędu, gdy wtyczka się kompiluje
-                        Console.WriteLine($"[Info] Wtyczka chatsync.dnn jest niedostępna lub pusta. Używam domyślnego wyboru.");
                         SelectedConversation = RecentConversations[0];
                     }
-                    // ---------------------------------------------------------
                 }
             });
         }

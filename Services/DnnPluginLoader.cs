@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
@@ -20,24 +19,26 @@ public class DnnPluginLoader
                 return null;
             }
 
-            string extractPath = Path.Combine(Path.GetTempPath(), "phonetolinux_plugins", Path.GetFileNameWithoutExtension(dnnFilePath));
-
-            // 1. Rozpakowanie pliku .dnn (ZIP) do katalogu tymczasowego
-            if (Directory.Exists(extractPath)) Directory.Exists(extractPath);
-            Directory.CreateDirectory(extractPath);
-            ZipFile.ExtractToDirectory(dnnFilePath, extractPath, overwriteFiles: true);
-
-            // 2. Znalezienie pliku kodu źródłowego C# wewnątrz paczki
-            string sourceFile = Directory.GetFiles(extractPath, "*.cs", SearchOption.AllDirectories).FirstOrDefault();
-            if (sourceFile == null)
+            // Pobieramy kod źródłowy bezpośrednio z pliku (obsługuje pliki .cs lub pliki źródłowe przekazane jako ścieżka)
+            string codeContent;
+            
+            // Jeśli plik to faktycznie archiwum ZIP (stare .dnn), możemy zachować fallback, 
+            // ale domyślnie czytamy jako tekst/kod C# lub binarkę
+            try
             {
-                Console.WriteLine("[DNN Error] Brak pliku kodu źródłowego .cs wewnątrz paczki .dnn");
-                return null;
+                codeContent = File.ReadAllText(dnnFilePath);
+            }
+            catch
+            {
+                // Jeśli nie da się odczytać jako tekst, próbujemy załadować jako zwykłą bibliotekę DLL przez refleksję
+                Assembly asm = Assembly.LoadFrom(dnnFilePath);
+                Type? t = asm.GetTypes().FirstOrDefault(x => x.Name == className || x.FullName == className);
+                MethodInfo? m = t?.GetMethod(methodName);
+                object? inst = t != null ? Activator.CreateInstance(t) : null;
+                return m?.Invoke(inst, new object[] { contextData });
             }
 
-            string codeContent = File.ReadAllText(sourceFile);
-
-            // 3. Kompilacja w locie za pomocą Roslyn
+            // Kompilacja w locie za pomocą Roslyn bezpośrednio z zawartości pliku
             var syntaxTree = CSharpSyntaxTree.ParseText(codeContent);
             
             var references = AppDomain.CurrentDomain.GetAssemblies()
@@ -66,7 +67,7 @@ public class DnnPluginLoader
                 return null;
             }
 
-            // 4. Załadowanie zestawu i wywołanie metody z obiektem kontekstu
+            // Załadowanie zestawu i wywołanie metody z obiektem kontekstu
             ms.Seek(0, SeekOrigin.Begin);
             Assembly assembly = Assembly.Load(ms.ToArray());
 

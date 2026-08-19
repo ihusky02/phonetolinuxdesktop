@@ -17,5 +17,12 @@
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.3" />
         <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.3" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="plugins\**\*.dnn">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 </Project>

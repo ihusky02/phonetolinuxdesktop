@@ -1,5 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Avalonia;
 
 namespace phonetolinux
@@ -9,53 +13,79 @@ namespace phonetolinux
         [STAThread]
         public static void Main(string[] args)
         {
-            // --- INICJALIZACJA BEZPIECZNEGO PLIKU WTYCZKI DLA KOMPILATORA ---
-            EnsureChatSyncPluginBinary();
-            // -------------------------------------------------------------
+            // --- AUTOMATYCZNA KOMPILACJA WSZYSTKICH WTYCZEK .cs DO LIBRARY ---
+            CompileAllPluginSourcesToLibrary();
+            // ----------------------------------------------------------------
 
             BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args);
         }
 
-        /// <summary>
-        /// Zapewnia istnienie poprawnego pliku chatsync.dnn w folderze plugins,
-        /// nie naruszając pozostałych plików systemowych kompilatora i menedżera wtyczek.
-        /// </summary>
-        private static void EnsureChatSyncPluginBinary()
+        private static void CompileAllPluginSourcesToLibrary()
         {
             try
             {
-                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                string pluginsDir = Path.Combine(baseDir, "plugins");
-                Directory.CreateDirectory(pluginsDir);
+                string projectRoot = "/home/stanislaw/phonetolinux";
+                string libraryDir = Path.Combine(projectRoot, "Library");
+                string sourceDir = Path.Combine(projectRoot, "PluginSource");
 
-                string targetDnn = Path.Combine(pluginsDir, "chatsync.dnn");
+                Directory.CreateDirectory(libraryDir);
+                Directory.CreateDirectory(sourceDir);
 
-                // Jeśli plik chatsync.dnn nie istnieje lub jest pusty, generujemy go poprawnie
-                if (!File.Exists(targetDnn) || new FileInfo(targetDnn).Length == 0)
+                Console.WriteLine($"[LibrarySystem] Główny folder Library: {libraryDir}");
+                Console.WriteLine($"[LibrarySystem] Folder źródłowy PluginSource: {sourceDir}");
+
+                var csFiles = Directory.GetFiles(sourceDir, "*.cs");
+                Console.WriteLine($"[LibrarySystem] Znaleziono plików .cs do skompilowania: {csFiles.Length}");
+
+                if (csFiles.Length == 0) return;
+
+                // Pobieramy referencje raz dla wszystkich kompilacji
+                var baseReferences = AppDomain.CurrentDomain.GetAssemblies()
+                    .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location))
+                    .Select(a => MetadataReference.CreateFromFile(a.Location))
+                    .Cast<MetadataReference>()
+                    .ToList();
+
+                baseReferences.Add(MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location));
+                baseReferences.Add(MetadataReference.CreateFromFile(typeof(Enumerable).GetTypeInfo().Assembly.Location));
+
+                // Kompilujemy każdy plik .cs osobno jako niezależną wtyczkę .dll
+                foreach (var csFile in csFiles)
                 {
-                    string sourceDll = Path.Combine(baseDir, "phonetolinux.dll");
+                    string fileNameWithoutExt = Path.GetFileNameWithoutExtension(csFile);
+                    string outputDllPath = Path.Combine(libraryDir, $"{fileNameWithoutExt}.dll");
 
-                    if (File.Exists(sourceDll))
+                    var syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(csFile));
+
+                    var compilation = CSharpCompilation.Create(
+                        fileNameWithoutExt,
+                        new[] { syntaxTree },
+                        baseReferences,
+                        new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                    );
+
+                    using (var fs = new FileStream(outputDllPath, FileMode.Create))
                     {
-                        File.Copy(sourceDll, targetDnn, true);
-                        Console.WriteLine($"[PluginSystem] Wygenerowano poprawny binarny chatsync.dnn z głównej biblioteki.");
-                    }
-                    else
-                    {
-                        // Fallback: bierzemy pierwszą dostępną bibliotekę .dll z katalogu
-                        var dlls = Directory.GetFiles(baseDir, "*.dll");
-                        if (dlls.Length > 0)
+                        var result = compilation.Emit(fs);
+                        if (result.Success)
                         {
-                            File.Copy(dlls[0], targetDnn, true);
-                            Console.WriteLine($"[PluginSystem] Wygenerowano chatsync.dnn z dostępnej binarki: {Path.GetFileName(dlls[0])}");
+                            Console.WriteLine($"[LibrarySystem] Sukces! Skompilowano wtyczkę -> {fileNameWithoutExt}.dll");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[LibrarySystem Błąd kompilacji dla {fileNameWithoutExt}.cs]:");
+                            foreach (var diagnostic in result.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error))
+                            {
+                                Console.WriteLine($" - {diagnostic.GetMessage()}");
+                            }
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[PluginSystem Ostrzeżenie]: {ex.Message}");
+                Console.WriteLine($"[LibrarySystem Wyjątek]: {ex.Message}");
             }
         }
 

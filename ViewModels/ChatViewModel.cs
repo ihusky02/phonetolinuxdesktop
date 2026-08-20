@@ -14,10 +14,10 @@ namespace phonetolinux.ViewModels;
 
 public partial class ChatViewModel : ObservableObject
 {
-    private readonly PhonetoLinuxSMS _smsService;
-    private readonly phonetolinuxchathistory _historyService;
-    private readonly phonetolinuxsmshistory _smsHistoryService;
-    private readonly phonetolinuxconversations _conversationsService;
+    private readonly SmsPlugin _smsService;
+    private readonly ChatHistoryPlugin _historyService;
+    private readonly SmsHistoryPlugin _smsHistoryService;
+    private readonly ConversationsPlugin _conversationsService;
 
     [ObservableProperty]
     private string _phoneNumber = "";
@@ -39,10 +39,10 @@ public partial class ChatViewModel : ObservableObject
 
     public ChatViewModel()
     {
-        _smsService = new PhonetoLinuxSMS();
-        _historyService = new phonetolinuxchathistory();
-        _smsHistoryService = new phonetolinuxsmshistory();
-        _conversationsService = new phonetolinuxconversations();
+        _smsService = new SmsPlugin();
+        _historyService = new ChatHistoryPlugin();
+        _smsHistoryService = new SmsHistoryPlugin();
+        _conversationsService = new ConversationsPlugin();
 
         StartRealtimeSmsListener();
         _ = LoadConversationsAndSyncAsync();
@@ -113,52 +113,7 @@ public partial class ChatViewModel : ObservableObject
 
                 if (SelectedConversation == null && RecentConversations.Count > 0)
                 {
-                    var context = new ChatContext
-                    {
-                        RecentConversations = RecentConversations
-                    };
-
-                    // --- ŁADOWANIE WTYCZKI Z FOLDERU Library ---
-                    string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                    string rootDir = Path.GetFullPath(Path.Combine(baseDir, "../../../.."));
-                    string libraryDir = Path.Combine(rootDir, "Library");
-                    
-                    if (!Directory.Exists(libraryDir))
-                    {
-                        libraryDir = Path.Combine(baseDir, "Library");
-                    }
-
-                    var pluginFiles = Directory.Exists(libraryDir) ? Directory.GetFiles(libraryDir, "*.dll") : Array.Empty<string>();
-                    bool pluginLoaded = false;
-
-                    if (pluginFiles.Length > 0)
-                    {
-                        string pluginPath = pluginFiles[0];
-                        try
-                        {
-                            var pluginResult = DnnPluginLoader.ExecutePlugin(
-                                dnnFilePath: pluginPath,
-                                className: "ChatSyncPlugin",
-                                methodName: "GetDefaultOrFirstConversation",
-                                contextData: context
-                            );
-
-                            if (pluginResult is ChatConversationItem defaultConv)
-                            {
-                                SelectedConversation = defaultConv;
-                                pluginLoaded = true;
-                            }
-                        }
-                        catch (Exception pluginEx)
-                        {
-                            Console.WriteLine($"[Plugin Ostrzeżenie]: {pluginEx.Message}");
-                        }
-                    }
-
-                    if (!pluginLoaded)
-                    {
-                        SelectedConversation = RecentConversations[0];
-                    }
+                    SelectedConversation = RecentConversations[0];
                 }
             });
         }
@@ -175,7 +130,7 @@ public partial class ChatViewModel : ObservableObject
 
         if (!string.IsNullOrEmpty(PhoneNumber) && PhoneNumber.Any(char.IsLetter))
         {
-            var match = context.AllContacts.FirstOrDefault(x => string.Equals(x.Name?.Trim(), PhoneNumber.Trim(), StringComparison.OrdinalIgnoreCase));
+            var match = context.AllContacts?.FirstOrDefault(x => string.Equals(x.Name?.Trim(), PhoneNumber.Trim(), StringComparison.OrdinalIgnoreCase));
             if (match != null && !string.IsNullOrEmpty(match.PhoneNumber))
             {
                 PhoneNumber = match.PhoneNumber;
@@ -189,7 +144,7 @@ public partial class ChatViewModel : ObservableObject
     {
         await Dispatcher.UIThread.InvokeAsync(() => MessagesList.Clear());
 
-        List<ChatMessageItem> history = null;
+        List<ChatMessageItem>? history = null;
         if (!string.IsNullOrEmpty(phoneNumber))
         {
             history = await _smsHistoryService.GetChatHistoryFromServerAsync(phoneNumber);

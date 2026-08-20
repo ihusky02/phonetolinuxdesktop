@@ -13,8 +13,8 @@ namespace phonetolinux.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
-    private readonly PhonetoLinuxCall _callService;
-    private readonly PhonetoLinuxContacts _contactsService;
+    private readonly PhoneCallPlugin _callService;
+    private readonly ContactsPlugin _contactsService;
 
     [ObservableProperty]
     private string _phoneNumber = "";
@@ -52,8 +52,8 @@ public partial class MainViewModel : ViewModelBase
 
     public MainViewModel()
     {
-        _callService = new PhonetoLinuxCall();
-        _contactsService = new PhonetoLinuxContacts();
+        _callService = new PhoneCallPlugin();
+        _contactsService = new ContactsPlugin();
 
         IsInCall = false;
         IsIncomingCall = false;

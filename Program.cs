@@ -6,28 +6,59 @@ using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Diagnostics;
+using System.Security.Cryptography;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Avalonia;
+using PhoneToLinux.Security;
 
 namespace phonetolinux
 {
     /// <summary>
-    /// Entry point of the application. Responsible for automatically compiling plugin source files 
-    /// from the PluginSource directory into dynamic .dll libraries inside the Library folder at startup,
-    /// and initializing the Avalonia desktop application lifecycle.
+    /// Entry point of the application. Responsible for initializing secure local storage mechanisms,
+    /// automatically compiling plugin source files from the PluginSource directory into dynamic .dll libraries,
+    /// and starting the Avalonia desktop UI lifecycle.
     /// </summary>
     class Program
     {
+        public static DynamicFolderManager? FolderManager { get; private set; }
+        public static SecureStorageService? StorageService { get; private set; }
+
         [STAThread]
         public static void Main(string[] args)
         {
-            // --- AUTOMATICALLY COMPILE ALL PLUGIN SOURCES TO LIBRARY AT STARTUP ---
+            // --- 1. INITIALIZE MOVING TARGET DEFENSE & SECURE STORAGE ---
+            InitializeSecurityFramework();
+            // ------------------------------------------------------------
+
+            // --- 2. AUTOMATICALLY COMPILE ALL PLUGIN SOURCES TO LIBRARY AT STARTUP ---
             CompileAllPluginSourcesToLibrary();
             // --------------------------------------------------------------------
 
             BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args);
+        }
+
+        private static void InitializeSecurityFramework()
+        {
+            try
+            {
+                string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+                // Instantiate DynamicFolderManager and start hourly directory relocation
+                FolderManager = new DynamicFolderManager(baseDirectory);
+                FolderManager.StartPeriodicRelocation(TimeSpan.FromHours(1));
+
+                // Generate a 256-bit AES master key for local session payload encryption
+                byte[] masterKey = RandomNumberGenerator.GetBytes(32);
+                StorageService = new SecureStorageService(masterKey);
+
+                Console.WriteLine($"[Security] Dynamic storage initialized at: {FolderManager.CurrentSecureFolder}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Security Critical Error] Failed to initialize security framework: {ex.Message}");
+            }
         }
 
         private static void CompileAllPluginSourcesToLibrary()
@@ -44,7 +75,7 @@ namespace phonetolinux
                 Console.WriteLine($"[LibrarySystem] Main Library directory: {libraryDir}");
                 Console.WriteLine($"[LibrarySystem] Source PluginSource directory: {sourceDir}");
 
-                var csFiles = Directory.GetFiles(sourceDir, "*.cs");
+                var csFiles = Directory.GetFiles(sourceDir, "*.cs", SearchOption.TopDirectoryOnly);
                 Console.WriteLine($"[LibrarySystem] Found .cs files to compile: {csFiles.Length}");
 
                 if (csFiles.Length == 0) return;

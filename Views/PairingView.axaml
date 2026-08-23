@@ -25,12 +25,16 @@
                 <Image Source="{Binding QrCodeImage}" Width="240" Height="240"/>
             </Border>
 
-            <TextBlock Text="{Binding StatusMessage}" 
-                       Foreground="#B0B0B0" 
-                       TextWrapping="Wrap" 
-                       TextAlignment="Center" 
-                       HorizontalAlignment="Center"
-                       MaxWidth="320"/>
+            <!-- Dynamic Status Notification Banner -->
+            <Border CornerRadius="6" Padding="10,6" Background="#2A2A2A" HorizontalAlignment="Center">
+                <TextBlock Text="{Binding StatusMessage}" 
+                           Foreground="#4CAF50" 
+                           FontWeight="Medium"
+                           TextWrapping="Wrap" 
+                           TextAlignment="Center" 
+                           HorizontalAlignment="Center"
+                           MaxWidth="320"/>
+            </Border>
 
             <Button Content="Refresh QR Code" 
                     Command="{Binding GeneratePairingQrCodeCommand}" 

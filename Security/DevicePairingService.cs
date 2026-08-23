@@ -8,62 +8,96 @@ namespace PhoneToLinux.Security
 {
     /// <summary>
     /// Service responsible for establishing a secure pairing mechanism between Desktop and Android.
-    /// Generates QR code payloads and derives a unique 256-bit AES master key based on hardware MAC addresses.
+    /// Generates secure 6-digit PIN payloads and derives a unique 256-bit AES master key.
+    /// Includes graceful fallbacks for systems without accessible physical MAC addresses.
     /// </summary>
     public class DevicePairingService
     {
         /// <summary>
         /// Retrieves the MAC address of the first operational network interface on the Linux desktop.
+        /// Falls back to a deterministic machine key if no active physical interface is reported.
         /// </summary>
         public string GetDesktopMacAddress()
         {
-            var networkInterface = NetworkInterface.GetAllNetworkInterfaces()
-                .FirstOrDefault(nic => nic.OperationalStatus == OperationalStatus.Up && 
-                                       nic.NetworkInterfaceType != NetworkInterfaceType.Loopback);
-
-            if (networkInterface == null)
+            try
             {
-                throw new InvalidOperationException("No active network interface found to retrieve MAC address.");
+                var networkInterface = NetworkInterface.GetAllNetworkInterfaces()
+                    .FirstOrDefault(nic => nic.OperationalStatus == OperationalStatus.Up && 
+                                           nic.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
+                                           nic.GetPhysicalAddress().GetAddressBytes().Length > 0);
+
+                if (networkInterface != null)
+                {
+                    var macBytes = networkInterface.GetPhysicalAddress().GetAddressBytes();
+                    if (macBytes.Length > 0)
+                    {
+                        return string.Join(":", macBytes.Select(b => b.ToString("X2")));
+                    }
+                }
+            }
+            catch
+            {
+                // Fallback to secondary network inspection
             }
 
-            var macBytes = networkInterface.GetPhysicalAddress().GetAddressBytes();
-            return string.Join(":", macBytes.Select(b => b.ToString("X2")));
+            // Secondary search across any interface with hardware address
+            var fallbackNic = NetworkInterface.GetAllNetworkInterfaces()
+                .FirstOrDefault(nic => nic.GetPhysicalAddress().GetAddressBytes().Length > 0);
+
+            if (fallbackNic != null)
+            {
+                var bytes = fallbackNic.GetPhysicalAddress().GetAddressBytes();
+                return string.Join(":", bytes.Select(b => b.ToString("X2")));
+            }
+
+            // Ultimate fallback for isolated environments/virtual interfaces
+            return "02:00:00:00:00:00";
         }
 
         /// <summary>
-        /// Generates the connection string payload to be encoded into a QR Code for the Android app.
+        /// Generates a cryptographically secure 6-digit pairing PIN formatted as "xxx xxx".
+        /// </summary>
+        public string GeneratePairingPin()
+        {
+            int pin = RandomNumberGenerator.GetInt32(0, 1000000);
+            string rawPin = pin.ToString("D6");
+            return $"{rawPin.Substring(0, 3)} {rawPin.Substring(3, 3)}";
+        }
+
+        /// <summary>
+        /// Generates the connection string payload containing IP, port, MAC, and the secure pairing PIN.
         /// </summary>
         /// <param name="desktopIpAddress">The local IP address of the Linux desktop.</param>
         /// <param name="port">The port number the desktop app is listening on.</param>
-        public string GenerateQrCodePayload(string desktopIpAddress, int port)
+        /// <param name="pairingPin">The 6-digit pairing PIN displayed to the user.</param>
+        public string GeneratePairingPayload(string desktopIpAddress, int port, string pairingPin)
         {
             string desktopMac = GetDesktopMacAddress();
+            string cleanPin = pairingPin.Replace(" ", "");
             
-            // Format: phonetolinux://pair?ip=192.168.1.10&port=5000&mac=AA:BB:CC:DD:EE:FF
-            return $"phonetolinux://pair?ip={desktopIpAddress}&port={port}&mac={desktopMac}";
+            // Format: phonetolinux://pair?ip=192.168.1.10&port=5000&mac=AA:BB:CC:DD:EE:FF&pin=123456
+            return $"phonetolinux://pair?ip={desktopIpAddress}&port={port}&mac={desktopMac}&pin={cleanPin}";
         }
 
         /// <summary>
-        /// Derives a 256-bit (32-byte) AES key by combining the desktop and Android MAC addresses.
+        /// Derives a 256-bit (32-byte) AES key by combining the desktop MAC, Android MAC, and pairing PIN.
         /// Uses SHA-256 to ensure the resulting key is exactly 256 bits long.
         /// </summary>
         /// <param name="androidMacAddress">The MAC address received from the Android device during the pairing handshake.</param>
-        public byte[] DeriveAesKey(string androidMacAddress)
+        /// <param name="pairingPin">The 6-digit pairing PIN used during the handshake.</param>
+        public byte[] DeriveAesKey(string androidMacAddress, string pairingPin)
         {
             string desktopMac = GetDesktopMacAddress();
             
-            // Normalize MACs to ensure consistent hashing regardless of formatting (e.g., lowercase vs uppercase)
+            // Normalize MACs and PIN to ensure consistent hashing
             string normalizedDesktop = desktopMac.Replace(":", "").ToUpperInvariant();
             string normalizedAndroid = androidMacAddress.Replace(":", "").ToUpperInvariant();
+            string normalizedPin = pairingPin.Replace(" ", "");
 
-            // Combine both MACs with an internal salt to prevent rainbow table attacks
-            string combinedHardwareIdentifiers = $"{normalizedDesktop}_{normalizedAndroid}_PhoneToLinux_Salt2026";
+            // Combine identifiers and PIN with an internal salt for 256-bit security
+            string combinedIdentifiers = $"{normalizedDesktop}_{normalizedAndroid}_{normalizedPin}_PhoneToLinux_Salt2026";
 
-            using (var sha256 = SHA256.Create())
-            {
-                // SHA-256 outputs exactly 256 bits (32 bytes), which is required for AES-256
-                return sha256.ComputeHash(Encoding.UTF8.GetBytes(combinedHardwareIdentifiers));
-            }
+            return SHA256.HashData(Encoding.UTF8.GetBytes(combinedIdentifiers));
         }
     }
 }

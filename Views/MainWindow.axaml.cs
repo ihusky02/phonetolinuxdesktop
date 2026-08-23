@@ -1,75 +1,51 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using PhoneToLinux.Security;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 
-namespace phonetolinux.ViewModels
+namespace phonetolinux.Views;
+
+/// <summary>
+/// Code-behind logic for the main application window.
+/// </summary>
+public partial class MainWindow : Window
 {
-    /// <summary>
-    /// ViewModel for the main application window.
-    /// Controls overall navigation state, first-launch pairing overlays, and sub-viewmodels.
-    /// </summary>
-    public partial class MainViewModel : ObservableObject
+    public MainWindow()
     {
-        private readonly SecureStorageService _storageService;
+        InitializeComponent();
+    }
 
-        [ObservableProperty]
-        private bool _isPaired;
-
-        [ObservableProperty]
-        private int _selectedTabIndex;
-
-        [ObservableProperty]
-        private PairingViewModel _pairing;
-
-        public MainViewModel()
+    /// <summary>
+    /// Handles drag-and-drop window movement using the custom title bar.
+    /// </summary>
+    private void TitleBar_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
         {
-            _storageService = new SecureStorageService();
-            Pairing = new PairingViewModel();
-
-            // Evaluate stored credentials on application launch
-            CheckPairingStatus();
+            BeginMoveDrag(e);
         }
+    }
 
-        /// <summary>
-        /// Inspects the secure storage directory to determine if the device has already been paired.
-        /// </summary>
-        public void CheckPairingStatus()
-        {
-            // Set IsPaired to true if session credentials exist in secure storage
-            IsPaired = _storageService.FileExists("paired_device.dat");
+    /// <summary>
+    /// Minimizes the application window.
+    /// </summary>
+    private void Minimize_Click(object? sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
 
-            if (IsPaired)
-            {
-                SelectedTabIndex = 0; // Default to Dialer tab
-            }
-            else
-            {
-                SelectedTabIndex = 3; // Fallback index for initial setup
-            }
-        }
+    /// <summary>
+    /// Toggles between maximized and normal window state.
+    /// </summary>
+    private void Maximize_Click(object? sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+    }
 
-        /// <summary>
-        /// Invoked when the QR code handshake completes successfully from the mobile app.
-        /// </summary>
-        [RelayCommand]
-        public void OnPairingCompleted()
-        {
-            IsPaired = true;
-            SelectedTabIndex = 0; // Automatically switch to the Dialer workspace
-        }
-
-        /// <summary>
-        /// Clears all stored encrypted credentials and reverts the UI to the initial QR pairing screen.
-        /// Useful when reinstalling the Android or Linux application.
-        /// </summary>
-        [RelayCommand]
-        public void UnpairDevice()
-        {
-            _storageService.DeleteFile("paired_device.dat");
-            _storageService.DeleteFile("session_keys.dat");
-
-            IsPaired = false;
-            Pairing.GeneratePairingQrCode();
-        }
+    /// <summary>
+    /// Closes the application.
+    /// </summary>
+    private void Close_Click(object? sender, RoutedEventArgs e)
+    {
+        Close();
     }
 }

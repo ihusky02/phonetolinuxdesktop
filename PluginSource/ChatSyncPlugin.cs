@@ -4,7 +4,7 @@ using phonetolinux.Models;
 namespace PhoneToLinux.Plugins
 {
     /// <summary>
-    /// Wtyczka odpowiedzialna za wybór domyślnej lub pierwszej konwersacji na liście czatów.
+    /// Plugin responsible for selecting the default or first conversation in the chat list.
     /// </summary>
     public class ChatSyncPlugin
     {
@@ -13,7 +13,7 @@ namespace PhoneToLinux.Plugins
             if (context.RecentConversations == null || context.RecentConversations.Count == 0)
                 return null;
 
-            // Zwraca pierwszą dostępną konwersację jako domyślnie zaznaczoną
+            // Returns the first available conversation as selected by default
             return context.RecentConversations.FirstOrDefault();
         }
     }

@@ -101,15 +101,18 @@ namespace phonetolinux.Services
 
             try
             {
+                // Automatically extract and save the phone's IP address from the incoming connection
+                string phoneIp = context.Request.RemoteEndPoint?.Address.ToString() ?? "";
+                if (!string.IsNullOrEmpty(phoneIp))
+                {
+                    PhoneConfig.SaveIp(phoneIp);
+                }
+
                 using var reader = new StreamReader(request.InputStream, request.ContentEncoding);
                 string payload = await reader.ReadToEndAsync();
 
                 if (!string.IsNullOrWhiteSpace(payload))
                 {
-                    // Optional: Validate incoming PIN/Payload against the one displayed in ViewModel
-                    // string incomingPin = ... (extracted from payload)
-                    // if (incomingPin != _mainViewModel.Pairing.PairingPin) { ... }
-
                     // Encrypt and save paired device session data using AES-256
                     string targetPath = Path.Combine(_storageDirectory, "paired_device.dat");
                     _storageService.EncryptAndWrite(targetPath, payload);

@@ -36,7 +36,7 @@ namespace phonetolinux.Services
             }
             catch (Exception) { }
 
-            // Domyślny fallback, jeśli brak pliku lub wystąpił błąd
+            // Default fallback if file is missing or an error occurs
             return ""; 
         }
 

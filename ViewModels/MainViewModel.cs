@@ -11,7 +11,7 @@ namespace phonetolinux.ViewModels
 {
     /// <summary>
     /// Main application ViewModel responsible for coordinating top-level UI states,
-    /// active views (dialer, chat, pairing), navigation tabs, and setup lifecycle.
+    /// active views (dialer, chat, pairing), navigation tabs, call overlays, and setup lifecycle.
     /// </summary>
     public partial class MainViewModel : ObservableObject
     {
@@ -37,6 +37,19 @@ namespace phonetolinux.ViewModels
 
         [ObservableProperty]
         private string _currentTheme = "Dark";
+
+        // Call overlay and state management properties (defaulted to false/empty to prevent unwanted overlays)
+        [ObservableProperty]
+        private bool _isInCall = false;
+
+        [ObservableProperty]
+        private bool _isIncomingCall = false;
+
+        [ObservableProperty]
+        private string _contactName = "Unknown";
+
+        [ObservableProperty]
+        private string _phoneNumber = "";
 
         public MainViewModel()
         {
@@ -132,6 +145,60 @@ namespace phonetolinux.ViewModels
             _pairingListener?.StopListening();
             _pairingListener = new PairingListenerService(this);
             _pairingListener.StartListening(5000);
+        }
+
+        /// <summary>
+        /// Command triggered to append a digit or symbol to the current phone number string.
+        /// </summary>
+        [RelayCommand]
+        public void AppendNumber(string number)
+        {
+            PhoneNumber += number;
+        }
+
+        /// <summary>
+        /// Command triggered to remove the last character from the current phone number string.
+        /// </summary>
+        [RelayCommand]
+        public void Backspace()
+        {
+            if (!string.IsNullOrEmpty(PhoneNumber))
+            {
+                PhoneNumber = PhoneNumber.Substring(0, PhoneNumber.Length - 1);
+            }
+        }
+
+        /// <summary>
+        /// Command triggered to initiate an outgoing call using the dialed number.
+        /// </summary>
+        [RelayCommand]
+        public void Call()
+        {
+            if (!string.IsNullOrEmpty(PhoneNumber))
+            {
+                IsInCall = true;
+                IsIncomingCall = false;
+                ContactName = "Wybieranie...";
+            }
+        }
+
+        /// <summary>
+        /// Command triggered to end an active phone call.
+        /// </summary>
+        [RelayCommand]
+        public void EndCall()
+        {
+            IsInCall = false;
+            IsIncomingCall = false;
+        }
+
+        /// <summary>
+        /// Command triggered to answer an incoming phone call.
+        /// </summary>
+        [RelayCommand]
+        public void AnswerCall()
+        {
+            IsIncomingCall = false;
         }
     }
 }

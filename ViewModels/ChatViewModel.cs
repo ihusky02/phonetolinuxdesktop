@@ -1,4 +1,77 @@
-public async Task LoadConversationsAndSyncAsync()
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using phonetolinux.Models;
+using phonetolinux.Services;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Avalonia.Threading;
+
+namespace phonetolinux.ViewModels;
+
+/// <summary>
+/// ViewModel responsible for managing chat state, active conversation selection,
+/// loading message history, and real-time messaging updates.
+/// </summary>
+public partial class ChatViewModel : ObservableObject
+{
+    private readonly SmsPlugin _smsService;
+    private readonly ChatHistoryPlugin _historyService;
+    private readonly SmsHistoryPlugin _smsHistoryService;
+    private readonly ConversationsPlugin _conversationsService;
+
+    [ObservableProperty]
+    private string _phoneNumber = "";
+
+    [ObservableProperty]
+    private string _contactName = "Select contact";
+
+    [ObservableProperty]
+    private string _currentMessageText = "";
+
+    [ObservableProperty]
+    private ObservableCollection<ChatMessageItem> _messagesList = new();
+
+    [ObservableProperty]
+    private ObservableCollection<ChatConversationItem> _recentConversations = new();
+
+    [ObservableProperty]
+    private ChatConversationItem? _selectedConversation;
+
+    public ChatViewModel()
+    {
+        _smsService = new SmsPlugin();
+        _historyService = new ChatHistoryPlugin();
+        _smsHistoryService = new SmsHistoryPlugin();
+        _conversationsService = new ConversationsPlugin();
+
+        StartRealtimeSmsListener();
+        _ = LoadConversationsAndSyncAsync();
+    }
+
+    partial void OnSelectedConversationChanged(ChatConversationItem? value)
+    {
+        if (value != null)
+        {
+            ContactName = string.IsNullOrEmpty(value.ContactName) ? value.PhoneNumber : value.ContactName;
+            PhoneNumber = value.PhoneNumber ?? "";
+
+            var context = new ChatContext
+            {
+                ContactName = ContactName,
+                PhoneNumber = PhoneNumber
+            };
+            _ = InitializeChatAsync(context);
+        }
+    }
+
+    /// <summary>
+    /// Asynchronously fetches recent conversations from the phone server or falls back to local storage.
+    /// </summary>
+    public async Task LoadConversationsAndSyncAsync()
     {
         try
         {
@@ -56,3 +129,142 @@ public async Task LoadConversationsAndSyncAsync()
             // Silently handle exception
         }
     }
+
+    /// <summary>
+    /// Initializes active chat context and triggers message history loading.
+    /// </summary>
+    public async Task InitializeChatAsync(ChatContext context)
+    {
+        ContactName = context.ContactName;
+        PhoneNumber = context.PhoneNumber;
+
+        if (!string.IsNullOrEmpty(PhoneNumber) && PhoneNumber.Any(char.IsLetter))
+        {
+            var match = context.AllContacts?.FirstOrDefault(x => string.Equals(x.Name?.Trim(), PhoneNumber.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (match != null && !string.IsNullOrEmpty(match.PhoneNumber))
+            {
+                PhoneNumber = match.PhoneNumber;
+            }
+        }
+
+        await LoadChatHistoryAsync(ContactName, PhoneNumber);
+    }
+
+    private async Task LoadChatHistoryAsync(string contactName, string phoneNumber)
+    {
+        await Dispatcher.UIThread.InvokeAsync(() => MessagesList.Clear());
+
+        List<ChatMessageItem>? history = null;
+        if (!string.IsNullOrEmpty(phoneNumber))
+        {
+            history = await _smsHistoryService.GetChatHistoryFromServerAsync(phoneNumber);
+        }
+
+        if (history == null || history.Count == 0)
+        {
+            history = await _historyService.LoadHistoryAsync(contactName);
+            if ((history == null || history.Count == 0) && !string.IsNullOrEmpty(phoneNumber))
+            {
+                history = await _historyService.LoadHistoryAsync(phoneNumber);
+            }
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            MessagesList.Clear();
+            if (history != null)
+            {
+                foreach (var msg in history) MessagesList.Add(msg);
+            }
+        });
+    }
+
+    private void StartRealtimeSmsListener()
+    {
+        Task.Run(async () =>
+        {
+            while (true)
+            {
+                await Task.Delay(2000);
+                try
+                {
+                    if (!string.IsNullOrEmpty(PhoneNumber) && PhoneNumber != "Select contact")
+                    {
+                        var freshHistory = await _smsHistoryService.GetChatHistoryFromServerAsync(PhoneNumber);
+                        
+                        if (freshHistory != null)
+                        {
+                            await Dispatcher.UIThread.InvokeAsync(() =>
+                            {
+                                if (freshHistory.Count != MessagesList.Count)
+                                {
+                                    MessagesList.Clear();
+                                    foreach (var msg in freshHistory)
+                                    {
+                                        MessagesList.Add(msg);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+                catch { }
+            }
+        });
+    }
+
+    /// <summary>
+    /// Sends a new SMS message and updates local history storage.
+    /// </summary>
+    [RelayCommand]
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(CurrentMessageText)) return;
+        if (string.IsNullOrEmpty(PhoneNumber)) return;
+
+        string textToSend = CurrentMessageText;
+
+        bool success = await _smsService.SendSmsAsync(PhoneNumber, textToSend);
+        
+        if (success)
+        {
+            var msg = new ChatMessageItem { Text = textToSend, IsOutgoing = true };
+            MessagesList.Add(msg);
+
+            if (!string.IsNullOrEmpty(ContactName) && ContactName != "Select contact")
+            {
+                await _historyService.SaveHistoryAsync(ContactName, MessagesList);
+            }
+
+            CurrentMessageText = "";
+        }
+    }
+
+    /// <summary>
+    /// Handles incoming real-time SMS pushes from background services.
+    /// </summary>
+    public async void AddIncomingSms(ChatContext context)
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            bool isCurrentChat = string.Equals(ContactName?.Trim(), context.ContactName?.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                                 string.Equals(PhoneNumber?.Trim(), context.ContactName?.Trim(), StringComparison.OrdinalIgnoreCase);
+
+            if (!isCurrentChat && context.AllContacts != null)
+            {
+                var contactMatch = context.AllContacts.FirstOrDefault(x => string.Equals(x.PhoneNumber?.Trim(), context.ContactName?.Trim(), StringComparison.OrdinalIgnoreCase));
+                if (contactMatch != null)
+                {
+                    isCurrentChat = string.Equals(ContactName?.Trim(), contactMatch.Name?.Trim(), StringComparison.OrdinalIgnoreCase);
+                }
+            }
+
+            if (isCurrentChat)
+            {
+                MessagesList.Add(new ChatMessageItem { Text = context.RawMessageText, IsOutgoing = false });
+            }
+        });
+
+        await _historyService.SaveHistoryAsync(context.ContactName, MessagesList);
+    }
+}

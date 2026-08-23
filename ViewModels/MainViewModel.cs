@@ -61,7 +61,7 @@ namespace phonetolinux.ViewModels
 
         /// <summary>
         /// Inspects the secure storage directory to determine if the device has already been paired
-        /// and restores the phone IP configuration if available.
+        /// and securely restores the phone IP configuration using AES-256 decryption.
         /// </summary>
         public void CheckPairingStatus()
         {
@@ -74,9 +74,8 @@ namespace phonetolinux.ViewModels
 
                 try
                 {
-                    // Restore saved phone IP from the encrypted pairing data if possible
-                    string encryptedPayload = File.ReadAllText(pairedFilePath);
-                    string decryptedPayload = _storageService.Decrypt(encryptedPayload);
+                    // Securely read and decrypt the paired device data using the master key
+                    string decryptedPayload = _storageService.ReadAndDecrypt(pairedFilePath);
                     
                     var jsonDoc = System.Text.Json.JsonDocument.Parse(decryptedPayload);
                     if (jsonDoc.RootElement.TryGetProperty("phoneIp", out var ipProp))
@@ -90,7 +89,7 @@ namespace phonetolinux.ViewModels
                 }
                 catch
                 {
-                    // Fallback silently if decryption fails or format differs
+                    // Fallback silently if decryption fails or file integrity is compromised
                 }
             }
             else

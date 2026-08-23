@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:phonetolinux.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="500"
+             x:Class="phonetolinux.Views.PairingView"
+             x:DataType="vm:PairingViewModel">
+
+    <Design.DataContext>
+        <vm:PairingViewModel/>
+    </Design.DataContext>
+
+    <Border Padding="24" Background="#1E1E1E" CornerRadius="12" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <StackPanel Spacing="16" HorizontalAlignment="Center">
+
+            <TextBlock Text="Device Pairing" 
+                       FontSize="22" 
+                       FontWeight="SemiBold" 
+                       Foreground="White" 
+                       HorizontalAlignment="Center"/>
+
+            <!-- QR Code Render Container -->
+            <Border Background="White" Padding="12" CornerRadius="8" HorizontalAlignment="Center">
+                <Image Source="{Binding QrCodeImage}" Width="240" Height="240"/>
+            </Border>
+
+            <TextBlock Text="{Binding StatusMessage}" 
+                       Foreground="#B0B0B0" 
+                       TextWrapping="Wrap" 
+                       TextAlignment="Center" 
+                       HorizontalAlignment="Center"
+                       MaxWidth="320"/>
+
+            <Button Content="Refresh QR Code" 
+                    Command="{Binding GeneratePairingQrCodeCommand}" 
+                    HorizontalAlignment="Center" 
+                    Padding="16,8"/>
+
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
@@ -101,18 +102,39 @@ namespace phonetolinux.Services
 
             try
             {
-                // Automatically extract and save the phone's IP address from the incoming connection
+                // Extract real remote IP directly from the network connection socket
                 string phoneIp = context.Request.RemoteEndPoint?.Address.ToString() ?? "";
-                if (!string.IsNullOrEmpty(phoneIp))
-                {
-                    PhoneConfig.SaveIp(phoneIp);
-                }
 
                 using var reader = new StreamReader(request.InputStream, request.ContentEncoding);
                 string payload = await reader.ReadToEndAsync();
 
                 if (!string.IsNullOrWhiteSpace(payload))
                 {
+                    // Force update the JSON payload to include verified phone IP and dynamic server port
+                    if (!string.IsNullOrEmpty(phoneIp))
+                    {
+                        try
+                        {
+                            var jsonNode = JsonNode.Parse(payload);
+                            if (jsonNode != null)
+                            {
+                                jsonNode["phoneIp"] = phoneIp;
+                                
+                                // Extract and save the active port sent from Android
+                                int phonePort = jsonNode["serverPort"]?.GetValue<int>() ?? 5000;
+                                PhoneConfig.SavePort(phonePort);
+
+                                payload = jsonNode.ToJsonString();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[PairingListener] Error parsing dynamic fields: {ex.Message}");
+                        }
+
+                        PhoneConfig.SaveIp(phoneIp);
+                    }
+
                     // Encrypt and save paired device session data using AES-256
                     string targetPath = Path.Combine(_storageDirectory, "paired_device.dat");
                     _storageService.EncryptAndWrite(targetPath, payload);

@@ -7,8 +7,8 @@ using PhoneToLinux.Plugins;
 namespace phonetolinux.Services
 {
     /// <summary>
-    /// Wtyczka odpowiedzialna za zarządzanie połączeniami telefonicznymi (inicjowanie, odebranie oraz kończenie rozmowy)
-    /// za pośrednictwem żądań HTTP do serwera działającego na urządzeniu mobilnym.
+    /// Plugin responsible for managing phone calls (initiating, answering, and ending calls)
+    /// via HTTP requests to the server running on the mobile device.
     /// </summary>
     public class PhoneCallPlugin : IPhonePlugin
     {
@@ -18,26 +18,28 @@ namespace phonetolinux.Services
         public string Endpoint => "/call";
 
         /// <summary>
-        /// Wykonuje akcję wtyczki na podstawie przekazanych parametrów lub obsługuje domyślne żądanie połączenia.
+        /// Executes the plugin action based on provided parameters or handles the default call request.
         /// </summary>
-        /// <param name="queryParams">Numer telefonu lub parametry żądania.</param>
-        /// <returns>Odpowiedź w formacie JSON lub wynik operacji.</returns>
+        /// <param name="queryParams">Phone number or request parameters.</param>
+        /// <returns>Response in JSON format or operation result.</returns>
         public string Execute(string queryParams)
         {
-            // Możemy obsłużyć główny endpoint wtyczki
+            // Placeholder for handling the main plugin endpoint
             return "{\"status\":\"PhoneCallPlugin active\"}";
         }
 
         /// <summary>
-        /// Asynchronicznie inicjuje nowe połączenie telefoniczne na podany numer.
+        /// Asynchronously initiates a new phone call to the specified number.
         /// </summary>
-        /// <param name="phoneNumber">Numer telefonu docelowego.</param>
-        /// <returns>True, jeśli żądanie powiodło się; w przeciwnym razie false.</returns>
+        /// <param name="phoneNumber">Destination phone number.</param>
+        /// <returns>True if the request succeeded; otherwise false.</returns>
         public async Task<bool> StartCallAsync(string phoneNumber)
         {
             try
             {
-                string url = $"{PhoneConfigPlugin.GetBaseUrl()}/call?number={Uri.EscapeDataString(phoneNumber)}";
+                if (string.IsNullOrEmpty(PhoneConfig.PhoneIp)) return false;
+
+                string url = $"{PhoneConfig.GetBaseUrl()}/call?number={Uri.EscapeDataString(phoneNumber)}";
                 var response = await _httpClient.GetAsync(url);
                 return response.IsSuccessStatusCode;
             }
@@ -45,14 +47,16 @@ namespace phonetolinux.Services
         }
 
         /// <summary>
-        /// Asynchronicznie kończy aktywne połączenie telefoniczne.
+        /// Asynchronously ends the active phone call.
         /// </summary>
-        /// <returns>True, jeśli żądanie powiodło się; w przeciwnym razie false.</returns>
+        /// <returns>True if the request succeeded; otherwise false.</returns>
         public async Task<bool> EndCallAsync()
         {
             try
             {
-                string url = $"{PhoneConfigPlugin.GetBaseUrl()}/endcall";
+                if (string.IsNullOrEmpty(PhoneConfig.PhoneIp)) return false;
+
+                string url = $"{PhoneConfig.GetBaseUrl()}/endcall";
                 var response = await _httpClient.GetAsync(url);
                 return response.IsSuccessStatusCode;
             }
@@ -60,14 +64,16 @@ namespace phonetolinux.Services
         }
 
         /// <summary>
-        /// Asynchronicznie odbiera przychodzące połączenie telefoniczne.
+        /// Asynchronously answers an incoming phone call.
         /// </summary>
-        /// <returns>True, jeśli żądanie powiodło się; w przeciwnym razie false.</returns>
+        /// <returns>True if the request succeeded; otherwise false.</returns>
         public async Task<bool> AnswerCallAsync()
         {
             try
             {
-                string url = $"{PhoneConfigPlugin.GetBaseUrl()}/answercall";
+                if (string.IsNullOrEmpty(PhoneConfig.PhoneIp)) return false;
+
+                string url = $"{PhoneConfig.GetBaseUrl()}/answercall";
                 var response = await _httpClient.GetAsync(url);
                 return response.IsSuccessStatusCode;
             }

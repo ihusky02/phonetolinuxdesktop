@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Security;
 using System.Threading.Tasks;
-using PhoneToLinux.Core; // <--- Poprawna przestrzeń nazw zdefiniowana w interfejsie
+using PhoneToLinux.Core;
 using phonetolinux.Models;
 
 namespace phonetolinux.Plugins
@@ -20,7 +20,7 @@ namespace phonetolinux.Plugins
         private readonly HttpClient _httpClient = new();
         private const long MaxFileSizeLimit = 15 * 1024 * 1024; // 15 MB limit in bytes
 
-        // Wymagane przez interfejs IPhonePlugin
+        // Required by the IPhonePlugin interface
         public string Endpoint => "/mms";
 
         // 1. Strict MIME-type whitelist to prevent malicious payload or executable delivery
@@ -47,10 +47,10 @@ namespace phonetolinux.Plugins
             }
         }
 
-        // Wymagana przez interfejs IPhonePlugin metoda wykonawcza
+        // Execution method required by the IPhonePlugin interface
         public string Execute(string queryParams)
         {
-            // Tutaj w przyszłości obsłużysz wywołanie z endpointu /mms
+            // Placeholder for handling calls from the /mms endpoint in the future
             return "MMS Plugin executed successfully.";
         }
 

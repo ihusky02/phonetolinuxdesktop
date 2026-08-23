@@ -36,9 +36,15 @@ namespace phonetolinux.Services
         {
             try
             {
+                // Guard check to prevent invalid URI if phone IP is not yet set
+                if (string.IsNullOrEmpty(PhoneConfig.PhoneIp))
+                {
+                    return false;
+                }
+
                 string encodedNumber = Uri.EscapeDataString(phoneNumber);
                 string encodedMessage = Uri.EscapeDataString(message);
-                string url = $"{PhoneConfigPlugin.GetBaseUrl()}/send_sms?number={encodedNumber}&message={encodedMessage}";
+                string url = $"{PhoneConfig.GetBaseUrl()}/send_sms?number={encodedNumber}&message={encodedMessage}";
 
                 var response = await _httpClient.GetAsync(url);
                 

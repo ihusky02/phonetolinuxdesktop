@@ -10,8 +10,8 @@ using PhoneToLinux.Plugins;
 namespace phonetolinux.Services
 {
     /// <summary>
-    /// Wtyczka odpowiedzialna za pobieranie listy kontaktów z urządzenia mobilnego
-    /// za pośrednictwem żądania HTTP do serwera i deserializację odpowiedzi JSON.
+    /// Plugin responsible for fetching the list of contacts from the mobile device
+    /// via an HTTP request to the server and deserializing the JSON response.
     /// </summary>
     public class ContactsPlugin : IPhonePlugin
     {
@@ -21,24 +21,30 @@ namespace phonetolinux.Services
         public string Endpoint => "/contacts";
 
         /// <summary>
-        /// Wykonuje operację wtyczki dla zadanego zapytania.
+        /// Executes the plugin operation for a given query.
         /// </summary>
-        /// <param name="queryParams">Parametry zapytania.</param>
-        /// <returns>Odpowiedź w formacie JSON.</returns>
+        /// <param name="queryParams">Query parameters.</param>
+        /// <returns>Response in JSON format.</returns>
         public string Execute(string queryParams)
         {
             return "{\"status\":\"ContactsPlugin active\"}";
         }
 
         /// <summary>
-        /// Asynchronicznie pobiera listę kontaktów z serwera telefonu.
+        /// Asynchronously fetches the list of contacts from the phone server.
         /// </summary>
-        /// <returns>Lista obiektów reprezentujących kontakty.</returns>
+        /// <returns>A list of contact item objects.</returns>
         public async Task<List<ContactItem>> GetContactsAsync()
         {
             try
             {
-                string url = $"{PhoneConfigPlugin.GetBaseUrl()}/contacts";
+                // Guard check to prevent invalid URI if phone IP is not yet set
+                if (string.IsNullOrEmpty(PhoneConfig.PhoneIp))
+                {
+                    return new List<ContactItem>();
+                }
+
+                string url = $"{PhoneConfig.GetBaseUrl()}/contacts";
                 string json = await _httpClient.GetStringAsync(url);
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                 return JsonSerializer.Deserialize<List<ContactItem>>(json, options) ?? new List<ContactItem>();

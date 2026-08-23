@@ -60,7 +60,8 @@ namespace phonetolinux.ViewModels
         }
 
         /// <summary>
-        /// Inspects the secure storage directory to determine if the device has already been paired.
+        /// Inspects the secure storage directory to determine if the device has already been paired
+        /// and restores the phone IP configuration if available.
         /// </summary>
         public void CheckPairingStatus()
         {
@@ -70,6 +71,27 @@ namespace phonetolinux.ViewModels
             if (IsPaired)
             {
                 SelectedTabIndex = 0; // Default to Dialer tab
+
+                try
+                {
+                    // Restore saved phone IP from the encrypted pairing data if possible
+                    string encryptedPayload = File.ReadAllText(pairedFilePath);
+                    string decryptedPayload = _storageService.Decrypt(encryptedPayload);
+                    
+                    var jsonDoc = System.Text.Json.JsonDocument.Parse(decryptedPayload);
+                    if (jsonDoc.RootElement.TryGetProperty("phoneIp", out var ipProp))
+                    {
+                        string savedIp = ipProp.GetString();
+                        if (!string.IsNullOrEmpty(savedIp))
+                        {
+                            PhoneConfig.SaveIp(savedIp);
+                        }
+                    }
+                }
+                catch
+                {
+                    // Fallback silently if decryption fails or format differs
+                }
             }
             else
             {

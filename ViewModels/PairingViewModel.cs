@@ -9,6 +9,9 @@ using PhoneToLinux.Security;
 
 namespace phonetolinux.ViewModels
 {
+    /// <summary>
+    /// ViewModel responsible for managing initial device handshake and PIN generation logic.
+    /// </summary>
     public partial class PairingViewModel : ObservableObject
     {
         private readonly DevicePairingService _pairingService;
@@ -22,13 +25,20 @@ namespace phonetolinux.ViewModels
         [ObservableProperty]
         private string _ipAddress = string.Empty;
 
+        // Flag enabling the UI button to generate a new PIN code
+        [ObservableProperty]
+        private bool _canGeneratePin = true;
+
         public PairingViewModel()
         {
             _pairingService = new DevicePairingService();
             Dispatcher.UIThread.Post(() => GeneratePairingPinCode(), DispatcherPriority.Render);
         }
 
-        [RelayCommand]
+        /// <summary>
+        /// Generates a fresh 6-digit PIN code and calculates the active network endpoint.
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanGeneratePin))]
         public void GeneratePairingPinCode()
         {
             try
@@ -51,6 +61,9 @@ namespace phonetolinux.ViewModels
             }
         }
 
+        /// <summary>
+        /// Resolves the primary local IPv4 address of the host machine.
+        /// </summary>
         private string GetActiveLocalIpAddress()
         {
             try

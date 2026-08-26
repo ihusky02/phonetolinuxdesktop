@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using phonetolinux.ViewModels;
 
 namespace phonetolinux.Views;
 
@@ -47,5 +48,22 @@ public partial class MainWindow : Window
     private void Close_Click(object? sender, RoutedEventArgs e)
     {
         Close();
+    }
+
+    /// <summary>
+    /// Triggers the phone call command when the Enter or Return key is pressed while on the Dialer tab.
+    /// </summary>
+    private void Window_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter || e.Key == Key.Return)
+        {
+            if (DataContext is MainViewModel vm && vm.SelectedTabIndex == 0)
+            {
+                if (vm.CallCommand.CanExecute(null))
+                {
+                    vm.CallCommand.Execute(null);
+                }
+            }
+        }
     }
 }

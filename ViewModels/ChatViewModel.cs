@@ -113,7 +113,7 @@ public partial class ChatViewModel : ObservableObject
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 RecentConversations.Clear();
-                foreach (var item in list.Take(6))
+                foreach (var item in list.Take(20))
                 {
                     RecentConversations.Add(item);
                 }
@@ -162,7 +162,11 @@ public partial class ChatViewModel : ObservableObject
 
         if (history == null || history.Count == 0)
         {
-            history = await _historyService.LoadHistoryAsync(contactName);
+            if (!string.IsNullOrEmpty(contactName))
+            {
+                history = await _historyService.LoadHistoryAsync(contactName);
+            }
+            
             if ((history == null || history.Count == 0) && !string.IsNullOrEmpty(phoneNumber))
             {
                 history = await _historyService.LoadHistoryAsync(phoneNumber);

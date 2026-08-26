@@ -7,24 +7,25 @@ using PhoneToLinux.Core;
 namespace PhoneToLinux.Desktop
 {
     /// <summary>
-    /// Odpowiada za skanowanie folderu Library, dynamiczne ładowanie bibliotek wtyczek (.dll)
-    /// oraz kierowanie żądań przychodzących do odpowiednich handlerów.
+    /// Scans the specified directory, dynamically loads plugin libraries (.dll),
+    /// and routes incoming requests to the appropriate plugin handlers.
     /// </summary>
     public class PluginManager
     {
         private readonly Dictionary<string, IPhonePlugin> _plugins = new();
 
         /// <summary>
-        /// Przeszukuje wskazany katalog Library w poszukiwaniu plików wtyczek z rozszerzeniem .dll,
-        /// a następnie rejestruje je w pamięci aplikacji.
+        /// Searches the specified library directory for plugin files with the .dll extension
+        /// and registers them in application memory.
+        /// Ignores subdirectories to prevent interference with secure storage paths.
         /// </summary>
-        /// <param name="libraryDirectoryPath">Ścieżka do folderu Library z wtyczkami.</param>
+        /// <param name="libraryDirectoryPath">Path to the Library directory containing plugins.</param>
         public void LoadPlugins(string libraryDirectoryPath)
         {
             if (!Directory.Exists(libraryDirectoryPath)) return;
 
-            // Iterujemy przez wszystkie pliki .dll w folderze Library
-            foreach (var file in Directory.GetFiles(libraryDirectoryPath, "*.dll"))
+            // Restrict file search to the top directory only to isolate from subfolders/SecureStorage
+            foreach (var file in Directory.GetFiles(libraryDirectoryPath, "*.dll", SearchOption.TopDirectoryOnly))
             {
                 try
                 {
@@ -36,20 +37,20 @@ namespace PhoneToLinux.Desktop
                             if (Activator.CreateInstance(type) is IPhonePlugin plugin)
                             {
                                 _plugins[plugin.Endpoint] = plugin;
-                                Console.WriteLine($"[PluginManager Library] Załadowano wtyczkę dla endpointu: {plugin.Endpoint}");
+                                Console.WriteLine($"[PluginManager Library] Loaded plugin for endpoint: {plugin.Endpoint}");
                             }
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[Błąd] Nie udało się załadować wtyczki z pliku {file}: {ex.Message}");
+                    Console.WriteLine($"[Error] Failed to load plugin from file {file}: {ex.Message}");
                 }
             }
         }
 
         /// <summary>
-        /// Obsługuje zapytanie poprzez przekazanie go do odpowiedniej wtyczki na podstawie endpointu.
+        /// Handles incoming queries by routing them to the corresponding plugin based on the endpoint.
         /// </summary>
         public string ExecutePlugin(string endpoint, string queryParams)
         {

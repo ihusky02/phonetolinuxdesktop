@@ -9,32 +9,32 @@ using PhoneToLinux.Core;
 namespace phonetolinux.Services
 {
     /// <summary>
-    /// Wtyczka odpowiedzialna za lokalne zarządzanie historią konwersacji (odczyt oraz zapis wiadomości do plików JSON)
-    /// w katalogu domowym użytkownika.
+    /// Plugin responsible for local management of chat history (reading and writing message data to JSON files)
+    /// within the user's home directory.
     /// </summary>
     public class ChatHistoryPlugin : IPhonePlugin
     {
-        /// <summary>Katalog docelowy przechowujący lokalne pliki historii czatów.</summary>
+        /// <summary>Target directory storing local chat history files.</summary>
         private static readonly string StorageDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".phonetolinux", "chats");
 
         /// <inheritdoc />
         public string Endpoint => "/chathistory";
 
         /// <summary>
-        /// Wykonuje główne zadanie wtyczki dla zadanego zapytania.
+        /// Executes the main plugin task for a given query.
         /// </summary>
-        /// <param name="queryParams">Parametry zapytania.</param>
-        /// <returns>Odpowiedź w formacie JSON.</returns>
+        /// <param name="queryParams">Query parameters.</param>
+        /// <returns>Response in JSON format.</returns>
         public string Execute(string queryParams)
         {
             return "{\"status\":\"ChatHistoryPlugin active\"}";
         }
 
         /// <summary>
-        /// Asynchronicznie wczytuje historię wiadomości dla wskazanego identyfikatora (kontaktu lub numeru telefonu).
+        /// Asynchronously loads message history for the specified identifier (contact name or phone number).
         /// </summary>
-        /// <param name="identifier">Nazwa kontaktu lub numer telefonu.</param>
-        /// <returns>Lista elementów wiadomości czatu.</returns>
+        /// <param name="identifier">Contact name or phone number.</param>
+        /// <returns>A list of chat message items.</returns>
         public async Task<List<ChatMessageItem>> LoadHistoryAsync(string identifier)
         {
             try
@@ -54,10 +54,10 @@ namespace phonetolinux.Services
         }
 
         /// <summary>
-        /// Asynchronicznie zapisuje historię wiadomości dla wskazanego identyfikatora do pliku JSON.
+        /// Asynchronously saves message history for the specified identifier to a JSON file.
         /// </summary>
-        /// <param name="identifier">Nazwa kontaktu lub numer telefonu.</param>
-        /// <param name="messages">Kolekcja wiadomości do zapisu.</param>
+        /// <param name="identifier">Contact name or phone number.</param>
+        /// <param name="messages">Collection of messages to save.</param>
         public async Task SaveHistoryAsync(string identifier, IEnumerable<ChatMessageItem> messages)
         {
             try

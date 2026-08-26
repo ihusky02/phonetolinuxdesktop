@@ -38,13 +38,18 @@ namespace phonetolinux.Services
         {
             try
             {
-                string url = $"{PhoneConfigPlugin.GetBaseUrl()}/chathistory?number={Uri.EscapeDataString(phoneNumber)}";
+                // Guard check to prevent invalid URI if phone IP is not yet set
+                if (string.IsNullOrEmpty(PhoneConfig.PhoneIp))
+                {
+                    return new List<ChatMessageItem>();
+                }
+
+                string url = $"{PhoneConfig.GetBaseUrl()}/chathistory?number={Uri.EscapeDataString(phoneNumber)}";
                 string json = await _httpClient.GetStringAsync(url);
                 
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                 var messages = JsonSerializer.Deserialize<List<ChatMessageItem>>(json, options) ?? new List<ChatMessageItem>();
 
-                // Diagnostic loop removed; the console will no longer be cluttered with message history.
                 return messages;
             }
             catch (Exception ex) 

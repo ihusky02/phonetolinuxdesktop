@@ -9,23 +9,23 @@ using PhoneToLinux.Plugins;
 namespace phonetolinux.Services
 {
     /// <summary>
-    /// Obiekt DTO reprezentujący dane pojedynczej konwersacji pobieranej z serwera.
+    /// DTO object representing data for a single conversation fetched from the server.
     /// </summary>
     public class ConversationDto
     {
-        /// <summary>Nazwa lub identyfikator kontaktu.</summary>
+        /// <summary>Contact name or identifier.</summary>
         public string contactName { get; set; } = "";
 
-        /// <summary>Numer telefonu powiązany z konwersacją.</summary>
+        /// <summary>Phone number associated with the conversation.</summary>
         public string phoneNumber { get; set; } = "";
 
-        /// <summary>Treść ostatniej wiadomości w konwersacji.</summary>
+        /// <summary>Content of the last message in the conversation.</summary>
         public string lastMessage { get; set; } = "";
     }
 
     /// <summary>
-    /// Wtyczka odpowiedzialna za pobieranie listy ostatnich konwersacji z urządzenia mobilnego
-    /// za pośrednictwem żądania HTTP do serwera.
+    /// Plugin responsible for fetching the list of recent conversations from the mobile device
+    /// via an HTTP request to the server.
     /// </summary>
     public class ConversationsPlugin : IPhonePlugin
     {
@@ -35,35 +35,41 @@ namespace phonetolinux.Services
         public string Endpoint => "/conversations";
 
         /// <summary>
-        /// Wykonuje operację wtyczki dla zadanego zapytania.
+        /// Executes the plugin operation for a given query.
         /// </summary>
-        /// <param name="queryParams">Parametry zapytania.</param>
-        /// <returns>Odpowiedź w formacie JSON.</returns>
+        /// <param name="queryParams">Query parameters.</param>
+        /// <returns>Response in JSON format.</returns>
         public string Execute(string queryParams)
         {
             return "{\"status\":\"ConversationsPlugin active\"}";
         }
 
         /// <summary>
-        /// Asynchronicznie pobiera listę konwersacji z serwera telefonu.
+        /// Asynchronously fetches the list of conversations from the phone server.
         /// </summary>
-        /// <returns>Lista obiektów ConversationDto reprezentujących konwersacje.</returns>
+        /// <returns>A list of ConversationDto objects representing the conversations.</returns>
         public async Task<List<ConversationDto>> GetConversationsFromServerAsync()
         {
             try
             {
-                string url = $"{PhoneConfigPlugin.GetBaseUrl()}/conversations";
-                Console.WriteLine($"[DEBUG CONVERSATIONS] Pobieram z: {url}");
+                // Guard check to prevent invalid URI if phone IP is not yet set
+                if (string.IsNullOrEmpty(PhoneConfig.PhoneIp))
+                {
+                    return new List<ConversationDto>();
+                }
+
+                string url = $"{PhoneConfig.GetBaseUrl()}/conversations";
+                Console.WriteLine($"[DEBUG CONVERSATIONS] Fetching from: {url}");
                 
                 string json = await _httpClient.GetStringAsync(url);
-                Console.WriteLine($"[DEBUG CONVERSATIONS] Odpowiedź JSON: {json}");
+                Console.WriteLine($"[DEBUG CONVERSATIONS] JSON response: {json}");
 
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                 return JsonSerializer.Deserialize<List<ConversationDto>>(json, options) ?? new List<ConversationDto>();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[CONVERSATIONS ERROR] Nie udało się pobrać konwersacji z serwera: {ex.Message}");
+                Console.WriteLine($"[CONVERSATIONS ERROR] Failed to fetch conversations from server: {ex.Message}");
                 return new List<ConversationDto>();
             }
         }

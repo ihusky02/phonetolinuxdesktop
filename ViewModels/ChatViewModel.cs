@@ -12,6 +12,10 @@ using Avalonia.Threading;
 
 namespace phonetolinux.ViewModels;
 
+/// <summary>
+/// ViewModel responsible for managing chat state, active conversation selection,
+/// loading message history, and real-time messaging updates.
+/// </summary>
 public partial class ChatViewModel : ObservableObject
 {
     private readonly SmsPlugin _smsService;
@@ -23,7 +27,7 @@ public partial class ChatViewModel : ObservableObject
     private string _phoneNumber = "";
 
     [ObservableProperty]
-    private string _contactName = "Wybierz kontakt";
+    private string _contactName = "Select contact";
 
     [ObservableProperty]
     private string _currentMessageText = "";
@@ -64,6 +68,9 @@ public partial class ChatViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Asynchronously fetches recent conversations from the phone server or falls back to local storage.
+    /// </summary>
     public async Task LoadConversationsAndSyncAsync()
     {
         try
@@ -98,7 +105,7 @@ public partial class ChatViewModel : ObservableObject
                     foreach (var file in files)
                     {
                         string name = Path.GetFileNameWithoutExtension(file);
-                        list.Add(new ChatConversationItem { ContactName = name, PhoneNumber = name, LastMessage = "Historia zapisana" });
+                        list.Add(new ChatConversationItem { ContactName = name, PhoneNumber = name, LastMessage = "Saved history" });
                     }
                 }
             }
@@ -117,12 +124,15 @@ public partial class ChatViewModel : ObservableObject
                 }
             });
         }
-        catch (Exception ex)
+        catch 
         {
-            Console.WriteLine($"[Błąd ładowania konwersacji]: {ex.Message}");
+            // Silently handle exception
         }
     }
 
+    /// <summary>
+    /// Initializes active chat context and triggers message history loading.
+    /// </summary>
     public async Task InitializeChatAsync(ChatContext context)
     {
         ContactName = context.ContactName;
@@ -178,7 +188,7 @@ public partial class ChatViewModel : ObservableObject
                 await Task.Delay(2000);
                 try
                 {
-                    if (!string.IsNullOrEmpty(PhoneNumber) && PhoneNumber != "Wybierz kontakt")
+                    if (!string.IsNullOrEmpty(PhoneNumber) && PhoneNumber != "Select contact")
                     {
                         var freshHistory = await _smsHistoryService.GetChatHistoryFromServerAsync(PhoneNumber);
                         
@@ -203,6 +213,9 @@ public partial class ChatViewModel : ObservableObject
         });
     }
 
+    /// <summary>
+    /// Sends a new SMS message and updates local history storage.
+    /// </summary>
     [RelayCommand]
     private async Task SendMessage()
     {
@@ -218,7 +231,7 @@ public partial class ChatViewModel : ObservableObject
             var msg = new ChatMessageItem { Text = textToSend, IsOutgoing = true };
             MessagesList.Add(msg);
 
-            if (!string.IsNullOrEmpty(ContactName) && ContactName != "Wybierz kontakt")
+            if (!string.IsNullOrEmpty(ContactName) && ContactName != "Select contact")
             {
                 await _historyService.SaveHistoryAsync(ContactName, MessagesList);
             }
@@ -227,6 +240,9 @@ public partial class ChatViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Handles incoming real-time SMS pushes from background services.
+    /// </summary>
     public async void AddIncomingSms(ChatContext context)
     {
         await Dispatcher.UIThread.InvokeAsync(() =>

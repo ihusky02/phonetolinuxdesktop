@@ -18,31 +18,47 @@ namespace phonetolinux.Services
     {
         /// <summary>Contact name or identifier.</summary>
         [JsonPropertyName("contactName")]
-        public string ContactName { get; set; } = "";
+        public string contactName { get; set; } = "";
+
+        /// <summary>PascalCase property alias for C# codebase consistency.</summary>
+        [JsonIgnore]
+        public string ContactName 
+        { 
+            get => contactName; 
+            set => contactName = value; 
+        }
 
         /// <summary>Primary phone number associated with the conversation.</summary>
         [JsonPropertyName("phoneNumber")]
-        public string PhoneNumber { get; set; } = "";
+        public string phoneNumber { get; set; } = "";
+
+        /// <summary>PascalCase property alias for C# codebase consistency.</summary>
+        [JsonIgnore]
+        public string PhoneNumber 
+        { 
+            get => phoneNumber; 
+            set => phoneNumber = value; 
+        }
 
         /// <summary>Fallback field for phone number from Android payload.</summary>
         [JsonPropertyName("number")]
-        public string Number { set => PhoneNumber = string.IsNullOrWhiteSpace(PhoneNumber) ? value : PhoneNumber; }
+        public string Number { set => phoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? value : phoneNumber; }
 
         /// <summary>Fallback field for address from Android payload.</summary>
         [JsonPropertyName("address")]
-        public string Address { set => PhoneNumber = string.IsNullOrWhiteSpace(PhoneNumber) ? value : PhoneNumber; }
+        public string Address { set => phoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? value : phoneNumber; }
 
         /// <summary>Content of the last message in the conversation.</summary>
         [JsonPropertyName("lastMessage")]
-        public string LastMessage { get; set; } = "";
+        public string lastMessage { get; set; } = "";
 
         /// <summary>Timestamp of the last message in milliseconds.</summary>
         [JsonPropertyName("date")]
-        public long Date { get; set; }
+        public long date { get; set; }
 
         /// <summary>Indicates whether the last message has been read.</summary>
         [JsonPropertyName("isRead")]
-        public bool IsRead { get; set; } = true;
+        public bool isRead { get; set; } = true;
     }
 
     /// <summary>
@@ -101,8 +117,8 @@ namespace phonetolinux.Services
 
                 // Deduplicate conversation entries by normalized phone number
                 return conversations
-                    .Where(c => !string.IsNullOrWhiteSpace(c.PhoneNumber))
-                    .DistinctBy(c => NormalizePhoneNumber(c.PhoneNumber))
+                    .Where(c => !string.IsNullOrWhiteSpace(c.phoneNumber))
+                    .DistinctBy(c => NormalizePhoneNumber(c.phoneNumber))
                     .ToList();
             }
             catch (Exception ex)

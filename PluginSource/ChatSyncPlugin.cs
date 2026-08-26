@@ -22,13 +22,13 @@ namespace PhoneToLinux.Plugins
             if (context?.RecentConversations == null || context.RecentConversations.Count == 0)
                 return null;
 
-            // Filter out potential duplicate entries by phone number/address before selecting
+            // Filter out potential duplicate entries by phone number before selecting
             var uniqueConversations = DeduplicateConversations(context.RecentConversations);
             return uniqueConversations.FirstOrDefault();
         }
 
         /// <summary>
-        /// Filters a collection of conversation items by unique phone number/address.
+        /// Filters a collection of conversation items by unique phone number.
         /// </summary>
         /// <param name="conversations">Input list of conversations.</param>
         /// <returns>Deduplicated list of conversation items.</returns>
@@ -38,8 +38,8 @@ namespace PhoneToLinux.Plugins
                 return new List<ChatConversationItem>();
 
             return conversations
-                .Where(c => !string.IsNullOrWhiteSpace(c.PhoneNumber ?? c.Address))
-                .DistinctBy(c => NormalizePhoneNumber(c.PhoneNumber ?? c.Address ?? ""))
+                .Where(c => !string.IsNullOrWhiteSpace(c.PhoneNumber))
+                .DistinctBy(c => NormalizePhoneNumber(c.PhoneNumber ?? ""))
                 .ToList();
         }
 

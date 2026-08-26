@@ -41,7 +41,7 @@ namespace phonetolinux.Services
         }
 
         /// <summary>
-        /// Asynchronously fetches the list of contacts from the phone server and deduplicates them by phone number.
+        /// Asynchronously fetches the list of contacts from the phone server and deduplicates them by unique contact names.
         /// </summary>
         /// <returns>A list of deduplicated contact item objects.</returns>
         public async Task<List<ContactItem>> GetContactsAsync()
@@ -61,10 +61,12 @@ namespace phonetolinux.Services
                 var contacts = JsonSerializer.Deserialize<List<ContactItem>>(json, options) 
                                ?? new List<ContactItem>();
 
-                // Deduplicate contacts by normalized phone number
+                // Aggressive deduplication: Keep only unique contact names to clean up the UI list completely
                 return contacts
-                    .Where(c => !string.IsNullOrWhiteSpace(c.PhoneNumber ?? c.Phone ?? c.Number))
-                    .DistinctBy(c => NormalizePhoneNumber(c.PhoneNumber ?? c.Phone ?? c.Number ?? ""))
+                    .Where(c => !string.IsNullOrWhiteSpace(c.Name))
+                    .GroupBy(c => c.Name.Trim().ToLowerInvariant())
+                    .Select(g => g.First())
+                    .OrderBy(c => c.Name)
                     .ToList();
             }
             catch

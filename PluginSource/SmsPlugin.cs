@@ -30,7 +30,7 @@ namespace phonetolinux.Services
         /// <summary>
         /// Executes the plugin operation for a given query parameter.
         /// </summary>
-        /// <param name="queryParams">Query parameters (e.g., "number=+48500100200&amp;message=Hello").</param>
+        /// <param name="queryParams">Query parameters.</param>
         /// <returns>Response in JSON format indicating execution status.</returns>
         public string Execute(string queryParams)
         {
@@ -50,7 +50,7 @@ namespace phonetolinux.Services
         }
 
         /// <summary>
-        /// Asynchronously sends an SMS message to the specified destination number.
+        /// Asynchronously sends an SMS message to the specified destination number via HTTP GET.
         /// </summary>
         /// <param name="phoneNumber">Recipient's phone number.</param>
         /// <param name="message">SMS message text content.</param>
@@ -59,21 +59,29 @@ namespace phonetolinux.Services
         {
             if (string.IsNullOrWhiteSpace(phoneNumber) || string.IsNullOrWhiteSpace(message) || string.IsNullOrEmpty(PhoneConfig.PhoneIp))
             {
+                Console.WriteLine("[SMS ERROR] Missing phone number, message text, or phone IP configuration.");
                 return false;
             }
 
             try
             {
-                string encodedNumber = Uri.EscapeDataString(phoneNumber);
-                string encodedMessage = Uri.EscapeDataString(message);
+                string cleanNumber = phoneNumber.Trim();
+                string cleanMessage = message.Trim();
+
+                string encodedNumber = Uri.EscapeDataString(cleanNumber);
+                string encodedMessage = Uri.EscapeDataString(cleanMessage);
+                
                 string url = $"{PhoneConfig.GetBaseUrl()}/send_sms?number={encodedNumber}&message={encodedMessage}";
+                Console.WriteLine($"[SMS] Dispatching request to phone: {url}");
 
                 using var response = await _httpClient.GetAsync(url);
                 string responseBody = await response.Content.ReadAsStringAsync();
 
+                Console.WriteLine($"[SMS] Response status: {(int)response.StatusCode}, Body: {responseBody}");
+
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"[SMS ERROR] HTTP Server Error: {(int)response.StatusCode}, Response: {responseBody}");
+                    Console.WriteLine($"[SMS ERROR] HTTP Server Error: {(int)response.StatusCode}");
                     return false;
                 }
 
@@ -81,7 +89,8 @@ namespace phonetolinux.Services
                 using var jsonDoc = JsonDocument.Parse(responseBody);
                 if (jsonDoc.RootElement.TryGetProperty("status", out var statusProp))
                 {
-                    return statusProp.GetString()?.Equals("success", StringComparison.OrdinalIgnoreCase) ?? false;
+                    string? statusVal = statusProp.GetString();
+                    return statusVal != null && statusVal.Equals("success", StringComparison.OrdinalIgnoreCase);
                 }
 
                 return true;

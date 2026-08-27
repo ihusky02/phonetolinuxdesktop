@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
@@ -27,6 +28,7 @@ namespace phonetolinux.ViewModels
         private readonly SecureStorageService _storageService;
         private readonly ContactsPlugin _contactsPlugin;
         private readonly SmsPlugin _smsPlugin;
+        private readonly ConversationsPlugin _conversationsPlugin;
         private readonly string _storageDirectory;
         private PairingListenerService? _pairingListener;
 
@@ -79,6 +81,7 @@ namespace phonetolinux.ViewModels
             _storageService = new SecureStorageService(MasterKey);
             _contactsPlugin = new ContactsPlugin(SharedHttpClient);
             _smsPlugin = new SmsPlugin(SharedHttpClient);
+            _conversationsPlugin = new ConversationsPlugin(SharedHttpClient);
             
             // Resolve application storage directory in user profile (.local/share/phonetolinux)
             _storageDirectory = Path.Combine(
@@ -198,48 +201,147 @@ namespace phonetolinux.ViewModels
         }
 
         /// <summary>
-        /// Invokes HTTP endpoint to fetch conversations or applies fallback mockup data.
+        /// Invokes ConversationsPlugin to fetch conversation threads and correlates phone numbers with ContactsList.
+        /// Overrides "..." or empty previews by querying the last actual SMS text from the thread.
         /// </summary>
         public async Task LoadConversationsAsync()
         {
             try
             {
-                string url = $"{PhoneConfig.GetBaseUrl()}/conversations";
-                HttpResponseMessage response = await SharedHttpClient.GetAsync(url);
-                if (response.IsSuccessStatusCode)
+                // Ensure contacts are loaded first to perform display name correlation
+                if (ContactsList.Count == 0)
                 {
-                    string json = await response.Content.ReadAsStringAsync();
-                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    var fetchedThreads = JsonSerializer.Deserialize<List<ChatConversationItem>>(json, options);
+                    await LoadContactsAsync();
+                }
 
-                    if (fetchedThreads != null && fetchedThreads.Count > 0)
+                var fetchedThreads = await _conversationsPlugin.GetConversationsFromServerAsync();
+
+                if (fetchedThreads != null && fetchedThreads.Count > 0)
+                {
+                    RecentConversations.Clear();
+                    foreach (var thread in fetchedThreads)
                     {
-                        RecentConversations.Clear();
-                        foreach (var thread in fetchedThreads)
+                        string rawAddr = !string.IsNullOrWhiteSpace(thread.PhoneNumber) 
+                            ? thread.PhoneNumber 
+                            : (!string.IsNullOrWhiteSpace(thread.ContactName) ? thread.ContactName : "");
+
+                        string displayName = ResolveContactName(rawAddr, thread.ContactName);
+                        string lastMsgPreview = thread.lastMessage?.Trim() ?? "";
+
+                        // Fetch real last SMS if preview string is placeholder or empty
+                        if (string.IsNullOrWhiteSpace(lastMsgPreview) || lastMsgPreview == "..." || lastMsgPreview == "…")
                         {
-                            RecentConversations.Add(thread);
+                            lastMsgPreview = await FetchLatestMessageTextAsync(rawAddr);
                         }
-                        return;
+
+                        RecentConversations.Add(new ChatConversationItem 
+                        { 
+                            ContactName = displayName, 
+                            LastMessage = string.IsNullOrWhiteSpace(lastMsgPreview) ? "Brak treści wiadomości" : lastMsgPreview, 
+                            PhoneNumber = rawAddr 
+                        });
                     }
+
+                    // Automatically select the first conversation if available
+                    if (RecentConversations.Count > 0 && string.IsNullOrEmpty(PhoneNumber))
+                    {
+                        _ = SelectConversation(RecentConversations[0]);
+                    }
+                    return;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[CONVERSATIONS ERROR] HTTP Request failed: {ex.Message}");
+                Console.WriteLine($"[CONVERSATIONS ERROR] Failed to fetch conversations: {ex.Message}");
             }
 
-            // Fallback mockup entries matching specification
+            // Fallback mockup entries
             if (RecentConversations.Count == 0)
             {
                 RecentConversations.Clear();
                 RecentConversations.Add(new ChatConversationItem { ContactName = "Anna Kowalska", LastMessage = "Hi, file attached!", PhoneNumber = "+48 500 100 200" });
                 RecentConversations.Add(new ChatConversationItem { ContactName = "Jan Nowak", LastMessage = "Thanks for Linux tips", PhoneNumber = "+48 600 300 400" });
-
-                MessagesList.Clear();
-                MessagesList.Add(new ChatMessageItem { Text = "Hello! How is the Phonetolinux UI progressing?", IsOutgoing = false });
-                MessagesList.Add(new ChatMessageItem { Text = "Working on the V3.3 navigation layout!", IsOutgoing = true });
-                MessagesList.Add(new ChatMessageItem { Text = "Awesome, sending docs over.", IsOutgoing = false });
             }
+        }
+
+        /// <summary>
+        /// Fetches the latest single SMS message body for a given address to fix preview placeholders.
+        /// </summary>
+        private async Task<string> FetchLatestMessageTextAsync(string address)
+        {
+            if (string.IsNullOrWhiteSpace(address)) return string.Empty;
+
+            try
+            {
+                string url = $"{PhoneConfig.GetBaseUrl()}/messages?address={Uri.EscapeDataString(address.Trim())}";
+                HttpResponseMessage response = await SharedHttpClient.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = await response.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var messages = JsonSerializer.Deserialize<List<ChatMessageItem>>(json, options);
+                    if (messages != null && messages.Count > 0)
+                    {
+                        var last = messages.LastOrDefault();
+                        return last?.Text ?? string.Empty;
+                    }
+                }
+            }
+            catch
+            {
+                // Return empty string on fetch failure
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Helper method to match a phone number against stored contacts or display fallback name.
+        /// Handles alphanumeric sender IDs (e.g. Kaufland, Globania, mObywatel) as well as numeric phone numbers.
+        /// </summary>
+        private string ResolveContactName(string rawPhoneNumber, string? serverContactName)
+        {
+            if (!string.IsNullOrWhiteSpace(serverContactName) && 
+                serverContactName != rawPhoneNumber && 
+                !serverContactName.StartsWith("+"))
+            {
+                return serverContactName;
+            }
+
+            if (string.IsNullOrWhiteSpace(rawPhoneNumber)) return "Unknown Contact";
+
+            // Return directly for alphanumeric senders (e.g., mObywatel, Globania, Kaufland)
+            if (rawPhoneNumber.Any(char.IsLetter))
+            {
+                return rawPhoneNumber;
+            }
+
+            string cleanTarget = GetLast9Digits(rawPhoneNumber);
+            if (string.IsNullOrEmpty(cleanTarget)) return rawPhoneNumber;
+
+            foreach (var contact in ContactsList)
+            {
+                if (string.IsNullOrWhiteSpace(contact.PhoneNumber)) continue;
+
+                string cleanContactNum = GetLast9Digits(contact.PhoneNumber);
+
+                if (cleanTarget == cleanContactNum && !string.IsNullOrWhiteSpace(contact.Name))
+                {
+                    return contact.Name;
+                }
+            }
+
+            return rawPhoneNumber;
+        }
+
+        /// <summary>
+        /// Extracts and normalizes the trailing 9 numeric digits of a phone number string.
+        /// </summary>
+        private static string GetLast9Digits(string number)
+        {
+            if (string.IsNullOrWhiteSpace(number)) return string.Empty;
+            string digits = new string(number.Where(char.IsDigit).ToArray());
+            return digits.Length > 9 ? digits.Substring(digits.Length - 9) : digits;
         }
 
         /// <summary>
@@ -252,6 +354,8 @@ namespace phonetolinux.ViewModels
             {
                 SelectedTabIndex = 2; // Switch to Chat tab
                 PhoneNumber = phoneNumber;
+                ContactName = ResolveContactName(phoneNumber, null);
+                _ = LoadMessagesForNumberAsync(phoneNumber);
             }
         }
 
@@ -266,7 +370,7 @@ namespace phonetolinux.ViewModels
                 PhoneNumber = phoneNumber;
                 IsInCall = true;
                 IsIncomingCall = false;
-                ContactName = phoneNumber;
+                ContactName = ResolveContactName(phoneNumber, null);
             }
         }
 
@@ -291,33 +395,115 @@ namespace phonetolinux.ViewModels
             }
 
             string textToSend = CurrentMessageText;
-            Console.WriteLine($"[SMS] Attempting to send message to {targetNumber}: '{textToSend}'");
-
             bool success = await _smsPlugin.SendSmsAsync(targetNumber, textToSend);
 
             if (success)
             {
-                Console.WriteLine("[SMS] Message successfully sent by phone!");
                 MessagesList.Add(new ChatMessageItem { Text = textToSend, IsOutgoing = true });
                 CurrentMessageText = "";
-            }
-            else
-            {
-                Console.WriteLine("[SMS ERROR] Failed to dispatch SMS via phone endpoint.");
             }
         }
 
         /// <summary>
-        /// Selects chat conversation thread from the list.
+        /// Selects chat conversation thread from the list and fetches messages for that specific thread.
+        /// Uses PhoneNumber or ContactName as fallback address parameter for queries.
         /// </summary>
         [RelayCommand]
-        public void SelectConversation(ChatConversationItem conversation)
+        public async Task SelectConversation(ChatConversationItem conversation)
         {
             if (conversation != null)
             {
-                ContactName = conversation.ContactName;
-                PhoneNumber = conversation.PhoneNumber ?? "";
+                string targetAddress = !string.IsNullOrWhiteSpace(conversation.PhoneNumber) 
+                    ? conversation.PhoneNumber 
+                    : conversation.ContactName;
+
+                ContactName = string.IsNullOrWhiteSpace(conversation.ContactName) ? targetAddress : conversation.ContactName;
+                PhoneNumber = targetAddress;
+
+                if (ActiveChat != null)
+                {
+                    ActiveChat.PhoneNumber = PhoneNumber;
+                }
+
+                await LoadMessagesForNumberAsync(targetAddress);
             }
+        }
+
+        /// <summary>
+        /// Asynchronously fetches SMS history for a specific phone number or alphanumeric sender ID from the phone server.
+        /// Evaluates multiple candidate variants for alphanumeric IDs (uppercase, lowercase, raw) and numeric formats.
+        /// </summary>
+        private async Task LoadMessagesForNumberAsync(string addressInput)
+        {
+            if (string.IsNullOrWhiteSpace(addressInput)) return;
+
+            List<string> candidates = new List<string>();
+            string raw = addressInput.Trim();
+
+            // 1. Add verbatim raw string
+            candidates.Add(raw);
+
+            // 2. Handle Alphanumeric Senders (e.g. mObywatel, Globania, Kaufland)
+            if (raw.Any(char.IsLetter))
+            {
+                candidates.Add(raw.ToLowerInvariant());
+                candidates.Add(raw.ToUpperInvariant());
+            }
+            else
+            {
+                // 3. Handle Numeric Phone Senders
+                string cleanNoSpaces = new string(raw.Where(c => !char.IsWhiteSpace(c) && c != '-' && c != '(' && c != ')').ToArray());
+                if (!candidates.Contains(cleanNoSpaces)) candidates.Add(cleanNoSpaces);
+
+                string last9 = GetLast9Digits(raw);
+                if (!string.IsNullOrEmpty(last9) && !candidates.Contains(last9))
+                {
+                    candidates.Add(last9);
+                }
+
+                string withPlus48 = "+48" + last9;
+                if (!candidates.Contains(withPlus48)) candidates.Add(withPlus48);
+
+                if (raw.StartsWith("+48"))
+                {
+                    string withoutPlus48 = raw.Substring(3).Trim();
+                    if (!candidates.Contains(withoutPlus48)) candidates.Add(withoutPlus48);
+                }
+            }
+
+            // Iterate over all candidate addresses until a non-empty response is obtained
+            foreach (var target in candidates.Distinct())
+            {
+                try
+                {
+                    string url = $"{PhoneConfig.GetBaseUrl()}/messages?address={Uri.EscapeDataString(target)}";
+                    HttpResponseMessage response = await SharedHttpClient.GetAsync(url);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string json = await response.Content.ReadAsStringAsync();
+                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                        var fetchedMessages = JsonSerializer.Deserialize<List<ChatMessageItem>>(json, options);
+
+                        if (fetchedMessages != null && fetchedMessages.Count > 0)
+                        {
+                            MessagesList.Clear();
+                            foreach (var msg in fetchedMessages)
+                            {
+                                MessagesList.Add(msg);
+                            }
+                            return; // Successfully loaded message thread
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[MESSAGES ERROR] Failed for candidate '{target}': {ex.Message}");
+                }
+            }
+
+            // Clear messages if no candidate returned valid SMS content
+            MessagesList.Clear();
         }
 
         /// <summary>

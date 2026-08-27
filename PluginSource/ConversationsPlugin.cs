@@ -28,7 +28,7 @@ namespace phonetolinux.Services
             set => contactName = value; 
         }
 
-        /// <summary>Primary phone number associated with the conversation.</summary>
+        /// <summary>Primary phone number or sender address associated with the conversation.</summary>
         [JsonPropertyName("phoneNumber")]
         public string phoneNumber { get; set; } = "";
 
@@ -42,11 +42,17 @@ namespace phonetolinux.Services
 
         /// <summary>Fallback field for phone number from Android payload.</summary>
         [JsonPropertyName("number")]
-        public string Number { set => phoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? value : phoneNumber; }
+        public string Number 
+        { 
+            set => phoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? value : phoneNumber; 
+        }
 
         /// <summary>Fallback field for address from Android payload.</summary>
         [JsonPropertyName("address")]
-        public string Address { set => phoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? value : phoneNumber; }
+        public string Address 
+        { 
+            set => phoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? value : phoneNumber; 
+        }
 
         /// <summary>Content of the last message in the conversation.</summary>
         [JsonPropertyName("lastMessage")]
@@ -92,14 +98,14 @@ namespace phonetolinux.Services
         }
 
         /// <summary>
-        /// Asynchronously fetches the list of conversations from the phone server and deduplicates threads by phone number.
+        /// Asynchronously fetches the list of conversations from the phone server and deduplicates threads.
+        /// Properly handles numeric phone numbers as well as alphanumeric sender IDs (e.g., mObywatel, Kaufland).
         /// </summary>
         /// <returns>A list of deduplicated ConversationDto objects.</returns>
         public async Task<List<ConversationDto>> GetConversationsFromServerAsync()
         {
             try
             {
-                // Guard check to prevent invalid URI if phone IP is not yet set
                 if (string.IsNullOrEmpty(PhoneConfig.PhoneIp))
                 {
                     return new List<ConversationDto>();
@@ -115,10 +121,19 @@ namespace phonetolinux.Services
                 var conversations = JsonSerializer.Deserialize<List<ConversationDto>>(json, options) 
                                     ?? new List<ConversationDto>();
 
-                // Deduplicate conversation entries by normalized phone number
+                // Ensure fallback value from ContactName if PhoneNumber/Address is empty
+                foreach (var conv in conversations)
+                {
+                    if (string.IsNullOrWhiteSpace(conv.phoneNumber) && !string.IsNullOrWhiteSpace(conv.contactName))
+                    {
+                        conv.phoneNumber = conv.contactName;
+                    }
+                }
+
+                // Deduplicate conversation entries safely supporting both numeric and text senders
                 return conversations
-                    .Where(c => !string.IsNullOrWhiteSpace(c.phoneNumber))
-                    .DistinctBy(c => NormalizePhoneNumber(c.phoneNumber))
+                    .Where(c => !string.IsNullOrWhiteSpace(c.phoneNumber) || !string.IsNullOrWhiteSpace(c.contactName))
+                    .DistinctBy(c => NormalizeSenderKey(c.phoneNumber))
                     .ToList();
             }
             catch (Exception ex)
@@ -129,11 +144,21 @@ namespace phonetolinux.Services
         }
 
         /// <summary>
-        /// Normalizes phone numbers to standard 9-digit format for robust comparison.
+        /// Normalizes sender keys for deduplication. Extracts last 9 digits for phone numbers,
+        /// or retains lower-cased verbatim strings for alphanumeric sender IDs.
         /// </summary>
-        private static string NormalizePhoneNumber(string number)
+        private static string NormalizeSenderKey(string identifier)
         {
-            var digits = new string(number.Where(char.IsDigit).ToArray());
+            if (string.IsNullOrWhiteSpace(identifier)) return string.Empty;
+
+            // Alphanumeric Sender IDs (e.g. Kaufland, Globania, mObywatel)
+            if (identifier.Any(char.IsLetter))
+            {
+                return identifier.Trim().ToLowerInvariant();
+            }
+
+            // Standard numeric phone numbers
+            var digits = new string(identifier.Where(char.IsDigit).ToArray());
             return digits.Length > 9 ? digits.Substring(digits.Length - 9) : digits;
         }
     }

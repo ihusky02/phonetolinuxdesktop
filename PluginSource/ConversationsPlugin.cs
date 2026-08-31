@@ -16,11 +16,9 @@ namespace phonetolinux.Services
     /// </summary>
     public class ConversationDto
     {
-        /// <summary>Contact name or identifier.</summary>
         [JsonPropertyName("contactName")]
         public string contactName { get; set; } = "";
 
-        /// <summary>PascalCase property alias for C# codebase consistency.</summary>
         [JsonIgnore]
         public string ContactName 
         { 
@@ -28,11 +26,9 @@ namespace phonetolinux.Services
             set => contactName = value; 
         }
 
-        /// <summary>Primary phone number or sender address associated with the conversation.</summary>
         [JsonPropertyName("phoneNumber")]
         public string phoneNumber { get; set; } = "";
 
-        /// <summary>PascalCase property alias for C# codebase consistency.</summary>
         [JsonIgnore]
         public string PhoneNumber 
         { 
@@ -40,68 +36,48 @@ namespace phonetolinux.Services
             set => phoneNumber = value; 
         }
 
-        /// <summary>Fallback field for phone number from Android payload.</summary>
         [JsonPropertyName("number")]
         public string Number 
         { 
             set => phoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? value : phoneNumber; 
         }
 
-        /// <summary>Fallback field for address from Android payload.</summary>
         [JsonPropertyName("address")]
         public string Address 
         { 
             set => phoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? value : phoneNumber; 
         }
 
-        /// <summary>Content of the last message in the conversation.</summary>
         [JsonPropertyName("lastMessage")]
         public string lastMessage { get; set; } = "";
 
-        /// <summary>Timestamp of the last message in milliseconds.</summary>
         [JsonPropertyName("date")]
         public long date { get; set; }
 
-        /// <summary>Indicates whether the last message has been read.</summary>
         [JsonPropertyName("isRead")]
         public bool isRead { get; set; } = true;
     }
 
     /// <summary>
-    /// Plugin responsible for fetching the list of recent conversations from the mobile device
-    /// via an HTTP request to the server, deserializing JSON responses, and deduplicating entries.
+    /// Plugin responsible for fetching and managing recent conversations from the mobile device
+    /// via HTTP requests, deserializing JSON responses, and handling deletion commands.
     /// </summary>
     public class ConversationsPlugin : IPhonePlugin
     {
         private readonly HttpClient _httpClient;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ConversationsPlugin"/> class.
-        /// </summary>
-        /// <param name="httpClient">Optional custom HttpClient instance. Uses a default client if none provided.</param>
         public ConversationsPlugin(HttpClient? httpClient = null)
         {
             _httpClient = httpClient ?? new HttpClient();
         }
 
-        /// <inheritdoc />
         public string Endpoint => "/conversations";
 
-        /// <summary>
-        /// Executes the plugin operation for a given query.
-        /// </summary>
-        /// <param name="queryParams">Query parameters.</param>
-        /// <returns>Response in JSON format.</returns>
         public string Execute(string queryParams)
         {
             return "{\"status\":\"ConversationsPlugin active\"}";
         }
 
-        /// <summary>
-        /// Asynchronously fetches the list of conversations from the phone server and deduplicates threads.
-        /// Properly handles numeric phone numbers as well as alphanumeric sender IDs (e.g., mObywatel, Kaufland).
-        /// </summary>
-        /// <returns>A list of deduplicated ConversationDto objects.</returns>
         public async Task<List<ConversationDto>> GetConversationsFromServerAsync()
         {
             try
@@ -121,7 +97,6 @@ namespace phonetolinux.Services
                 var conversations = JsonSerializer.Deserialize<List<ConversationDto>>(json, options) 
                                     ?? new List<ConversationDto>();
 
-                // Ensure fallback value from ContactName if PhoneNumber/Address is empty
                 foreach (var conv in conversations)
                 {
                     if (string.IsNullOrWhiteSpace(conv.phoneNumber) && !string.IsNullOrWhiteSpace(conv.contactName))
@@ -130,7 +105,6 @@ namespace phonetolinux.Services
                     }
                 }
 
-                // Deduplicate conversation entries safely supporting both numeric and text senders
                 return conversations
                     .Where(c => !string.IsNullOrWhiteSpace(c.phoneNumber) || !string.IsNullOrWhiteSpace(c.contactName))
                     .DistinctBy(c => NormalizeSenderKey(c.phoneNumber))
@@ -144,20 +118,49 @@ namespace phonetolinux.Services
         }
 
         /// <summary>
-        /// Normalizes sender keys for deduplication. Extracts last 9 digits for phone numbers,
-        /// or retains lower-cased verbatim strings for alphanumeric sender IDs.
+        /// Asynchronously sends an HTTP DELETE request to the Android server to remove an SMS thread by address.
         /// </summary>
+        public async Task<bool> DeleteConversationAsync(string address)
+        {
+            if (string.IsNullOrWhiteSpace(address) || string.IsNullOrEmpty(PhoneConfig.PhoneIp))
+            {
+                Console.WriteLine("[DELETE ERROR] Missing address or phone IP configuration.");
+                return false;
+            }
+
+            try
+            {
+                string encodedAddress = Uri.EscapeDataString(address.Trim());
+                
+                // Poprawiona ścieżka kierująca bezpośrednio do nowego endpointu usuwania na Androidzie
+                string url = $"{PhoneConfig.GetBaseUrl()}/delete_conversation?address={encodedAddress}";
+                
+                Console.WriteLine($"[DELETE DEBUG] Dispatching DELETE request to URL: {url}");
+
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, url);
+                HttpResponseMessage response = await _httpClient.SendAsync(request);
+                
+                string responseBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[DELETE DEBUG] Response status: {(int)response.StatusCode}, Body: {responseBody}");
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[CONVERSATIONS ERROR] Failed to delete conversation '{address}': {ex.Message}");
+                return false;
+            }
+        }
+
         private static string NormalizeSenderKey(string identifier)
         {
             if (string.IsNullOrWhiteSpace(identifier)) return string.Empty;
 
-            // Alphanumeric Sender IDs (e.g. Kaufland, Globania, mObywatel)
             if (identifier.Any(char.IsLetter))
             {
                 return identifier.Trim().ToLowerInvariant();
             }
 
-            // Standard numeric phone numbers
             var digits = new string(identifier.Where(char.IsDigit).ToArray());
             return digits.Length > 9 ? digits.Substring(digits.Length - 9) : digits;
         }

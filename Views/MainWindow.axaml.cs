@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using phonetolinux.ViewModels;
+using phonetolinux.Models;
 
 namespace phonetolinux.Views;
 
@@ -13,6 +14,29 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+    }
+
+    /// <summary>
+    /// Triggered when the user changes the selected item in the conversations ListBox.
+    /// </summary>
+    private void ConversationsList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm && sender is ListBox listBox && listBox.SelectedItem is ChatConversationItem conversation)
+        {
+            _ = vm.SelectConversation(conversation);
+        }
+    }
+
+    /// <summary>
+    /// Triggered when the user clicks on a conversation row (even if already selected).
+    /// </summary>
+    private void Conversation_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm && sender is Control control && control.DataContext is ChatConversationItem conversation)
+        {
+            vm.SelectedConversation = conversation;
+            _ = vm.SelectConversation(conversation);
+        }
     }
 
     /// <summary>

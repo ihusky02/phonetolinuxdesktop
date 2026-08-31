@@ -8,7 +8,7 @@ namespace phonetolinux.Services
 {
     /// <summary>
     /// Plugin responsible for managing phone calls (initiating, answering, and ending calls)
-    /// via HTTP requests to the mobile device server.
+    /// via HTTP POST requests to the mobile device server.
     /// </summary>
     public class PhoneCallPlugin : IPhonePlugin
     {
@@ -40,7 +40,6 @@ namespace phonetolinux.Services
 
             try
             {
-                // Parse basic action from query parameters if needed
                 if (queryParams.Contains("action=answer", StringComparison.OrdinalIgnoreCase))
                 {
                     bool result = Task.Run(AnswerCallAsync).GetAwaiter().GetResult();
@@ -73,8 +72,9 @@ namespace phonetolinux.Services
 
             try
             {
-                string url = $"{PhoneConfig.GetBaseUrl()}/call?number={Uri.EscapeDataString(phoneNumber)}";
-                using var response = await _httpClient.GetAsync(url);
+                string url = $"{PhoneConfig.GetBaseUrl()}/call?number={Uri.EscapeDataString(phoneNumber.Trim())}";
+                using var request = new HttpRequestMessage(HttpMethod.Post, url);
+                using var response = await _httpClient.SendAsync(request);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
@@ -85,7 +85,7 @@ namespace phonetolinux.Services
         }
 
         /// <summary>
-        /// Asynchronously ends the active phone call.
+        /// Asynchronously ends or rejects an active phone call.
         /// </summary>
         /// <returns>True if the request succeeded; otherwise false.</returns>
         public async Task<bool> EndCallAsync()
@@ -95,8 +95,9 @@ namespace phonetolinux.Services
 
             try
             {
-                string url = $"{PhoneConfig.GetBaseUrl()}/endcall";
-                using var response = await _httpClient.GetAsync(url);
+                string url = $"{PhoneConfig.GetBaseUrl()}/call?action=end";
+                using var request = new HttpRequestMessage(HttpMethod.Post, url);
+                using var response = await _httpClient.SendAsync(request);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
@@ -117,8 +118,9 @@ namespace phonetolinux.Services
 
             try
             {
-                string url = $"{PhoneConfig.GetBaseUrl()}/answercall";
-                using var response = await _httpClient.GetAsync(url);
+                string url = $"{PhoneConfig.GetBaseUrl()}/call?action=answer";
+                using var request = new HttpRequestMessage(HttpMethod.Post, url);
+                using var response = await _httpClient.SendAsync(request);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)

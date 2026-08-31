@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using phonetolinux.Services;
@@ -25,6 +26,8 @@ namespace phonetolinux.ViewModels
         private readonly ContactsPlugin _contactsPlugin;
         private readonly SmsPlugin _smsPlugin;
         private readonly ConversationsPlugin _conversationsPlugin;
+        private readonly PhoneCallPlugin _phoneCallPlugin;
+        private readonly LinuxNotificationPlugin _notificationPlugin;
         private readonly string _storageDirectory;
         private PairingListenerService? _pairingListener;
 
@@ -79,6 +82,8 @@ namespace phonetolinux.ViewModels
             _contactsPlugin = new ContactsPlugin(SharedHttpClient);
             _smsPlugin = new SmsPlugin(SharedHttpClient);
             _conversationsPlugin = new ConversationsPlugin(SharedHttpClient);
+            _phoneCallPlugin = new PhoneCallPlugin(SharedHttpClient);
+            _notificationPlugin = new LinuxNotificationPlugin();
             
             _storageDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "phonetolinux");
             if (!Directory.Exists(_storageDirectory)) Directory.CreateDirectory(_storageDirectory);
@@ -112,6 +117,78 @@ namespace phonetolinux.ViewModels
                 SelectedTabIndex = 3;
                 _pairingListener = new PairingListenerService(this);
                 _pairingListener.StartListening(5000);
+            }
+        }
+
+        /// <summary>
+        /// Processes real-time incoming SSE stream payloads received from Android.
+        /// Handles incoming SMS notifications, incoming voice calls, and call termination events.
+        /// </summary>
+        public void ProcessSseMessage(string jsonMessage)
+        {
+            try
+            {
+                using var json = JsonDocument.Parse(jsonMessage);
+                if (json.RootElement.TryGetProperty("event", out var evt))
+                {
+                    string eventName = evt.GetString() ?? "";
+
+                    switch (eventName)
+                    {
+                        case "incoming_sms":
+                            string sender = json.RootElement.GetProperty("sender").GetString() ?? "";
+                            string message = json.RootElement.GetProperty("message").GetString() ?? "";
+                            
+                            _notificationPlugin.ShowNotification(
+                                title: $"SMS od: {sender}",
+                                message: message,
+                                icon: "mail-unread",
+                                urgency: "normal"
+                            );
+
+                            Dispatcher.UIThread.Post(() =>
+                            {
+                                if (PhoneNumber == sender || ContactName == sender)
+                                {
+                                    MessagesList.Add(new ChatMessageItem { Text = message, IsOutgoing = false });
+                                }
+                                _ = LoadConversationsAsync();
+                            });
+                            break;
+
+                        case "incoming_call":
+                            string rawNumber = json.RootElement.GetProperty("number").GetString() ?? "Unknown";
+                            string displayName = ResolveContactName(rawNumber, null);
+
+                            _notificationPlugin.ShowNotification(
+                                title: "Połączenie przychodzące",
+                                message: $"{displayName} ({rawNumber})",
+                                icon: "call-start",
+                                urgency: "critical"
+                            );
+
+                            Dispatcher.UIThread.Post(() =>
+                            {
+                                PhoneNumber = rawNumber;
+                                ContactName = displayName;
+                                IsIncomingCall = true;
+                                IsInCall = true;
+                            });
+                            break;
+
+                        case "call_ended":
+                            Dispatcher.UIThread.Post(() =>
+                            {
+                                IsInCall = false;
+                                IsIncomingCall = false;
+                            });
+                            break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SSE PARSE ERROR] {ex.Message}");
             }
         }
 
@@ -207,14 +284,15 @@ namespace phonetolinux.ViewModels
         }
 
         [RelayCommand]
-        public void CallSpecificNumber(string phoneNumber)
+        public async Task CallSpecificNumber(string phoneNumber)
         {
             if (!string.IsNullOrEmpty(phoneNumber))
             {
                 PhoneNumber = phoneNumber;
+                ContactName = ResolveContactName(phoneNumber, null);
                 IsInCall = true;
                 IsIncomingCall = false;
-                ContactName = ResolveContactName(phoneNumber, null);
+                await _phoneCallPlugin.StartCallAsync(phoneNumber);
             }
         }
 
@@ -385,27 +463,30 @@ namespace phonetolinux.ViewModels
         }
 
         [RelayCommand]
-        public void Call()
+        public async Task Call()
         {
             if (!string.IsNullOrEmpty(PhoneNumber))
             {
                 IsInCall = true;
                 IsIncomingCall = false;
-                ContactName = "Dialing...";
+                ContactName = ResolveContactName(PhoneNumber, null);
+                await _phoneCallPlugin.StartCallAsync(PhoneNumber);
             }
         }
 
         [RelayCommand]
-        public void EndCall()
+        public async Task EndCall()
         {
             IsInCall = false;
             IsIncomingCall = false;
+            await _phoneCallPlugin.EndCallAsync();
         }
 
         [RelayCommand]
-        public void AnswerCall()
+        public async Task AnswerCall()
         {
             IsIncomingCall = false;
+            await _phoneCallPlugin.AnswerCallAsync();
         }
     }
 }

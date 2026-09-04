@@ -36,23 +36,30 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private string _phoneNumber = "";
 
-    [ObservableProperty]
-    private bool _isInCall = false;
+        private readonly SecureStorageService _storageService;
+        private readonly ContactsPlugin _contactsPlugin;
+        private readonly SmsPlugin _smsPlugin;
+        private readonly ConversationsPlugin _conversationsPlugin;
+        private readonly PhoneCallPlugin _phoneCallPlugin;
+        private readonly PhoneSsePlugin _phoneSsePlugin; 
+        private readonly LinuxNotificationPlugin _notificationPlugin;
+        private readonly string _storageDirectory;
+        private PairingListenerService? _pairingListener;
 
-    [ObservableProperty]
-    private bool _isIncomingCall = false;
+        [ObservableProperty]
+        private bool _isPaired;
 
     [ObservableProperty]
     private string _contactName = "Wybierz kontakt";
 
-    [ObservableProperty]
-    private int _selectedTabIndex = 0;
+        [ObservableProperty]
+        private PairingViewModel _pairing;
 
-    [ObservableProperty]
-    private string _searchQuery = "";
+        [ObservableProperty]
+        private DialerViewModel _dialer = new();
 
-    [ObservableProperty]
-    private bool _isSearchActive = false;
+        [ObservableProperty]
+        private ChatViewModel _activeChat = new();
 
     [ObservableProperty]
     private string _currentMessageText = "";
@@ -335,12 +342,39 @@ public partial class MainViewModel : ViewModelBase
             ? _allContacts
             : _allContacts.Where(c => !string.IsNullOrEmpty(c.Name) && c.Name.ToLower().Contains(query)).ToList();
 
-        ContactsList.Clear();
-        foreach (var c in filtered)
+        [ObservableProperty]
+        private string _currentMessageText = "";
+
+        [ObservableProperty]
+        private ObservableCollection<ContactItem> _contactsList = new();
+
+        [ObservableProperty]
+        private ObservableCollection<ChatConversationItem> _recentConversations = new();
+
+        [ObservableProperty]
+        private ObservableCollection<ChatMessageItem> _messagesList = new();
+
+        public MainViewModel()
         {
-            ContactsList.Add(c);
+            _storageService = new SecureStorageService(MasterKey);
+            _contactsPlugin = new ContactsPlugin(SharedHttpClient);
+            _smsPlugin = new SmsPlugin(SharedHttpClient);
+            _conversationsPlugin = new ConversationsPlugin(SharedHttpClient);
+            _phoneCallPlugin = new PhoneCallPlugin(SharedHttpClient);
+            _phoneSsePlugin = new PhoneSsePlugin(); 
+            _notificationPlugin = new LinuxNotificationPlugin();
+            
+            _storageDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "phonetolinux");
+            if (!Directory.Exists(_storageDirectory)) Directory.CreateDirectory(_storageDirectory);
+
+            // Subscribe to SSE plugin events
+            _phoneSsePlugin.OnCallReceived += HandleIncomingCall;
+            _phoneSsePlugin.OnCallEnded += HandleCallEnded;
+            _phoneSsePlugin.OnSmsReceived += HandleIncomingSms;
+
+            _pairing = new PairingViewModel();
+            CheckPairingStatus();
         }
-    }
 
     public async void AddIncomingSms(string sender, string text)
     {
@@ -403,7 +437,6 @@ public partial class MainViewModel : ViewModelBase
             IsInCall = true;
             IsIncomingCall = false;
         }
-    }
 
     [RelayCommand]
     private async Task EndCall()
@@ -447,7 +480,6 @@ public partial class MainViewModel : ViewModelBase
             }
             SelectedTabIndex = 2; // Przełącz na zakładkę czatu
         }
-    }
 
     [RelayCommand]
     private async Task SendMessage()
@@ -476,7 +508,6 @@ public partial class MainViewModel : ViewModelBase
         {
             Console.WriteLine("Nie udało się wysłać wiadomości SMS.");
         }
-    }
 
     private void ResetCallState()
     {

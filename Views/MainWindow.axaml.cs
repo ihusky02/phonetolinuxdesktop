@@ -8,6 +8,9 @@ using System;
 
 namespace phonetolinux.Views;
 
+/// <summary>
+/// Code-behind logic for the main application window.
+/// </summary>
 public partial class MainWindow : Window
 {
     private readonly PhonetoLinuxCall _callService;
@@ -104,7 +107,7 @@ public partial class MainWindow : Window
 
     protected override void OnTextInput(TextInputEventArgs e)
     {
-        if (DataContext is MainViewModel vm && vm.SelectedTabIndex == 1)
+        if (DataContext is MainViewModel vm && sender is ListBox listBox && listBox.SelectedItem is ChatConversationItem conversation)
         {
             if (!string.IsNullOrEmpty(e.Text) && char.IsLetterOrDigit(e.Text[0]))
             {
@@ -113,8 +116,6 @@ public partial class MainWindow : Window
                 e.Handled = true;
             }
         }
-        
-        base.OnTextInput(e);
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
@@ -129,15 +130,14 @@ public partial class MainWindow : Window
 
         if (DataContext is MainViewModel vm && vm.SelectedTabIndex == 1)
         {
-            if (e.Key == Key.Back && vm.SearchQuery.Length > 0)
+            if (DataContext is MainViewModel vm && vm.SelectedTabIndex == 0)
             {
-                vm.SearchQuery = vm.SearchQuery.Substring(0, vm.SearchQuery.Length - 1);
-                vm.FilterContacts();
-                e.Handled = true;
+                if (vm.CallCommand.CanExecute(null))
+                {
+                    vm.CallCommand.Execute(null);
+                }
             }
         }
-        
-        base.OnKeyDown(e);
     }
 
     private void OpenDebugWindow()

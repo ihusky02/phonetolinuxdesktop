@@ -14,6 +14,7 @@ using CommunityToolkit.Mvvm.Input;
 using phonetolinux.Services;
 using phonetolinux.Models;
 using PhoneToLinux.Security;
+using phonetolinux.Plugins; 
 
 namespace phonetolinux.ViewModels
 {
@@ -27,6 +28,7 @@ namespace phonetolinux.ViewModels
         private readonly SmsPlugin _smsPlugin;
         private readonly ConversationsPlugin _conversationsPlugin;
         private readonly PhoneCallPlugin _phoneCallPlugin;
+        private readonly PhoneSsePlugin _phoneSsePlugin; 
         private readonly LinuxNotificationPlugin _notificationPlugin;
         private readonly string _storageDirectory;
         private PairingListenerService? _pairingListener;
@@ -83,10 +85,16 @@ namespace phonetolinux.ViewModels
             _smsPlugin = new SmsPlugin(SharedHttpClient);
             _conversationsPlugin = new ConversationsPlugin(SharedHttpClient);
             _phoneCallPlugin = new PhoneCallPlugin(SharedHttpClient);
+            _phoneSsePlugin = new PhoneSsePlugin(); 
             _notificationPlugin = new LinuxNotificationPlugin();
             
             _storageDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "phonetolinux");
             if (!Directory.Exists(_storageDirectory)) Directory.CreateDirectory(_storageDirectory);
+
+            // Subscribe to SSE plugin events
+            _phoneSsePlugin.OnCallReceived += HandleIncomingCall;
+            _phoneSsePlugin.OnCallEnded += HandleCallEnded;
+            _phoneSsePlugin.OnSmsReceived += HandleIncomingSms;
 
             _pairing = new PairingViewModel();
             CheckPairingStatus();
@@ -103,14 +111,24 @@ namespace phonetolinux.ViewModels
                 try
                 {
                     string decryptedPayload = _storageService.ReadAndDecrypt(pairedFilePath);
-                    var jsonDoc = JsonDocument.Parse(decryptedPayload);
+                    using var jsonDoc = JsonDocument.Parse(decryptedPayload);
                     if (jsonDoc.RootElement.TryGetProperty("phoneIp", out var ipProp))
                     {
-                        string savedIp = ipProp.GetString();
-                        if (!string.IsNullOrEmpty(savedIp)) PhoneConfig.SaveIp(savedIp);
+                        string savedIp = ipProp.GetString() ?? "";
+                        if (!string.IsNullOrEmpty(savedIp))
+                        {
+                            Console.WriteLine($"[SSE START] Starting listener on IP: {savedIp}");
+                            
+                            // Initialize the SSE plugin directly based on the IP loaded from the secure file
+                            _phoneSsePlugin.Initialize(savedIp, 5000); 
+                        }
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    // Log the error instead of swallowing it silently
+                    Console.WriteLine($"[SSE ERROR] Error during SSE plugin startup: {ex.Message}");
+                }
             }
             else
             {
@@ -120,77 +138,67 @@ namespace phonetolinux.ViewModels
             }
         }
 
-        /// <summary>
-        /// Processes real-time incoming SSE stream payloads received from Android.
-        /// Handles incoming SMS notifications, incoming voice calls, and call termination events.
-        /// </summary>
-        public void ProcessSseMessage(string jsonMessage)
+        // --- SSE Event Handlers ---
+
+        private void HandleIncomingCall(string number, string sender)
         {
-            try
+            // Fallback: if number is empty/unknown, try to check sender argument
+            string rawNumber = !string.IsNullOrEmpty(number) && number != "Unknown" ? number : sender;
+            if (string.IsNullOrEmpty(rawNumber)) rawNumber = "Unknown";
+
+            // Resolve contact name using the raw phone number
+            string displayName = ResolveContactName(rawNumber, null);
+
+            Console.WriteLine($"[TEST] Incoming call detected from: '{rawNumber}', Resolved Name: '{displayName}'");
+
+            _notificationPlugin.ShowNotification(
+                title: "Incoming Call",
+                message: $"{displayName} ({rawNumber})",
+                icon: "call-start",
+                urgency: "critical"
+            );
+
+            // Dispatch to UI thread to update the view and force overlay open
+            Dispatcher.UIThread.Post(() =>
             {
-                using var json = JsonDocument.Parse(jsonMessage);
-                if (json.RootElement.TryGetProperty("event", out var evt))
-                {
-                    string eventName = evt.GetString() ?? "";
-
-                    switch (eventName)
-                    {
-                        case "incoming_sms":
-                            string sender = json.RootElement.GetProperty("sender").GetString() ?? "";
-                            string message = json.RootElement.GetProperty("message").GetString() ?? "";
-                            
-                            _notificationPlugin.ShowNotification(
-                                title: $"SMS od: {sender}",
-                                message: message,
-                                icon: "mail-unread",
-                                urgency: "normal"
-                            );
-
-                            Dispatcher.UIThread.Post(() =>
-                            {
-                                if (PhoneNumber == sender || ContactName == sender)
-                                {
-                                    MessagesList.Add(new ChatMessageItem { Text = message, IsOutgoing = false });
-                                }
-                                _ = LoadConversationsAsync();
-                            });
-                            break;
-
-                        case "incoming_call":
-                            string rawNumber = json.RootElement.GetProperty("number").GetString() ?? "Unknown";
-                            string displayName = ResolveContactName(rawNumber, null);
-
-                            _notificationPlugin.ShowNotification(
-                                title: "Połączenie przychodzące",
-                                message: $"{displayName} ({rawNumber})",
-                                icon: "call-start",
-                                urgency: "critical"
-                            );
-
-                            Dispatcher.UIThread.Post(() =>
-                            {
-                                PhoneNumber = rawNumber;
-                                ContactName = displayName;
-                                IsIncomingCall = true;
-                                IsInCall = true;
-                            });
-                            break;
-
-                        case "call_ended":
-                            Dispatcher.UIThread.Post(() =>
-                            {
-                                IsInCall = false;
-                                IsIncomingCall = false;
-                            });
-                            break;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[SSE PARSE ERROR] {ex.Message}");
-            }
+                PhoneNumber = rawNumber;
+                ContactName = displayName;
+                IsIncomingCall = true;
+                IsInCall = true;
+            });
         }
+
+        private void HandleCallEnded()
+        {
+            Console.WriteLine("[TEST] Call ended event received.");
+            
+            Dispatcher.UIThread.Post(() =>
+            {
+                IsInCall = false;
+                IsIncomingCall = false;
+            });
+        }
+
+        private void HandleIncomingSms(string sender, string message)
+        {
+            _notificationPlugin.ShowNotification(
+                title: $"SMS from: {sender}",
+                message: message,
+                icon: "mail-unread",
+                urgency: "normal"
+            );
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (PhoneNumber == sender || ContactName == sender)
+                {
+                    MessagesList.Add(new ChatMessageItem { Text = message, IsOutgoing = false });
+                }
+                _ = LoadConversationsAsync();
+            });
+        }
+
+        // --------------------------
 
         [RelayCommand]
         public void SelectTab(object? parameter)
@@ -441,6 +449,30 @@ namespace phonetolinux.ViewModels
         {
             IsPaired = true;
             SelectedTabIndex = 0;
+            
+            // Read the IP directly from the secured pairing file right after pairing
+            string pairedFilePath = Path.Combine(_storageDirectory, "paired_device.dat");
+            if (File.Exists(pairedFilePath))
+            {
+                try
+                {
+                    string decryptedPayload = _storageService.ReadAndDecrypt(pairedFilePath);
+                    using var jsonDoc = JsonDocument.Parse(decryptedPayload);
+                    
+                    if (jsonDoc.RootElement.TryGetProperty("phoneIp", out var ipProp))
+                    {
+                        string? savedIp = ipProp.GetString();
+                        if (!string.IsNullOrEmpty(savedIp))
+                        {
+                            _phoneSsePlugin.Initialize(savedIp, 5000);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[PAIRING ERROR] Could not read IP for SSE initialization: {ex.Message}");
+                }
+            }
         }
 
         [RelayCommand]
@@ -450,6 +482,7 @@ namespace phonetolinux.ViewModels
             if (File.Exists(pFile)) File.Delete(pFile);
             IsPaired = false;
             SelectedTabIndex = 3;
+            _phoneSsePlugin.Shutdown(); // Stop listening when unpaired
             Pairing.GeneratePairingPinCode();
         }
 
@@ -479,14 +512,24 @@ namespace phonetolinux.ViewModels
         {
             IsInCall = false;
             IsIncomingCall = false;
-            await _phoneCallPlugin.EndCallAsync();
+            
+            // Depending on the state, we can either end an active call or reject an incoming one
+            if (IsIncomingCall)
+            {
+                await _phoneSsePlugin.RejectCallAsync();
+            }
+            else
+            {
+                await _phoneCallPlugin.EndCallAsync();
+            }
         }
 
         [RelayCommand]
         public async Task AnswerCall()
         {
             IsIncomingCall = false;
-            await _phoneCallPlugin.AnswerCallAsync();
+            // Use the SSE plugin to send the answer command to Android
+            await _phoneSsePlugin.AnswerCallAsync(); 
         }
     }
 }

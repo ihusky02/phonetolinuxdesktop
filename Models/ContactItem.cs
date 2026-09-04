@@ -1,4 +1,5 @@
-namespace phonetolinux.Models;
+using CommunityToolkit.Mvvm.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace phonetolinux.Models;
 
@@ -14,7 +15,7 @@ public partial class ContactItem : ObservableObject
     [property: JsonInclude]
     private string _phoneNumber = "";
 
-    // Dodatkowe pola pomocnicze na wypadek, gdy serwer zwraca numer pod inną nazwą
+    // Additional helper fields in case the server returns the number under a different name
     [JsonInclude]
     [JsonPropertyName("number")]
     public string ServerNumber 

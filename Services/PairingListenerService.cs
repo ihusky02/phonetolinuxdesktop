@@ -110,7 +110,7 @@ namespace phonetolinux.Services
 
                 if (!string.IsNullOrWhiteSpace(payload))
                 {
-                    // Force update the JSON payload to include verified phone IP and dynamic server port
+                    // Force update the JSON payload to include verified phone IP
                     if (!string.IsNullOrEmpty(phoneIp))
                     {
                         try
@@ -119,11 +119,6 @@ namespace phonetolinux.Services
                             if (jsonNode != null)
                             {
                                 jsonNode["phoneIp"] = phoneIp;
-                                
-                                // Extract and save the active port sent from Android
-                                int phonePort = jsonNode["serverPort"]?.GetValue<int>() ?? 5000;
-                                PhoneConfig.SavePort(phonePort);
-
                                 payload = jsonNode.ToJsonString();
                             }
                         }
@@ -131,11 +126,9 @@ namespace phonetolinux.Services
                         {
                             Console.WriteLine($"[PairingListener] Error parsing dynamic fields: {ex.Message}");
                         }
-
-                        PhoneConfig.SaveIp(phoneIp);
                     }
 
-                    // Encrypt and save paired device session data using AES-256
+                    // Encrypt and save paired device session data using AES-256 (contains IP, port, and session tokens)
                     string targetPath = Path.Combine(_storageDirectory, "paired_device.dat");
                     _storageService.EncryptAndWrite(targetPath, payload);
 

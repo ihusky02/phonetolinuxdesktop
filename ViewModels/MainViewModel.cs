@@ -3,38 +3,25 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
-using phonetolinux.Models;
-using phonetolinux.Services;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Avalonia.Threading;
+using phonetolinux.Services;
+using phonetolinux.Models;
+using PhoneToLinux.Security;
+using phonetolinux.Plugins; 
 
-namespace phonetolinux.ViewModels;
-
-public partial class ChatConversationItem : ObservableObject
+namespace phonetolinux.ViewModels
 {
-    [ObservableProperty]
-    private string _contactName = "";
-
-    [ObservableProperty]
-    private string _phoneNumber = ""; // Dodane pole na prawdziwy numer telefonu
-
-    [ObservableProperty]
-    private string _lastMessage = "";
-}
-
-public partial class MainViewModel : ViewModelBase
-{
-    private readonly PhonetoLinuxCall _callService;
-    private readonly PhonetoLinuxSMS _smsService;
-    private readonly PhonetoLinuxContacts _contactsService;
-    private readonly phonetolinuxchathistory _historyService;
-    private readonly phonetolinuxconversations _conversationsService;
-    private readonly phonetolinuxsmshistory _smsHistoryService;
-
-    [ObservableProperty]
-    private string _phoneNumber = "";
+    public partial class MainViewModel : ObservableObject
+    {
+        private static readonly byte[] MasterKey = SHA256.HashData(Encoding.UTF8.GetBytes("PhoneToLinux_MasterKey2026_Salt"));
+        private static readonly HttpClient SharedHttpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
 
         private readonly SecureStorageService _storageService;
         private readonly ContactsPlugin _contactsPlugin;
@@ -49,8 +36,8 @@ public partial class MainViewModel : ViewModelBase
         [ObservableProperty]
         private bool _isPaired;
 
-    [ObservableProperty]
-    private string _contactName = "Wybierz kontakt";
+        [ObservableProperty]
+        private int _selectedTabIndex;
 
         [ObservableProperty]
         private PairingViewModel _pairing;
@@ -61,286 +48,23 @@ public partial class MainViewModel : ViewModelBase
         [ObservableProperty]
         private ChatViewModel _activeChat = new();
 
-    [ObservableProperty]
-    private string _currentMessageText = "";
+        [ObservableProperty]
+        private string _currentTheme = "Dark";
 
-    [ObservableProperty]
-    private ObservableCollection<ContactItem> _contactsList = new();
+        [ObservableProperty]
+        private ChatConversationItem? _selectedConversation;
 
-    [ObservableProperty]
-    private ObservableCollection<ChatMessageItem> _messagesList = new();
+        [ObservableProperty]
+        private bool _isInCall = false;
 
-    // Lista ostatnich konwersacji (maksymalnie 6 elementów z przewijaniem)
-    [ObservableProperty]
-    private ObservableCollection<ChatConversationItem> _recentConversations = new();
+        [ObservableProperty]
+        private bool _isIncomingCall = false;
 
-    [ObservableProperty]
-    private ChatConversationItem? _selectedConversation;
+        [ObservableProperty]
+        private string _contactName = "Unknown";
 
-    private List<ContactItem> _allContacts = new();
-
-    public MainViewModel()
-    {
-        _callService = new PhonetoLinuxCall();
-        _smsService = new PhonetoLinuxSMS();
-        _contactsService = new PhonetoLinuxContacts();
-        _historyService = new phonetolinuxchathistory();
-        _conversationsService = new phonetolinuxconversations();
-        _smsHistoryService = new phonetolinuxsmshistory();
-
-        IsInCall = false;
-        IsIncomingCall = false;
-
-        _ = LoadContactsFromPhoneAsync();
-        _ = LoadRecentConversationsAsync();
-    }
-
-    private async Task LoadRecentConversationsAsync()
-    {
-        try
-        {
-            var phoneConversations = await _conversationsService.GetConversationsFromServerAsync();
-            var list = new List<ChatConversationItem>();
-
-            if (phoneConversations != null && phoneConversations.Count > 0)
-            {
-                // Zabezpieczenie przed duplikatami z telefonu (grupowanie po nazwie/numerze, ignorując wielkość liter)
-                var uniqueConversations = phoneConversations
-                    .GroupBy(c => (c.contactName ?? c.phoneNumber)?.Trim(), StringComparer.OrdinalIgnoreCase)
-                    .Select(g => g.First());
-
-                foreach (var conv in uniqueConversations)
-                {
-                    list.Add(new ChatConversationItem 
-                    { 
-                        ContactName = string.IsNullOrEmpty(conv.contactName) ? conv.phoneNumber : conv.contactName, 
-                        PhoneNumber = conv.phoneNumber ?? "", 
-                        LastMessage = conv.lastMessage 
-                    });
-                }
-            }
-            else
-            {
-                // Fallback do lokalnej historii JSON, jeśli telefon jest niedostępny
-                string homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                string storageDir = Path.Combine(homeDir, ".phonetolinux", "chats");
-                if (Directory.Exists(storageDir))
-                {
-                    var files = Directory.GetFiles(storageDir, "*.json");
-                    foreach (var file in files)
-                    {
-                        string name = Path.GetFileNameWithoutExtension(file);
-                        list.Add(new ChatConversationItem { ContactName = name, PhoneNumber = name, LastMessage = "Historia zapisana" });
-                    }
-                }
-            }
-
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                RecentConversations.Clear();
-                foreach (var item in list.Take(6)) // Maksymalnie 6 elementów
-                {
-                    RecentConversations.Add(item);
-                }
-            });
-        }
-        catch (Exception) { }
-    }
-
-    partial void OnSelectedConversationChanged(ChatConversationItem? value)
-    {
-        if (value != null)
-        {
-            ContactName = string.IsNullOrEmpty(value.ContactName) ? value.PhoneNumber : value.ContactName;
-            
-            // Jeśli obiekt konwersacji ma bezpośrednio zapisany numer telefonu, bierzemy go w pierwszej kolejności!
-            if (!string.IsNullOrEmpty(value.PhoneNumber))
-            {
-                PhoneNumber = value.PhoneNumber;
-            }
-            else
-            {
-                // Próbujemy dopasować po nazwie w kontaktach (ignorując wielkość liter i spacje)
-                var contact = _allContacts.FirstOrDefault(x => 
-                    string.Equals(x.Name?.Trim(), value.ContactName?.Trim(), StringComparison.OrdinalIgnoreCase));
-
-                if (contact != null && !string.IsNullOrEmpty(contact.PhoneNumber))
-                {
-                    PhoneNumber = contact.PhoneNumber;
-                }
-                else
-                {
-                    PhoneNumber = value.ContactName;
-                }
-            }
-            
-            _ = LoadChatHistoryForContact(ContactName, PhoneNumber);
-        }
-    }
-
-    [RelayCommand]
-    private void SelectConversation(ChatConversationItem? conversation)
-    {
-        if (conversation != null)
-        {
-            SelectedConversation = conversation;
-        }
-    }
-
-    [RelayCommand]
-    private async Task DeleteChat(ChatConversationItem? conversationToRemove)
-    {
-        // Określamy, który element usuwamy (z parametru menu kontekstowego lub aktualnie zaznaczony)
-        var targetConversation = conversationToRemove ?? SelectedConversation;
-
-        if (targetConversation == null && (string.IsNullOrEmpty(ContactName) || ContactName == "Wybierz kontakt"))
-            return;
-
-        string targetName = targetConversation?.ContactName ?? ContactName;
-        string targetPhone = targetConversation?.PhoneNumber ?? PhoneNumber;
-
-        // 1. Czyszczenie widoku wiadomości w interfejsie
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            if (SelectedConversation == targetConversation || SelectedConversation == null)
-            {
-                MessagesList.Clear();
-                ContactName = "Wybierz kontakt";
-                PhoneNumber = "";
-                SelectedConversation = null;
-            }
-        });
-
-        // 2. Usunięcie lokalnego pliku historii z dysku Linuksa (telefon pozostaje nietknięty)
-        try
-        {
-            string homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            string storageDir = Path.Combine(homeDir, ".phonetolinux", "chats");
-            
-            if (Directory.Exists(storageDir))
-            {
-                var files = Directory.GetFiles(storageDir, "*.json");
-                foreach (var file in files)
-                {
-                    string fileName = Path.GetFileNameWithoutExtension(file);
-                    if (string.Equals(fileName, targetName, StringComparison.OrdinalIgnoreCase) ||
-                        (!string.IsNullOrEmpty(targetPhone) && string.Equals(fileName, targetPhone, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        File.Delete(file);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Błąd podczas usuwania lokalnego pliku historii: {ex.Message}");
-        }
-
-        // 3. Usunięcie z widocznej listy ostatnich konwersacji na pulpicie
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            if (targetConversation != null && RecentConversations.Contains(targetConversation))
-            {
-                RecentConversations.Remove(targetConversation);
-            }
-            else
-            {
-                var itemToRemove = RecentConversations.FirstOrDefault(x => 
-                    string.Equals(x.ContactName?.Trim(), targetName?.Trim(), StringComparison.OrdinalIgnoreCase));
-                if (itemToRemove != null)
-                {
-                    RecentConversations.Remove(itemToRemove);
-                }
-            }
-        });
-    }
-
-    private async Task LoadChatHistoryForContact(string contactName, string phoneNumber = "")
-    {
-        // 0. Natychmiastowe wyczyszczenie widoku w wątku UI przy zmianie konwersacji
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            MessagesList.Clear();
-        });
-
-        List<ChatMessageItem> history = null;
-
-        // 1. Najpierw próbujemy pobrać pełną historię bezpośrednio z telefonu przez sieć
-        if (!string.IsNullOrEmpty(phoneNumber))
-        {
-            history = await _smsHistoryService.GetChatHistoryFromServerAsync(phoneNumber);
-        }
-
-        // 2. Jeśli telefon jest niedostępny lub brak danych, sięgamy do lokalnego pliku JSON na dysku (fallback)
-        if (history == null || history.Count == 0)
-        {
-            history = await _historyService.LoadHistoryAsync(contactName);
-            if ((history == null || history.Count == 0) && !string.IsNullOrEmpty(phoneNumber))
-            {
-                history = await _historyService.LoadHistoryAsync(phoneNumber);
-            }
-        }
-
-        // Wypełnienie nowymi wiadomościami
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            MessagesList.Clear();
-            if (history != null)
-            {
-                foreach (var msg in history)
-                {
-                    MessagesList.Add(msg);
-                }
-            }
-        });
-    }
-
-    private async Task LoadContactsFromPhoneAsync()
-    {
-        try
-        {
-            var contacts = await _contactsService.GetContactsAsync();
-            
-            var tempList = new List<ContactItem>();
-            foreach (var c in contacts)
-            {
-                if (!string.IsNullOrEmpty(c.Name))
-                {
-                    string cleanPhone = !string.IsNullOrEmpty(c.PhoneNumber)
-                        ? new string(c.PhoneNumber.Where(ch => char.IsDigit(ch) || ch == '+').ToArray())
-                        : "Brak numeru";
-                    
-                    if (!tempList.Any(x => x.Name == c.Name))
-                    {
-                        tempList.Add(new ContactItem { Name = c.Name, PhoneNumber = cleanPhone });
-                    }
-                }
-            }
-
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                _allContacts.Clear();
-                foreach (var item in tempList)
-                {
-                    _allContacts.Add(item);
-                }
-                FilterContacts();
-            });
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Błąd pobierania kontaktów z telefonu: {ex.Message}");
-        }
-    }
-
-    public void FilterContacts()
-    {
-        IsSearchActive = !string.IsNullOrEmpty(SearchQuery);
-        var query = SearchQuery?.ToLower() ?? "";
-
-        var filtered = string.IsNullOrEmpty(query)
-            ? _allContacts
-            : _allContacts.Where(c => !string.IsNullOrEmpty(c.Name) && c.Name.ToLower().Contains(query)).ToList();
+        [ObservableProperty]
+        private string _phoneNumber = "";
 
         [ObservableProperty]
         private string _currentMessageText = "";
@@ -376,150 +100,436 @@ public partial class MainViewModel : ViewModelBase
             CheckPairingStatus();
         }
 
-    public async void AddIncomingSms(string sender, string text)
-    {
-        ContactName = sender;
-        var newMsg = new ChatMessageItem 
-        { 
-            Text = text, 
-            IsOutgoing = false 
-        };
-        
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        public void CheckPairingStatus()
         {
-            MessagesList.Add(newMsg);
-            UpdateRecentConversations(sender, text);
-        });
+            string pairedFilePath = Path.Combine(_storageDirectory, "paired_device.dat");
+            IsPaired = File.Exists(pairedFilePath);
 
-        await _historyService.SaveHistoryAsync(sender, MessagesList);
-    }
-
-    private void UpdateRecentConversations(string sender, string lastMsg)
-    {
-        // Sprawdzamy, czy konwersacja już istnieje na liście (ignorując wielkość liter)
-        var existing = RecentConversations.FirstOrDefault(x => 
-            string.Equals(x.ContactName?.Trim(), sender?.Trim(), StringComparison.OrdinalIgnoreCase));
-
-        if (existing != null)
-        {
-            existing.LastMessage = lastMsg;
-            int index = RecentConversations.IndexOf(existing);
-            if (index > 0)
+            if (IsPaired)
             {
-                RecentConversations.Move(index, 0);
+                SelectedTabIndex = 0;
+                try
+                {
+                    string decryptedPayload = _storageService.ReadAndDecrypt(pairedFilePath);
+                    using var jsonDoc = JsonDocument.Parse(decryptedPayload);
+                    if (jsonDoc.RootElement.TryGetProperty("phoneIp", out var ipProp))
+                    {
+                        string savedIp = ipProp.GetString() ?? "";
+                        if (!string.IsNullOrEmpty(savedIp))
+                        {
+                            Console.WriteLine($"[SSE START] Starting listener on IP: {savedIp}");
+                            
+                            // Initialize the SSE plugin directly based on the IP loaded from the secure file
+                            _phoneSsePlugin.Initialize(savedIp, 5000); 
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log the error instead of swallowing it silently
+                    Console.WriteLine($"[SSE ERROR] Error during SSE plugin startup: {ex.Message}");
+                }
+            }
+            else
+            {
+                SelectedTabIndex = 3;
+                _pairingListener = new PairingListenerService(this);
+                _pairingListener.StartListening(5000);
             }
         }
-        else
+
+        // --- SSE Event Handlers ---
+
+        private void HandleIncomingCall(string number, string sender)
         {
-            RecentConversations.Insert(0, new ChatConversationItem { ContactName = sender, PhoneNumber = sender, LastMessage = lastMsg });
-            if (RecentConversations.Count > 6) RecentConversations.RemoveAt(6);
+            // Fallback: if number is empty/unknown, try to check sender argument
+            string rawNumber = !string.IsNullOrEmpty(number) && number != "Unknown" ? number : sender;
+            if (string.IsNullOrEmpty(rawNumber)) rawNumber = "Unknown";
+
+            // Resolve contact name using the raw phone number
+            string displayName = ResolveContactName(rawNumber, null);
+
+            Console.WriteLine($"[TEST] Incoming call detected from: '{rawNumber}', Resolved Name: '{displayName}'");
+
+            _notificationPlugin.ShowNotification(
+                title: "Incoming Call",
+                message: $"{displayName} ({rawNumber})",
+                icon: "call-start",
+                urgency: "critical"
+            );
+
+            // Dispatch to UI thread to update the view and force overlay open
+            Dispatcher.UIThread.Post(() =>
+            {
+                PhoneNumber = rawNumber;
+                ContactName = displayName;
+                IsIncomingCall = true;
+                IsInCall = true;
+            });
         }
-    }
 
-    [RelayCommand]
-    private void AppendNumber(string number) => PhoneNumber += number;
-
-    [RelayCommand]
-    private void Backspace()
-    {
-        if (PhoneNumber.Length > 0)
-            PhoneNumber = PhoneNumber.Substring(0, PhoneNumber.Length - 1);
-    }
-
-    [RelayCommand]
-    private async Task Call()
-    {
-        if (string.IsNullOrEmpty(PhoneNumber)) return;
-
-        bool success = await _callService.StartCallAsync(PhoneNumber);
-        if (success)
+        private void HandleCallEnded()
         {
-            IsInCall = true;
+            Console.WriteLine("[TEST] Call ended event received.");
+            
+            Dispatcher.UIThread.Post(() =>
+            {
+                IsInCall = false;
+                IsIncomingCall = false;
+            });
+        }
+
+        private void HandleIncomingSms(string sender, string message)
+        {
+            _notificationPlugin.ShowNotification(
+                title: $"SMS from: {sender}",
+                message: message,
+                icon: "mail-unread",
+                urgency: "normal"
+            );
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (PhoneNumber == sender || ContactName == sender)
+                {
+                    MessagesList.Add(new ChatMessageItem { Text = message, IsOutgoing = false });
+                }
+                _ = LoadConversationsAsync();
+            });
+        }
+
+        // --------------------------
+
+        [RelayCommand]
+        public void SelectTab(object? parameter)
+        {
+            if (parameter != null && int.TryParse(parameter.ToString(), out int index))
+            {
+                SelectedTabIndex = index;
+                if (index == 1) _ = LoadContactsAsync();
+                else if (index == 2) _ = LoadConversationsAsync();
+            }
+        }
+
+        public async Task LoadContactsAsync()
+        {
+            try
+            {
+                var fetchedContacts = await _contactsPlugin.GetContactsAsync();
+                if (fetchedContacts != null && fetchedContacts.Count > 0)
+                {
+                    ContactsList.Clear();
+                    foreach (var contact in fetchedContacts) ContactsList.Add(contact);
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[CONTACTS ERROR] {ex.Message}");
+            }
+        }
+
+        public async Task LoadConversationsAsync()
+        {
+            try
+            {
+                if (ContactsList.Count == 0) await LoadContactsAsync();
+
+                var fetchedThreads = await _conversationsPlugin.GetConversationsFromServerAsync();
+                if (fetchedThreads != null && fetchedThreads.Count > 0)
+                {
+                    RecentConversations.Clear();
+                    foreach (var thread in fetchedThreads)
+                    {
+                        string rawAddr = !string.IsNullOrWhiteSpace(thread.PhoneNumber) ? thread.PhoneNumber : thread.ContactName ?? "";
+                        string displayName = ResolveContactName(rawAddr, thread.ContactName);
+                        RecentConversations.Add(new ChatConversationItem { ContactName = displayName, LastMessage = thread.lastMessage ?? "...", PhoneNumber = rawAddr });
+                    }
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[CONVERSATIONS ERROR] {ex.Message}");
+            }
+        }
+
+        private string ResolveContactName(string rawPhoneNumber, string? serverContactName)
+        {
+            if (!string.IsNullOrWhiteSpace(serverContactName) && serverContactName != rawPhoneNumber && !serverContactName.StartsWith("+")) return serverContactName;
+            if (string.IsNullOrWhiteSpace(rawPhoneNumber)) return "Unknown Contact";
+            if (rawPhoneNumber.Any(char.IsLetter)) return rawPhoneNumber;
+
+            string cleanTarget = GetLast9Digits(rawPhoneNumber);
+            if (string.IsNullOrEmpty(cleanTarget)) return rawPhoneNumber;
+
+            foreach (var contact in ContactsList)
+            {
+                if (string.IsNullOrWhiteSpace(contact.PhoneNumber)) continue;
+                string cleanContactNum = GetLast9Digits(contact.PhoneNumber);
+                if (cleanTarget == cleanContactNum && !string.IsNullOrWhiteSpace(contact.Name)) return contact.Name;
+            }
+            return rawPhoneNumber;
+        }
+
+        private static string GetLast9Digits(string number)
+        {
+            if (string.IsNullOrWhiteSpace(number)) return string.Empty;
+            string digits = new string(number.Where(char.IsDigit).ToArray());
+            return digits.Length > 9 ? digits.Substring(digits.Length - 9) : digits;
+        }
+
+        [RelayCommand]
+        public void SendMessageToContact(string phoneNumber)
+        {
+            if (!string.IsNullOrEmpty(phoneNumber))
+            {
+                SelectedTabIndex = 2;
+                PhoneNumber = phoneNumber;
+                ContactName = ResolveContactName(phoneNumber, null);
+                _ = LoadMessagesForNumberAsync(phoneNumber);
+            }
+        }
+
+        [RelayCommand]
+        public async Task CallSpecificNumber(string phoneNumber)
+        {
+            if (!string.IsNullOrEmpty(phoneNumber))
+            {
+                PhoneNumber = phoneNumber;
+                ContactName = ResolveContactName(phoneNumber, null);
+                IsInCall = true;
+                IsIncomingCall = false;
+                await _phoneCallPlugin.StartCallAsync(phoneNumber);
+            }
+        }
+
+        [RelayCommand]
+        public async Task SendMessage()
+        {
+            if (string.IsNullOrWhiteSpace(CurrentMessageText)) return;
+            string targetNumber = string.IsNullOrEmpty(PhoneNumber) && ActiveChat != null ? ActiveChat.PhoneNumber : PhoneNumber;
+            if (string.IsNullOrEmpty(targetNumber)) return;
+
+            string textToSend = CurrentMessageText;
+            bool success = await _smsPlugin.SendSmsAsync(targetNumber, textToSend);
+
+            if (success)
+            {
+                MessagesList.Add(new ChatMessageItem { Text = textToSend, IsOutgoing = true });
+                CurrentMessageText = "";
+            }
+        }
+
+        [RelayCommand]
+        public async Task SelectConversation(ChatConversationItem conversation)
+        {
+            if (conversation != null)
+            {
+                string targetAddress = !string.IsNullOrWhiteSpace(conversation.PhoneNumber) ? conversation.PhoneNumber : conversation.ContactName;
+                ContactName = string.IsNullOrWhiteSpace(conversation.ContactName) ? targetAddress : conversation.ContactName;
+                PhoneNumber = targetAddress;
+
+                if (ActiveChat != null) ActiveChat.PhoneNumber = PhoneNumber;
+                
+                await LoadMessagesForNumberAsync(targetAddress);
+            }
+        }
+
+        [RelayCommand]
+        public async Task DeleteConversation(ChatConversationItem? conversation)
+        {
+            if (conversation == null) return;
+            string targetAddress = !string.IsNullOrWhiteSpace(conversation.PhoneNumber) ? conversation.PhoneNumber : conversation.ContactName;
+            if (string.IsNullOrWhiteSpace(targetAddress)) return;
+
+            bool success = await _conversationsPlugin.DeleteConversationAsync(targetAddress);
+            if (success)
+            {
+                RecentConversations.Remove(conversation);
+                if (PhoneNumber == targetAddress || ContactName == conversation.ContactName)
+                {
+                    MessagesList.Clear();
+                    PhoneNumber = "";
+                    ContactName = "";
+                    SelectedConversation = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Highly resilient JSON message parser with exhaustive error logging.
+        /// </summary>
+        private async Task LoadMessagesForNumberAsync(string addressInput)
+        {
+            if (string.IsNullOrWhiteSpace(addressInput)) return;
+
+            List<string> candidates = new List<string> { addressInput.Trim() };
+            if (addressInput.Any(char.IsLetter))
+            {
+                candidates.Add(addressInput.ToLowerInvariant());
+                candidates.Add(addressInput.ToUpperInvariant());
+            }
+            else
+            {
+                string cleanNoSpaces = new string(addressInput.Where(c => !char.IsWhiteSpace(c) && c != '-' && c != '(' && c != ')').ToArray());
+                if (!candidates.Contains(cleanNoSpaces)) candidates.Add(cleanNoSpaces);
+
+                string last9 = GetLast9Digits(addressInput);
+                if (!string.IsNullOrEmpty(last9) && !candidates.Contains(last9)) candidates.Add(last9);
+
+                string withPlus48 = "+48" + last9;
+                if (!candidates.Contains(withPlus48)) candidates.Add(withPlus48);
+            }
+
+            foreach (var target in candidates.Distinct())
+            {
+                try
+                {
+                    string url = $"{PhoneConfig.GetBaseUrl()}/messages?address={Uri.EscapeDataString(target)}";
+                    Console.WriteLine($"\n[MESSAGES DEBUG] Requesting URL: {url}");
+                    
+                    HttpResponseMessage response = await SharedHttpClient.GetAsync(url);
+                    
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string json = await response.Content.ReadAsStringAsync();
+                        Console.WriteLine($"[MESSAGES DEBUG] RAW JSON RESPONSE from Android: {json}");
+
+                        List<ChatMessageItem>? fetchedMessages = null;
+                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+                        using (JsonDocument doc = JsonDocument.Parse(json))
+                        {
+                            if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                            {
+                                fetchedMessages = JsonSerializer.Deserialize<List<ChatMessageItem>>(json, options);
+                            }
+                            else if (doc.RootElement.ValueKind == JsonValueKind.Object)
+                            {
+                                if (doc.RootElement.TryGetProperty("messages", out var msgs) && msgs.ValueKind == JsonValueKind.Array)
+                                {
+                                    fetchedMessages = JsonSerializer.Deserialize<List<ChatMessageItem>>(msgs.GetRawText(), options);
+                                }
+                                else if (doc.RootElement.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Array)
+                                {
+                                    fetchedMessages = JsonSerializer.Deserialize<List<ChatMessageItem>>(data.GetRawText(), options);
+                                }
+                            }
+                        }
+
+                        if (fetchedMessages != null && fetchedMessages.Count > 0)
+                        {
+                            MessagesList.Clear();
+                            foreach (var msg in fetchedMessages) MessagesList.Add(msg);
+                            Console.WriteLine($"[MESSAGES DEBUG] SUCCESS - Displaying {fetchedMessages.Count} messages in UI.\n");
+                            return;
+                        }
+                        else
+                        {
+                            Console.WriteLine("[MESSAGES DEBUG] JSON was parsed successfully, but the message array was empty []");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[MESSAGES DEBUG] Server returned HTTP {(int)response.StatusCode} {response.ReasonPhrase}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[MESSAGES ERROR] Critical failure parsing messages: {ex.Message}");
+                }
+            }
+            
+            MessagesList.Clear();
+        }
+
+        [RelayCommand]
+        public void OnPairingCompleted()
+        {
+            IsPaired = true;
+            SelectedTabIndex = 0;
+            
+            // Read the IP directly from the secured pairing file right after pairing
+            string pairedFilePath = Path.Combine(_storageDirectory, "paired_device.dat");
+            if (File.Exists(pairedFilePath))
+            {
+                try
+                {
+                    string decryptedPayload = _storageService.ReadAndDecrypt(pairedFilePath);
+                    using var jsonDoc = JsonDocument.Parse(decryptedPayload);
+                    
+                    if (jsonDoc.RootElement.TryGetProperty("phoneIp", out var ipProp))
+                    {
+                        string? savedIp = ipProp.GetString();
+                        if (!string.IsNullOrEmpty(savedIp))
+                        {
+                            _phoneSsePlugin.Initialize(savedIp, 5000);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[PAIRING ERROR] Could not read IP for SSE initialization: {ex.Message}");
+                }
+            }
+        }
+
+        [RelayCommand]
+        public void UnpairDevice()
+        {
+            string pFile = Path.Combine(_storageDirectory, "paired_device.dat");
+            if (File.Exists(pFile)) File.Delete(pFile);
+            IsPaired = false;
+            SelectedTabIndex = 3;
+            _phoneSsePlugin.Shutdown(); // Stop listening when unpaired
+            Pairing.GeneratePairingPinCode();
+        }
+
+        [RelayCommand]
+        public void AppendNumber(string number) => PhoneNumber += number;
+
+        [RelayCommand]
+        public void Backspace()
+        {
+            if (!string.IsNullOrEmpty(PhoneNumber)) PhoneNumber = PhoneNumber.Substring(0, PhoneNumber.Length - 1);
+        }
+
+        [RelayCommand]
+        public async Task Call()
+        {
+            if (!string.IsNullOrEmpty(PhoneNumber))
+            {
+                IsInCall = true;
+                IsIncomingCall = false;
+                ContactName = ResolveContactName(PhoneNumber, null);
+                await _phoneCallPlugin.StartCallAsync(PhoneNumber);
+            }
+        }
+
+        [RelayCommand]
+        public async Task EndCall()
+        {
+            IsInCall = false;
             IsIncomingCall = false;
+            
+            // Depending on the state, we can either end an active call or reject an incoming one
+            if (IsIncomingCall)
+            {
+                await _phoneSsePlugin.RejectCallAsync();
+            }
+            else
+            {
+                await _phoneCallPlugin.EndCallAsync();
+            }
         }
 
-    [RelayCommand]
-    private async Task EndCall()
-    {
-        await _callService.EndCallAsync();
-        ResetCallState();
-    }
-
-    [RelayCommand]
-    private async Task AnswerCall()
-    {
-        bool success = await _callService.AnswerCallAsync();
-        if (success)
+        [RelayCommand]
+        public async Task AnswerCall()
         {
             IsIncomingCall = false;
-            IsInCall = true;
+            // Use the SSE plugin to send the answer command to Android
+            await _phoneSsePlugin.AnswerCallAsync(); 
         }
     }
-
-    [RelayCommand]
-    private async Task CallSpecificNumber(string number)
-    {
-        if (!string.IsNullOrEmpty(number))
-        {
-            PhoneNumber = number;
-            await Call();
-        }
-    }
-    
-    [RelayCommand]
-    private void SendMessageToContact(string? phoneNumber)
-    {
-        if (!string.IsNullOrEmpty(phoneNumber))
-        {
-            PhoneNumber = phoneNumber;
-            var contact = _allContacts.FirstOrDefault(x => x.PhoneNumber == phoneNumber);
-            if (contact != null)
-            {
-                ContactName = contact.Name;
-                _ = LoadChatHistoryForContact(contact.Name, contact.PhoneNumber);
-            }
-            SelectedTabIndex = 2; // Przełącz na zakładkę czatu
-        }
-
-    [RelayCommand]
-    private async Task SendMessage()
-    {
-        if (string.IsNullOrWhiteSpace(CurrentMessageText)) return;
-
-        string targetPhone = PhoneNumber; 
-        if (string.IsNullOrEmpty(targetPhone)) return;
-
-        bool success = await _smsService.SendSmsAsync(targetPhone, CurrentMessageText);
-        
-        if (success)
-        {
-            var msg = new ChatMessageItem { Text = CurrentMessageText, IsOutgoing = true };
-            MessagesList.Add(msg);
-
-            if (!string.IsNullOrEmpty(ContactName) && ContactName != "Wybierz kontakt")
-            {
-                UpdateRecentConversations(ContactName, CurrentMessageText);
-                await _historyService.SaveHistoryAsync(ContactName, MessagesList);
-            }
-
-            CurrentMessageText = "";
-        }
-        else
-        {
-            Console.WriteLine("Nie udało się wysłać wiadomości SMS.");
-        }
-
-    private void ResetCallState()
-    {
-        IsInCall = false;
-        IsIncomingCall = false;
-        PhoneNumber = "";
-        ContactName = "Nieznany";
-    }
-}
-
-public class ChatMessageItem
-{
-    public string Text { get; set; } = "";
-    public bool IsOutgoing { get; set; } = true;
 }

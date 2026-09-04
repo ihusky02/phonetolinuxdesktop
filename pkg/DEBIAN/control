@@ -1,7 +1,0 @@
-Package: androidcallbridge
-Version: 1.0.0
-Section: utils
-Priority: optional
-Architecture: amd64
-Maintainer: Stanisław Tlołka
-Description: Android Call Bridge dla ChromeOS

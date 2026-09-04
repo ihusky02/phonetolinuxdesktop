@@ -6,3 +6,6 @@ obj/
 
 /Views/DebugWindow.axaml
 /Views/DebugWindow.axaml.cs
+pkg/opt/androidcallbridge/
+.idea/
+*.dll

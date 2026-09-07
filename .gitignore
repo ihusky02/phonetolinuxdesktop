@@ -3,9 +3,10 @@ obj/
 *.deb
 .DS_Store
 .vscode/
-
 /Views/DebugWindow.axaml
 /Views/DebugWindow.axaml.cs
 pkg/opt/androidcallbridge/
 .idea/
 *.dll
+/vendor
+nuget.config

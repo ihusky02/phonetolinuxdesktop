@@ -9,7 +9,7 @@ namespace phonetolinux.Views
         public IpConfigWindow()
         {
             InitializeComponent();
-            // Wpisz ostatnio zapamiętane IP, jeśli istnieje
+            // Enter the last saved IP, if it exists.
             IpTextBox.Text = PhoneConfig.PhoneIp;
         }
 
@@ -20,7 +20,7 @@ namespace phonetolinux.Views
             {
                 PhoneConfig.SaveIp(ip);
             }
-            Close(); // Zamknij okno konfiguracji i przejdź do głównego interfejsu
+            Close(); // Close the configuration window and go to the main interface.
         }
     }
 }

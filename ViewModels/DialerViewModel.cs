@@ -42,6 +42,7 @@ public partial class DialerViewModel : ObservableObject
         {
             IsInCall = true;
             IsIncomingCall = false;
+            PhoneNumber = "";
         }
     }
 

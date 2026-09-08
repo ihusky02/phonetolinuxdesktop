@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" 
         x:Class="phonetolinux.Views.IpConfigWindow"
-        Title="Konfiguracja połączenia z telefonem"
+        Title="Phone Connection Setup"
         Width="380" Height="200"
         WindowStartupLocation="CenterScreen"
         Topmost="True"
@@ -12,7 +12,7 @@
         Background="#121212">
     
     <StackPanel Margin="20" VerticalAlignment="Center" Spacing="12">
-        <TextBlock Text="Wprowadź adres IP telefonu:" 
+        <TextBlock Text="Write IP Adress:" 
                    Foreground="White" 
                    FontSize="14" 
                    FontWeight="SemiBold"/>
@@ -26,7 +26,7 @@
                  CornerRadius="8"
                  Height="35"/>
 
-        <Button Content="Połącz / Zapisz" 
+        <Button Content="Connect/Save" 
                 Background="#1E88E5" 
                 Foreground="White" 
                 CornerRadius="8"

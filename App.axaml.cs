@@ -4,6 +4,7 @@ using Avalonia.Markup.Xaml;
 using phonetolinux.Services;
 using phonetolinux.ViewModels;
 using phonetolinux.Views;
+using phonetolinux.Security;
 
 namespace phonetolinux;
 
@@ -14,17 +15,17 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
-    public override void OnFrameworkInitializationCompleted()
+    public override async void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            // Jeśli adres IP nie jest zapisany, najpierw uruchamiamy okno konfiguracji jako główne okno
+            // If the IP address is not configured yet, launch the setup window first
             if (string.IsNullOrEmpty(PhoneConfig.PhoneIp))
             {
                 var configWindow = new IpConfigWindow();
                 desktop.MainWindow = configWindow;
-                
-                // Po zamknięciu okna konfiguracji (jeśli użytkownik wpisał IP), uruchamiamy właściwą aplikację
+
+                // Handle setup window closing event
                 configWindow.Closed += (sender, args) =>
                 {
                     if (!string.IsNullOrEmpty(PhoneConfig.PhoneIp))
@@ -38,14 +39,31 @@ public partial class App : Application
                     }
                     else
                     {
-                        // Jeśli użytkownik zamknął okno bez wpisania IP, zamykamy aplikację
+                        // Shutdown application if configuration was cancelled
                         desktop.Shutdown();
                     }
                 };
             }
             else
             {
-                // Jeśli IP jest już zapisane, startujemy normalnie od razu z MainWindow
+                // Attempt to automatically discover updated phone IP on network change
+                var autoIpService = new AutochangeIP();
+
+                // Retrieve the pairing secret from PhoneConfig or Services
+                string pairingSecret = PhoneConfig.PairingSecret;
+
+                if (!string.IsNullOrEmpty(pairingSecret))
+                {
+                    string? discoveredIp = await autoIpService.DiscoverPhoneIpAsync(pairingSecret, timeoutMs: 2000);
+
+                    if (!string.IsNullOrEmpty(discoveredIp))
+                    {
+                        PhoneConfig.PhoneIp = discoveredIp;
+                        // PhoneConfig.Save();
+                    }
+                }
+
+                // Launch main application window
                 desktop.MainWindow = new MainWindow
                 {
                     DataContext = new MainViewModel(),

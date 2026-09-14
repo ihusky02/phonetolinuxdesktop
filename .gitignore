@@ -8,5 +8,5 @@ obj/
 pkg/opt/androidcallbridge/
 .idea/
 *.dll
-/vendor
+vendor/
 nuget.config

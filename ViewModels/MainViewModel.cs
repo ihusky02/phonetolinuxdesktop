@@ -15,6 +15,7 @@ using phonetolinux.Services;
 using phonetolinux.Models;
 using PhoneToLinux.Security;
 using phonetolinux.Plugins; 
+using phonetolinux.ViewModels;
 
 namespace phonetolinux.ViewModels
 {
@@ -35,6 +36,9 @@ namespace phonetolinux.ViewModels
 
         [ObservableProperty]
         private bool _isPaired;
+        
+        [ObservableProperty]
+        private StorageBrowserViewModel _storageViewModel = new();
 
         [ObservableProperty]
         private int _selectedTabIndex;

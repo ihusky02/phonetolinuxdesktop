@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using phonetolinux.Models;
@@ -14,7 +15,7 @@ public partial class StorageBrowserViewModel : ViewModelBase
     private readonly HttpClient _httpClient = new();
     
     // TODO: Eventually, this address will be fetched from DevicePairingService
-    private string _deviceIp = "192.168.100.90"; 
+    private readonly string _deviceIp = "192.168.100.90"; 
 
     [ObservableProperty]
     private string _currentPath = "/";
@@ -27,6 +28,10 @@ public partial class StorageBrowserViewModel : ViewModelBase
 
     public StorageBrowserViewModel()
     {
+        // Temporary test items to verify UI layout immediately
+        Files.Add(new PhoneFileItem { Name = "Music", IsDirectory = true, RelativePath = "/Music" });
+        Files.Add(new PhoneFileItem { Name = "Download", IsDirectory = true, RelativePath = "/Download" });
+        
         // Load the main directory of the phone on startup
         _ = LoadFilesAsync("");
     }
@@ -45,14 +50,18 @@ public partial class StorageBrowserViewModel : ViewModelBase
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var items = JsonSerializer.Deserialize<PhoneFileItem[]>(response, options);
 
-            Files.Clear();
-            if (items != null)
+            // Update UI safely on the main thread
+            Dispatcher.UIThread.Post(() =>
             {
-                foreach (var item in items)
+                Files.Clear();
+                if (items != null)
                 {
-                    Files.Add(item);
+                    foreach (var item in items)
+                    {
+                        Files.Add(item);
+                    }
                 }
-            }
+            });
         }
         catch (Exception ex)
         {

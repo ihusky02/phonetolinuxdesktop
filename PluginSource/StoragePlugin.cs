@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using phonetolinux.Plugins;
 
@@ -9,17 +10,36 @@ namespace phonetolinux.PluginSource
 {
     /// <summary>
     /// Storage integration plugin implementation for desktop file manager mounting and bookmarks.
-    /// Compatible with DnnPluginLoader dynamic reflection.
+    /// Implements full IPhonetolinuxPlugin contract.
     /// </summary>
     public class StoragePlugin : IPhonetolinuxPlugin
     {
         private const string BookmarkDisplayName = "PhoneToLinux Storage";
 
         public string Name => "StoragePlugin";
+        public string Version => "1.0.0";
+
+        // Required interface events with Action delegates
+        public event Action<string, string>? OnCallReceived;
+        public event Action? OnCallEnded;
+        public event Action<string, string>? OnSmsReceived;
+
+        public void Initialize(string ip, int port)
+        {
+            OnDeviceConnected(ip);
+        }
+
+        public void Shutdown()
+        {
+            // Optional cleanup on plugin unload
+        }
+
+        public Task<bool> AnswerCallAsync() => Task.FromResult(false);
+        public Task<bool> RejectCallAsync() => Task.FromResult(false);
 
         /// <summary>
         /// Triggered when phone connects/pairs with desktop application.
-        /// Accepts single string parameter (phoneIp) for DnnPluginLoader compatibility.
+        /// Compatible with DnnPluginLoader single-string parameter signature.
         /// </summary>
         public bool OnDeviceConnected(string phoneIp)
         {

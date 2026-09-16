@@ -1,67 +1,72 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:phonetolinux.ViewModels"
+             xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
              x:Class="phonetolinux.Views.StorageBrowserView"
              x:DataType="vm:StorageBrowserViewModel">
 
-    <Grid RowDefinitions="Auto, Auto, *">
-        <!-- Navigation bar and path -->
+    <Grid RowDefinitions="Auto, *">
+        <!-- Navigation Bar and Path Input -->
         <Border Grid.Row="0" Background="#252526" Padding="12" CornerRadius="8" Margin="0,0,0,10">
             <Grid ColumnDefinitions="Auto, *, Auto, Auto">
-                <Button Grid.Column="0" Command="{Binding NavigateUpCommand}" Margin="0,0,10,0" ToolTip.Tip="Katalog wyżej">
+                <Button Grid.Column="0" Command="{Binding NavigateUpCommand}" Margin="0,0,10,0" ToolTip.Tip="Directory Up">
                     <StackPanel Orientation="Horizontal" Spacing="5">
                         <TextBlock Text="⬆" />
-                        <TextBlock Text="W górę" />
+                        <TextBlock Text="Up" />
                     </StackPanel>
                 </Button>
 
                 <TextBox Grid.Column="1" Text="{Binding CurrentPath}" IsReadOnly="True" VerticalAlignment="Center" Margin="0,0,10,0" />
 
-                <Button Grid.Column="2" Command="{Binding RefreshCommand}" Margin="0,0,10,0" ToolTip.Tip="Odśwież">
+                <Button Grid.Column="2" Command="{Binding RefreshCommand}" Margin="0,0,10,0" ToolTip.Tip="Refresh">
                     <TextBlock Text="🔄" />
                 </Button>
 
-                <Button Grid.Column="3" Command="{Binding UploadFileAsyncCommand}" Classes="accent">
+                <Button Grid.Column="3" Command="{Binding UploadFileCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="5">
                         <TextBlock Text="📤" />
-                        <TextBlock Text="Send File" />
+                        <TextBlock Text="Upload File" />
                     </StackPanel>
                 </Button>
             </Grid>
         </Border>
 
-        <!-- List of Files and Directories -->
-        <Border Grid.Row="2" Background="#1E1E1E" CornerRadius="8" Padding="5">
+        <!-- Main Content Area: DataGrid and Bottom Toolbar -->
+        <Border Grid.Row="1" Background="#1E1E1E" CornerRadius="8" Padding="5">
             <Grid RowDefinitions="*, Auto">
-                <DataGrid Grid.Row="0"
-                          ItemsSource="{Binding Files}"
-                          SelectedItem="{Binding SelectedFile}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          GridLinesVisibility="Horizontal">
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="Typ" Width="60">
-                            <DataGridTemplateColumn.CellTemplate>
+                <!-- DataGrid View -->
+                <dg:DataGrid Grid.Row="0"
+                             ItemsSource="{Binding Files}"
+                             SelectedItem="{Binding SelectedFile}"
+                             AutoGenerateColumns="False"
+                             IsReadOnly="True"
+                             SelectionMode="Single"
+                             GridLinesVisibility="Horizontal"
+                             PointerPressed="DataGrid_PointerPressed"
+                             DragDrop.AllowDrop="True">
+                    <dg:DataGrid.Columns>
+                        <dg:DataGridTemplateColumn Header="Type" Width="60">
+                            <dg:DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Icon}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                            </dg:DataGridTemplateColumn.CellTemplate>
+                        </dg:DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="Nazwa" Binding="{Binding Name}" Width="*" />
-                        <DataGridTextColumn Header="Rozmiar" Binding="{Binding FormattedSize}" Width="120" />
-                    </DataGrid.Columns>
-                </DataGrid>
+                        <dg:DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
+                        <dg:DataGridTextColumn Header="Size" Binding="{Binding FormattedSize}" Width="120" />
+                    </dg:DataGrid.Columns>
+                </dg:DataGrid>
 
-                <!-- Action bar for the selected file -->
+                <!-- Action Toolbar for Selected Resource -->
                 <Border Grid.Row="1" Background="#2D2D2D" Padding="10" Margin="0,5,0,0" CornerRadius="4"
                         IsVisible="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <Grid ColumnDefinitions="*, Auto">
-                        <TextBlock Grid.Column="0" Text="{Binding SelectedFile.Name}" VerticalAlignment="Center" FontWeight="Bold" />
-                        <Button Grid.Column="1" Command="{Binding DownloadFileAsyncCommand}">
+                        <TextBlock Grid.Column="0" Text="{Binding SelectedFile.Name}" VerticalAlignment="Center" FontWeight="Bold" Foreground="White" />
+                        <Button Grid.Column="1" Command="{Binding DownloadFileCommand}">
                             <StackPanel Orientation="Horizontal" Spacing="5">
                                 <TextBlock Text="📥" />
-                                <TextBlock Text="Pobierz plik" />
+                                <TextBlock Text="Download File" />
                             </StackPanel>
                         </Button>
                     </Grid>

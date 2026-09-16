@@ -1,41 +1,34 @@
 using System;
 using System.Collections.ObjectModel;
-using System.Net.Http;
-using System.Text.Json;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using WebDav;
 using phonetolinux.Models;
 
 namespace phonetolinux.ViewModels;
 
 public partial class StorageBrowserViewModel : ViewModelBase
 {
-    // Configure HttpClient timeout once upon instantiation to avoid InvalidOperationException
-    private readonly HttpClient _httpClient = new()
-    {
-        Timeout = TimeSpan.FromSeconds(5)
-    };
-    
-    // Runtime storage for the active device IP address (pre-configured for development session)
-    private static string _activeDeviceIp = "192.168.100.90";
+    // Runtime storage for the active device IP address
+    private static string _activeDeviceIp = string.Empty;
 
     /// <summary>
     /// Automatically retrieves the active device IP address. 
-    /// Checks the cached session variable first, falls back to configuration, or prompts the user.
+    /// Checks the cached session variable first or prompts the user.
     /// </summary>
     private async Task<string> GetDeviceIpAsync()
     {
-        // Return cached IP if already available in the current session
         if (!string.IsNullOrEmpty(_activeDeviceIp))
         {
             return _activeDeviceIp;
         }
 
-        // Fallback: Prompt the user manually if no IP is stored
         var manualIp = await PromptForIpAddressAsync();
         if (!string.IsNullOrWhiteSpace(manualIp))
         {
@@ -71,7 +64,7 @@ public partial class StorageBrowserViewModel : ViewModelBase
 
         var textBox = new TextBox
         {
-            Watermark = "e.g. 192.168.1.50",
+            Watermark = "e.g. 192.168.100.90",
             Text = _activeDeviceIp,
             Margin = new Avalonia.Thickness(15, 0, 15, 15),
             Background = Avalonia.Media.Brush.Parse("#2C2C2C"),
@@ -121,11 +114,11 @@ public partial class StorageBrowserViewModel : ViewModelBase
     public StorageBrowserViewModel()
     {
         // Automatically load the root directory of the phone upon initialization
-        _ = LoadFilesAsync("");
+        _ = LoadFilesAsync("/");
     }
 
     /// <summary>
-    /// Asynchronously fetches files and directories from the connected Android device.
+    /// Asynchronously fetches files and directories via WebDAV PROPFIND (Port 5001).
     /// </summary>
     [RelayCommand]
     private async Task LoadFilesAsync(string path)
@@ -133,43 +126,63 @@ public partial class StorageBrowserViewModel : ViewModelBase
         try
         {
             string targetPath = string.IsNullOrEmpty(path) ? "/" : path;
-            CurrentPath = targetPath;
             
             string currentIp = await GetDeviceIpAsync();
-            if (string.IsNullOrEmpty(currentIp)) return; // Abort if user canceled the prompt
+            if (string.IsNullOrEmpty(currentIp)) return;
 
-            string url = $"http://{currentIp}:5000/storage/list?path={Uri.EscapeDataString(targetPath)}";
-            
-            Console.WriteLine($"[StorageBrowser] Requesting: {url}");
-            var response = await _httpClient.GetStringAsync(url);
-            Console.WriteLine($"[StorageBrowser] Response received successfully! Raw length: {response.Length}");
-            
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var items = JsonSerializer.Deserialize<PhoneFileItem[]>(response, options);
-
-            // Safely update the observable UI collection on the main thread using a new collection instance
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            var clientParams = new WebDavClientParams
             {
+                BaseAddress = new Uri($"http://{currentIp}:5001/"),
+                Timeout = TimeSpan.FromSeconds(10)
+            };
+
+            using var client = new WebDavClient(clientParams);
+            Console.WriteLine($"[WebDAV] Sending PROPFIND for path: {targetPath}");
+            
+            var result = await client.Propfind(targetPath);
+
+            if (result.IsSuccessful)
+            {
+                CurrentPath = targetPath;
                 var newCollection = new ObservableCollection<PhoneFileItem>();
-                if (items != null)
+
+                // Skip the first item as it represents the queried directory itself
+                foreach (var res in result.Resources.Skip(1))
                 {
-                    foreach (var item in items)
+                    var uri = new Uri(res.Uri, UriKind.RelativeOrAbsolute);
+                    string rawPath = uri.IsAbsoluteUri ? uri.AbsolutePath : res.Uri;
+                    string cleanPath = Uri.UnescapeDataString(rawPath);
+                    string name = cleanPath.TrimEnd('/').Split('/').LastOrDefault() ?? "Unknown";
+
+                    newCollection.Add(new PhoneFileItem
                     {
-                        newCollection.Add(item);
-                        Console.WriteLine($"[StorageBrowser] Added item: {item.Name}");
-                    }
+                        Name = name,
+                        RelativePath = cleanPath,
+                        IsDirectory = res.IsCollection,
+                        SizeBytes = res.ContentLength ?? 0
+                    });
                 }
-                Files = newCollection;
-            });
+
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Files = newCollection;
+                });
+                
+                Console.WriteLine($"[WebDAV] Successfully loaded {newCollection.Count} items.");
+            }
+            else
+            {
+                Console.WriteLine($"[WebDAV] PROPFIND failed: {result.StatusCode} - {result.Description}");
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[StorageBrowser] ERROR in LoadFilesAsync: {ex.GetType().Name} - {ex.Message}");
+            Console.WriteLine($"[WebDAV Error] LoadFilesAsync: {ex.GetType().Name} - {ex.Message}");
         }
     }
 
     /// <summary>
-    /// Handles the downloading of a selected file from the Android device to the Linux desktop.
+    /// Downloads selected file using WebDAV GET (Port 5001).
     /// </summary>
     [RelayCommand]
     private async Task DownloadFileAsync()
@@ -194,26 +207,35 @@ public partial class StorageBrowserViewModel : ViewModelBase
                 string currentIp = await GetDeviceIpAsync();
                 if (string.IsNullOrEmpty(currentIp)) return;
 
-                string downloadUrl = $"http://{currentIp}:5000/storage/download?path={Uri.EscapeDataString(SelectedFile.RelativePath)}";
-                
-                using var response = await _httpClient.GetAsync(downloadUrl);
-                response.EnsureSuccessStatusCode();
-                
-                await using var contentStream = await response.Content.ReadAsStreamAsync();
-                await using var fileStream = await fileResult.OpenWriteAsync();
-                await contentStream.CopyToAsync(fileStream);
+                var clientParams = new WebDavClientParams
+                {
+                    BaseAddress = new Uri($"http://{currentIp}:5001/"),
+                    Timeout = TimeSpan.FromMinutes(5)
+                };
 
-                Console.WriteLine($"[StorageBrowser] File successfully downloaded: {SelectedFile.Name}");
+                using var client = new WebDavClient(clientParams);
+                var response = await client.GetRawFile(SelectedFile.RelativePath);
+
+                if (response.IsSuccessful)
+                {
+                    await using var destinationStream = await fileResult.OpenWriteAsync();
+                    await response.Stream.CopyToAsync(destinationStream);
+                    Console.WriteLine($"[WebDAV] File successfully downloaded: {SelectedFile.Name}");
+                }
+                else
+                {
+                    Console.WriteLine($"[WebDAV] Download failed: {response.StatusCode}");
+                }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[StorageBrowser] Failed to download file: {ex.Message}");
+            Console.WriteLine($"[WebDAV Error] DownloadFileAsync: {ex.Message}");
         }
     }
 
     /// <summary>
-    /// Handles uploading a local file from the Linux desktop to the active path on the phone.
+    /// Uploads a local file using WebDAV PUT (Port 5001).
     /// </summary>
     [RelayCommand]
     private async Task UploadFileAsync()
@@ -235,33 +257,109 @@ public partial class StorageBrowserViewModel : ViewModelBase
                 var file = files[0];
                 string fileName = file.Name;
                 
-                string targetPath = (CurrentPath == "/" ? "" : CurrentPath) + "/" + fileName;
                 string currentIp = await GetDeviceIpAsync();
                 if (string.IsNullOrEmpty(currentIp)) return;
 
-                string uploadUrl = $"http://{currentIp}:5000/storage/upload?path={Uri.EscapeDataString(targetPath)}";
+                var clientParams = new WebDavClientParams
+                {
+                    BaseAddress = new Uri($"http://{currentIp}:5001/"),
+                    Timeout = TimeSpan.FromMinutes(5)
+                };
 
-                using var content = new MultipartFormDataContent();
+                using var client = new WebDavClient(clientParams);
+                string remotePath = (CurrentPath.EndsWith("/") ? CurrentPath : CurrentPath + "/") + fileName;
+
                 await using var readStream = await file.OpenReadAsync();
-                using var streamContent = new StreamContent(readStream);
-                
-                content.Add(streamContent, "file", fileName);
+                var response = await client.PutFile(remotePath, readStream);
 
-                var response = await _httpClient.PostAsync(uploadUrl, content);
-                response.EnsureSuccessStatusCode();
+                if (response.IsSuccessful)
+                {
+                    Console.WriteLine($"[WebDAV] File successfully uploaded: {fileName}");
+                    Refresh();
+                }
+                else
+                {
+                    Console.WriteLine($"[WebDAV] Upload failed: {response.StatusCode}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[WebDAV Error] UploadFileAsync: {ex.Message}");
+        }
+    }
 
-                Console.WriteLine($"[StorageBrowser] File successfully uploaded: {fileName}");
+    /// <summary>
+    /// Helper method for Drag & Drop: Downloads selected file to a specific local temp path.
+    /// </summary>
+    public async Task DownloadSelectedFileToPathAsync(string destinationPath)
+    {
+        if (SelectedFile == null || SelectedFile.IsDirectory) return;
+
+        try
+        {
+            string currentIp = await GetDeviceIpAsync();
+            if (string.IsNullOrEmpty(currentIp)) return;
+
+            var clientParams = new WebDavClientParams
+            {
+                BaseAddress = new Uri($"http://{currentIp}:5001/"),
+                Timeout = TimeSpan.FromMinutes(5)
+            };
+
+            using var client = new WebDavClient(clientParams);
+            var response = await client.GetRawFile(SelectedFile.RelativePath);
+
+            if (response.IsSuccessful)
+            {
+                await using var destinationStream = File.Create(destinationPath);
+                await response.Stream.CopyToAsync(destinationStream);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DragDrop Error] Download failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Helper method for Drag & Drop: Uploads a file from local path directly to the phone.
+    /// </summary>
+    public async Task UploadFileFromPathAsync(string localFilePath)
+    {
+        if (!File.Exists(localFilePath)) return;
+
+        try
+        {
+            string currentIp = await GetDeviceIpAsync();
+            if (string.IsNullOrEmpty(currentIp)) return;
+
+            var clientParams = new WebDavClientParams
+            {
+                BaseAddress = new Uri($"http://{currentIp}:5001/"),
+                Timeout = TimeSpan.FromMinutes(5)
+            };
+
+            using var client = new WebDavClient(clientParams);
+            string fileName = Path.GetFileName(localFilePath);
+            string remotePath = (CurrentPath.EndsWith("/") ? CurrentPath : CurrentPath + "/") + fileName;
+
+            await using var readStream = File.OpenRead(localFilePath);
+            var response = await client.PutFile(remotePath, readStream);
+
+            if (response.IsSuccessful)
+            {
                 Refresh();
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[StorageBrowser] Failed to upload file: {ex.Message}");
+            Console.WriteLine($"[DragDrop Error] Upload failed: {ex.Message}");
         }
     }
 
     /// <summary>
-    /// Navigates one directory level up in the file hierarchy.
+    /// Navigates one directory level up in the hierarchy.
     /// </summary>
     [RelayCommand]
     private void NavigateUp()
@@ -272,12 +370,12 @@ public partial class StorageBrowserViewModel : ViewModelBase
         var parts = CurrentPath.TrimEnd('/').Split('/');
         if (parts.Length <= 1)
         {
-            _ = LoadFilesAsync("");
+            _ = LoadFilesAsync("/");
             return;
         }
         
         var newPath = string.Join("/", parts, 0, parts.Length - 1);
-        _ = LoadFilesAsync(newPath);
+        _ = LoadFilesAsync(string.IsNullOrEmpty(newPath) ? "/" : newPath);
     }
 
     /// <summary>
@@ -286,11 +384,11 @@ public partial class StorageBrowserViewModel : ViewModelBase
     [RelayCommand]
     private void Refresh()
     {
-        _ = LoadFilesAsync(CurrentPath == "/" ? "" : CurrentPath);
+        _ = LoadFilesAsync(CurrentPath);
     }
 
     /// <summary>
-    /// Handles item selection changes. If a directory is selected, navigates into it.
+    /// Handles item selection. Navigates into selected directories automatically.
     /// </summary>
     partial void OnSelectedFileChanged(PhoneFileItem? value)
     {
@@ -303,7 +401,7 @@ public partial class StorageBrowserViewModel : ViewModelBase
         }
         else
         {
-            Console.WriteLine($"[StorageBrowser] Selected file: {value.Name} ({value.FormattedSize})");
+            Console.WriteLine($"[WebDAV] Selected file: {value.Name} ({value.FormattedSize})");
         }
     }
 }

@@ -1,3 +1,9 @@
+phonetolinux (1.1.5.1) noble; urgency=medium
+
+  * Bump version to 1.1.5.1 for PPA build
+
+ -- Stanisław Tlołka <stanislawtlolka@gmail.com>  Wed, 16 Sep 2026 07:21:13 +0200
+
 phonetolinux (1.1.5.0) noble; urgency=medium
 
   * update version package to 1.1.5.0

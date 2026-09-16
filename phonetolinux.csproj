@@ -18,6 +18,8 @@
         <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.3" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
+        <PackageReference Include="ReactiveUI" Version="24.2.0" />
+        <PackageReference Include="ReactiveUI.Fody" Version="19.5.41" />
         <PackageReference Include="WebDav.Client" Version="2.9.0" />
     </ItemGroup>
 </Project>

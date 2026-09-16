@@ -1,0 +1,1915 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>WebDav.Client</name>
+    </assembly>
+    <members>
+        <member name="T:WebDav.ActiveLock">
+            <summary>
+            Represents an active lock taken on a WebDAV resource.
+            </summary>
+        </member>
+        <member name="P:WebDav.ActiveLock.ApplyTo">
+            <summary>
+            Gets a value indicating whether the lock is to be applied only to the resource or the resource and all its members.
+            It corresponds to the WebDAV Depth header.
+            </summary>
+        </member>
+        <member name="P:WebDav.ActiveLock.LockScope">
+            <summary>
+            Gets a value indicating whether this lock is an exclusive lock or a shared lock.
+            </summary>
+        </member>
+        <member name="P:WebDav.ActiveLock.LockToken">
+            <summary>
+            Gets the resource lock token.
+            </summary>
+        </member>
+        <member name="P:WebDav.ActiveLock.Owner">
+            <summary>
+            Gets the owner of this lock.
+            </summary>
+        </member>
+        <member name="P:WebDav.ActiveLock.LockRoot">
+            <summary>
+            Gets the root URL of the lock, which is the URL through which the resource was addressed in the LOCK request.
+            </summary>
+        </member>
+        <member name="P:WebDav.ActiveLock.Timeout">
+            <summary>
+            Gets the duration of this lock.
+            </summary>
+        </member>
+        <member name="T:WebDav.ActiveLock.Builder">
+            <summary>
+            Represents a builder of the <see cref="T:WebDav.ActiveLock"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.ActiveLock.Builder.WithApplyTo(System.Nullable{WebDav.ApplyTo.Lock})">
+            <summary>
+            Sets the ApplyTo parameter of an instance of the <see cref="T:WebDav.ActiveLock"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.ActiveLock.Builder.WithLockScope(System.Nullable{WebDav.LockScope})">
+            <summary>
+            Sets the LockTo parameter of an instance of the <see cref="T:WebDav.ActiveLock"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.ActiveLock.Builder.WithLockToken(System.String)">
+            <summary>
+            Sets the LockToken parameter of an instance of the <see cref="T:WebDav.ActiveLock"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.ActiveLock.Builder.WithOwner(WebDav.LockOwner)">
+            <summary>
+            Sets the Owner parameter of an instance of the <see cref="T:WebDav.ActiveLock"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.ActiveLock.Builder.WithLockRoot(System.String)">
+            <summary>
+            Sets the LockRoot parameter of an instance of the <see cref="T:WebDav.ActiveLock"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.ActiveLock.Builder.WithTimeout(System.Nullable{System.TimeSpan})">
+            <summary>
+            Sets the Timeout parameter of an instance of the <see cref="T:WebDav.ActiveLock"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.ActiveLock.Builder.Build">
+            <summary>
+            Builds a new instance of the <see cref="T:WebDav.ActiveLock"/> class.
+            </summary>
+            <returns>A new instance of the <see cref="T:WebDav.ActiveLock"/> class.</returns>
+        </member>
+        <member name="T:WebDav.ApplyTo">
+            <summary>
+            Contains classes to specify AppltTo for concrete methods.
+            </summary>
+        </member>
+        <member name="T:WebDav.ApplyTo.Propfind">
+            <summary>
+            Specifies whether the PROPFIND method is to be applied only to the resource, to the resource and its internal members only, or the resource and all its members.
+            It corresponds to the WebDAV Depth header.
+            </summary>
+        </member>
+        <member name="T:WebDav.ApplyTo.Copy">
+            <summary>
+            Specifies whether the COPY method is to be applied only to the resource or the resource and all its members.
+            It corresponds to the WebDAV Depth header.
+            </summary>
+        </member>
+        <member name="T:WebDav.ApplyTo.Lock">
+            <summary>
+            Specifies whether the LOCK method is to be applied only to the resource or the resource and all its members.
+            It corresponds to the WebDAV Depth header.
+            </summary>
+        </member>
+        <member name="T:WebDav.LockOwner">
+            <summary>
+            Represents a lock owner.
+            </summary>
+        </member>
+        <member name="P:WebDav.LockOwner.Value">
+            <summary>
+            Gets a value representing an owner.
+            </summary>
+        </member>
+        <member name="T:WebDav.LockScope">
+            <summary>
+            Specifies a type of lock - exclusive or shared.
+            </summary>
+        </member>
+        <member name="T:WebDav.NamespaceAttr">
+            <summary>
+            Represents an xml namespace attribute.
+            </summary>
+        </member>
+        <member name="M:WebDav.NamespaceAttr.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.NamespaceAttr"/> class.
+            </summary>
+            <param name="defaultNamespace">The default namespace.</param>
+        </member>
+        <member name="M:WebDav.NamespaceAttr.#ctor(System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.NamespaceAttr"/> class.
+            </summary>
+            <param name="prefix">The prefix of the namespace</param>
+            <param name="namespace">The namespace in form of URI specified at an xmlns attribute</param>
+        </member>
+        <member name="P:WebDav.NamespaceAttr.Prefix">
+            <summary>
+            Gets the prefix of this namespace.
+            </summary>
+        </member>
+        <member name="P:WebDav.NamespaceAttr.Namespace">
+            <summary>
+            Gets the namespace in form of URI specified at an xmlns attribute as follows. xmlns:prefix="URI".
+            </summary>
+        </member>
+        <member name="T:WebDav.PrincipalLockOwner">
+            <summary>
+            Represents a lock owner identified by principal name.
+            </summary>
+        </member>
+        <member name="M:WebDav.PrincipalLockOwner.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.PrincipalLockOwner"/> class.
+            </summary>
+            <param name="principalName">Name of the principal.</param>
+        </member>
+        <member name="P:WebDav.PrincipalLockOwner.Value">
+            <summary>
+            Gets a value representing an owner.
+            </summary>
+        </member>
+        <member name="T:WebDav.PropfindRequestType">
+            <summary>
+            Specifies a type of PROPFIND request.
+            AllProperties: 'allprop' + 'include'.
+            NamedProperties: 'prop'.
+            AllPropertiesImplied: no body.
+            </summary>
+        </member>
+        <member name="T:WebDav.UriLockOwner">
+            <summary>
+            Represents a lock owner identified by URI.
+            </summary>
+        </member>
+        <member name="M:WebDav.UriLockOwner.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.UriLockOwner"/> class.
+            </summary>
+            <param name="absoluteUri">The absolute URI.</param>
+            <exception cref="T:System.ArgumentException">The parameter uri should be a valid absolute uri.;absoluteUri</exception>
+        </member>
+        <member name="P:WebDav.UriLockOwner.Value">
+            <summary>
+            Gets a value representing an owner.
+            </summary>
+        </member>
+        <member name="T:WebDav.WebDavProperty">
+            <summary>
+            Represents a WebDAV resource property.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavProperty.#ctor(System.Xml.Linq.XName,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.WebDavProperty"/> class.
+            </summary>
+            <param name="name">The property name.</param>
+            <param name="value">The property value.</param>
+        </member>
+        <member name="P:WebDav.WebDavProperty.Name">
+            <summary>
+            Gets the property name.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavProperty.Value">
+            <summary>
+            Gets the property value.
+            </summary>
+        </member>
+        <member name="T:WebDav.WebDavPropertyStatus">
+            <summary>
+            Represents a status of an operation on a resource property.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavPropertyStatus.#ctor(System.Xml.Linq.XName,System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.WebDavPropertyStatus"/> class.
+            </summary>
+            <param name="name">The property name.</param>
+            <param name="statusCode">The status code of the operation.</param>
+        </member>
+        <member name="M:WebDav.WebDavPropertyStatus.#ctor(System.Xml.Linq.XName,System.Int32,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.WebDavPropertyStatus"/> class.
+            </summary>
+            <param name="name">The property name.</param>
+            <param name="statusCode">The status code of the operation.</param>
+            <param name="description">The description of the operation.</param>
+        </member>
+        <member name="P:WebDav.WebDavPropertyStatus.Name">
+            <summary>
+            Gets the property name.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavPropertyStatus.StatusCode">
+            <summary>
+            Gets the status code of the operation.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavPropertyStatus.Description">
+            <summary>
+            Gets the description of the operation.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavPropertyStatus.IsSuccessful">
+            <summary>
+            Gets a value indicating whether the operation on the property was successful.
+            </summary>
+            <value>
+            <c>true</c> if the operation was successfull; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="T:WebDav.WebDavResource">
+            <summary>
+            Represents a WebDAV resource.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.#ctor">
+            <summary>
+            Prevents a default instance of the <see cref="T:WebDav.WebDavResource"/> class from being created.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavResource.ActiveLocks">
+            <summary>
+            Gets a collection locks on this resource.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavResource.ContentLanguage">
+            <summary>
+            Gets the content language of this resource.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavResource.ContentLength">
+            <summary>
+            Gets the content length of this resource.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavResource.ContentType">
+            <summary>
+            Gets the content type of this resource.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavResource.CreationDate">
+            <summary>
+            Gets the creation date of this resource.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavResource.DisplayName">
+            <summary>
+            Gets the display name of this resource.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavResource.ETag">
+            <summary>
+            Gets the ETag of this resource.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavResource.Uri">
+            <summary>
+            Gets the URI of this resource.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavResource.IsCollection">
+            <summary>
+            Gets a value indicating whether this resource is a collection.
+            </summary>
+            <value>
+            <c>true</c> if this resource is a collection; otherwise, <c>false</c>. The default value is <c>false</c>.
+            </value>
+        </member>
+        <member name="P:WebDav.WebDavResource.IsHidden">
+            <summary>
+            Gets a value indicating whether this resource is hidden.
+            </summary>
+            <value>
+              <c>true</c> if this resource is hidden; otherwise, <c>false</c>. The default value is <c>false</c>.
+            </value>
+        </member>
+        <member name="P:WebDav.WebDavResource.LastModifiedDate">
+            <summary>
+            Gets the last modified date of this resource.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavResource.Properties">
+            <summary>
+            Gets the collection of properties of this resource.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavResource.PropertyStatuses">
+            <summary>
+            Gets the collection of property statuses of this resource.
+            </summary>
+        </member>
+        <member name="T:WebDav.WebDavResource.Builder">
+            <summary>
+            Represents a builder of the <see cref="T:WebDav.WebDavResource"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.Builder.WithActiveLocks(System.Collections.Generic.IReadOnlyCollection{WebDav.ActiveLock})">
+            <summary>
+            Sets the ActiveLocks parameter of an instance of the <see cref="T:WebDav.WebDavResource"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.Builder.WithContentLanguage(System.String)">
+            <summary>
+            Sets the ContentLanguage parameter of an instance of the <see cref="T:WebDav.WebDavResource"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.Builder.WithContentLength(System.Nullable{System.Int64})">
+            <summary>
+            Sets the ContentLength parameter of an instance of the <see cref="T:WebDav.WebDavResource"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.Builder.WithContentType(System.String)">
+            <summary>
+            Sets the ContentType parameter of an instance of the <see cref="T:WebDav.WebDavResource"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.Builder.WithCreationDate(System.Nullable{System.DateTime})">
+            <summary>
+            Sets the CreationDate parameter of an instance of the <see cref="T:WebDav.WebDavResource"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.Builder.WithDisplayName(System.String)">
+            <summary>
+            Sets the DisplayName parameter of an instance of the <see cref="T:WebDav.WebDavResource"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.Builder.WithETag(System.String)">
+            <summary>
+            Sets the ETag parameter of an instance of the <see cref="T:WebDav.WebDavResource"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.Builder.WithUri(System.String)">
+            <summary>
+            Sets the Uri parameter of an instance of the <see cref="T:WebDav.WebDavResource"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.Builder.IsCollection">
+            <summary>
+            Sets the IsCollection parameter of an instance of the <see cref="T:WebDav.WebDavResource"/> class to <c>true</c>.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.Builder.IsNotCollection">
+            <summary>
+            Sets the IsCollection parameter of an instance of the <see cref="T:WebDav.WebDavResource"/> class to <c>false</c>.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.Builder.IsHidden">
+            <summary>
+            Sets the IsHidden parameter of an instance of the <see cref="T:WebDav.WebDavResource"/> class to <c>true</c>.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.Builder.IsNotHidden">
+            <summary>
+            Sets the IsHidden parameter of an instance of the <see cref="T:WebDav.WebDavResource"/> class to <c>false</c>.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.Builder.WithLastModifiedDate(System.Nullable{System.DateTime})">
+            <summary>
+            Sets the LastModifiedDate parameter of an instance of the <see cref="T:WebDav.WebDavResource"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.Builder.WithProperties(System.Collections.Generic.IReadOnlyCollection{WebDav.WebDavProperty})">
+            <summary>
+            Sets the Properties parameter of an instance of the <see cref="T:WebDav.WebDavResource"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.Builder.WithPropertyStatuses(System.Collections.Generic.IReadOnlyCollection{WebDav.WebDavPropertyStatus})">
+            <summary>
+            Sets the PropertyStatuses parameter of an instance of the <see cref="T:WebDav.WebDavResource"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResource.Builder.Build">
+            <summary>
+            Builds a new instance of the <see cref="T:WebDav.WebDavResource"/> class.
+            </summary>
+            <returns>A new instance of the <see cref="T:WebDav.WebDavResource"/> class.</returns>
+        </member>
+        <member name="T:WebDav.IWebDavClient">
+            <summary>
+            Represents a WebDAV client that can perform WebDAV operations.
+            </summary>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Propfind(System.String)">
+            <summary>
+            Retrieves properties defined on the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <returns>An instance of <see cref="T:WebDav.PropfindResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Propfind(System.Uri)">
+            <summary>
+            Retrieves properties defined on the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <returns>An instance of <see cref="T:WebDav.PropfindResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Propfind(System.String,WebDav.PropfindParameters)">
+            <summary>
+            Retrieves properties defined on the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the PROPFIND operation.</param>
+            <returns>An instance of <see cref="T:WebDav.PropfindResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Propfind(System.Uri,WebDav.PropfindParameters)">
+            <summary>
+            Retrieves properties defined on the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the PROPFIND operation.</param>
+            <returns>An instance of <see cref="T:WebDav.PropfindResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Proppatch(System.String,WebDav.ProppatchParameters)">
+            <summary>
+            Sets and/or removes properties defined on the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the PROPPATCH operation.</param>
+            <returns>An instance of <see cref="T:WebDav.ProppatchResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Proppatch(System.Uri,WebDav.ProppatchParameters)">
+            <summary>
+            Sets and/or removes properties defined on the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the PROPPATCH operation.</param>
+            <returns>An instance of <see cref="T:WebDav.ProppatchResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Mkcol(System.String)">
+            <summary>
+            Creates a new collection resource at the location specified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Mkcol(System.Uri)">
+            <summary>
+            Creates a new collection resource at the location specified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Mkcol(System.String,WebDav.MkColParameters)">
+            <summary>
+            Creates a new collection resource at the location specified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the MKCOL operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Mkcol(System.Uri,WebDav.MkColParameters)">
+            <summary>
+            Creates a new collection resource at the location specified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the MKCOL operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.GetRawFile(System.String)">
+            <summary>
+            Retrieves the file identified by the request URI telling the server to return it without processing.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavStreamResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.GetRawFile(System.Uri)">
+            <summary>
+            Retrieves the file identified by the request URI telling the server to return it without processing.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavStreamResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.GetRawFile(System.String,WebDav.GetFileParameters)">
+            <summary>
+            Retrieves the file identified by the request URI telling the server to return it without processing.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the GET operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavStreamResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.GetRawFile(System.Uri,WebDav.GetFileParameters)">
+            <summary>
+            Retrieves the file identified by the request URI telling the server to return it without processing.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the GET operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavStreamResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.GetProcessedFile(System.String)">
+            <summary>
+            Retrieves the file identified by the request URI telling the server to return a processed response, if possible.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavStreamResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.GetProcessedFile(System.Uri)">
+            <summary>
+            Retrieves the file identified by the request URI telling the server to return a processed response, if possible.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavStreamResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.GetProcessedFile(System.String,WebDav.GetFileParameters)">
+            <summary>
+            Retrieves the file identified by the request URI telling the server to return a processed response, if possible.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the GET operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavStreamResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.GetProcessedFile(System.Uri,WebDav.GetFileParameters)">
+            <summary>
+            Retrieves the file identified by the request URI telling the server to return a processed response, if possible.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the GET operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavStreamResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.GetFileResponse(System.Uri,System.Boolean,WebDav.GetFileParameters)">
+            <summary>
+            Retrieves the raw http response of a file identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="translate">A parameter indicating if the response can be processed by the web server.</param>
+            <param name="parameters">Parameters of the GET operation.</param>
+            <returns>An instance of <see cref="T:System.Net.Http.HttpResponseMessage" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Delete(System.String)">
+            <summary>
+            Deletes the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Delete(System.Uri)">
+            <summary>
+            Deletes the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Delete(System.String,WebDav.DeleteParameters)">
+            <summary>
+            Deletes the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the DELETE operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Delete(System.Uri,WebDav.DeleteParameters)">
+            <summary>
+            Deletes the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the DELETE operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.PutFile(System.String,System.IO.Stream)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="stream">The stream of content of the resource.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.PutFile(System.Uri,System.IO.Stream)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="stream">The stream of content of the resource.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.PutFile(System.String,System.IO.Stream,System.String)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="stream">The stream of content of the resource.</param>
+            <param name="contentType">The content type of the request body.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.PutFile(System.Uri,System.IO.Stream,System.String)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="stream">The stream of content of the resource.</param>
+            <param name="contentType">The content type of the request body.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.PutFile(System.String,System.IO.Stream,WebDav.PutFileParameters)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="stream">The stream of content of the resource.</param>
+            <param name="parameters">Parameters of the PUT operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.PutFile(System.Uri,System.IO.Stream,WebDav.PutFileParameters)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="stream">The stream of content of the resource.</param>
+            <param name="parameters">Parameters of the PUT operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.PutFile(System.String,System.Net.Http.HttpContent)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="content">The content to pass to the request.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.PutFile(System.Uri,System.Net.Http.HttpContent)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="content">The content to pass to the request.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.PutFile(System.String,System.Net.Http.HttpContent,WebDav.PutFileParameters)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="content">The content to pass to the request.</param>
+            <param name="parameters">Parameters of the PUT operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.PutFile(System.Uri,System.Net.Http.HttpContent,WebDav.PutFileParameters)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="content">The content to pass to the request.</param>
+            <param name="parameters">Parameters of the PUT operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Copy(System.String,System.String)">
+            <summary>
+            Creates a duplicate of the source resource identified by the source URI in the destination resource identified by the destination URI.
+            </summary>
+            <param name="sourceUri">A string that represents the source URI.</param>
+            <param name="destUri">A string that represents the destination URI.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Copy(System.Uri,System.Uri)">
+            <summary>
+            Creates a duplicate of the source resource identified by the source URI in the destination resource identified by the destination URI.
+            </summary>
+            <param name="sourceUri">The source <see cref="T:System.Uri"/>.</param>
+            <param name="destUri">The destination <see cref="T:System.Uri"/>.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Copy(System.String,System.String,WebDav.CopyParameters)">
+            <summary>
+            Creates a duplicate of the source resource identified by the source URI in the destination resource identified by the destination URI.
+            </summary>
+            <param name="sourceUri">A string that represents the source URI.</param>
+            <param name="destUri">A string that represents the destination URI.</param>
+            <param name="parameters">Parameters of the COPY operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Copy(System.Uri,System.Uri,WebDav.CopyParameters)">
+            <summary>
+            Creates a duplicate of the source resource identified by the source URI in the destination resource identified by the destination URI.
+            </summary>
+            <param name="sourceUri">The source <see cref="T:System.Uri"/>.</param>
+            <param name="destUri">The destination <see cref="T:System.Uri"/>.</param>
+            <param name="parameters">Parameters of the COPY operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" /></returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Move(System.String,System.String)">
+            <summary>
+            Moves the resource identified by the source URI to the destination identified by the destination URI.
+            </summary>
+            <param name="sourceUri">A string that represents the source URI.</param>
+            <param name="destUri">A string that represents the destination URI.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Move(System.Uri,System.Uri)">
+            <summary>
+            Moves the resource identified by the source URI to the destination identified by the destination URI.
+            </summary>
+            <param name="sourceUri">The source <see cref="T:System.Uri"/>.</param>
+            <param name="destUri">The destination <see cref="T:System.Uri"/>.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" /></returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Move(System.String,System.String,WebDav.MoveParameters)">
+            <summary>
+            Moves the resource identified by the source URI to the destination identified by the destination URI.
+            </summary>
+            <param name="sourceUri">A string that represents the source URI.</param>
+            <param name="destUri">A string that represents the destination URI.</param>
+            <param name="parameters">Parameters of the MOVE operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Move(System.Uri,System.Uri,WebDav.MoveParameters)">
+            <summary>
+            Moves the resource identified by the source URI to the destination identified by the destination URI.
+            </summary>
+            <param name="sourceUri">The source <see cref="T:System.Uri"/>.</param>
+            <param name="destUri">The destination <see cref="T:System.Uri"/>.</param>
+            <param name="parameters">Parameters of the MOVE operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Lock(System.String)">
+            <summary>
+            Takes out a shared lock or refreshes an existing lock of the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <returns>An instance of <see cref="T:WebDav.LockResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Lock(System.Uri)">
+            <summary>
+            Takes out a shared lock or refreshes an existing lock of the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <returns>An instance of <see cref="T:WebDav.LockResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Lock(System.String,WebDav.LockParameters)">
+            <summary>
+            Takes out a lock of any type or refreshes an existing lock of the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the LOCK operation.</param>
+            <returns>An instance of <see cref="T:WebDav.LockResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Lock(System.Uri,WebDav.LockParameters)">
+            <summary>
+            Takes out a lock of any type or refreshes an existing lock of the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the LOCK operation.</param>
+            <returns>An instance of <see cref="T:WebDav.LockResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Unlock(System.String,System.String)">
+            <summary>
+            Removes the lock identified by the lock token from the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="lockToken">The resource lock token.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Unlock(System.Uri,System.String)">
+            <summary>
+            Removes the lock identified by the lock token from the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="lockToken">The resource lock token.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Unlock(System.String,WebDav.UnlockParameters)">
+            <summary>
+            Removes the lock identified by the lock token from the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the UNLOCK operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Unlock(System.Uri,WebDav.UnlockParameters)">
+            <summary>
+            Removes the lock identified by the lock token from the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the UNLOCK operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Search(System.String,WebDav.SearchParameters)">
+            <summary>
+            Executes a SEARCH operation.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the SEARCH operation.</param>
+            <returns>An instance of <see cref="T:WebDav.PropfindResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.IWebDavClient.Search(System.Uri,WebDav.SearchParameters)">
+            <summary>
+            Executes a SEARCH operation.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the SEARCH operation.</param>
+            <returns>An instance of <see cref="T:WebDav.PropfindResponse" />.</returns>
+        </member>
+        <member name="T:WebDav.CopyParameters">
+            <summary>
+            Represents parameters for the COPY WebDAV method.
+            </summary>
+        </member>
+        <member name="M:WebDav.CopyParameters.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.CopyParameters"/> class.
+            </summary>
+        </member>
+        <member name="P:WebDav.CopyParameters.ApplyTo">
+            <summary>
+            Gets or sets a value indicating whether the method is to be applied only to the resource or the resource and all its members.
+            It corresponds to the WebDAV Depth header.
+            </summary>
+        </member>
+        <member name="P:WebDav.CopyParameters.DestLockToken">
+            <summary>
+            Gets or sets the lock token for the destination resource.
+            </summary>
+        </member>
+        <member name="P:WebDav.CopyParameters.Overwrite">
+            <summary>
+            Gets or sets a value indicating whether the server should overwrite a non-null destination.
+            For more information see https://msdn.microsoft.com/en-us/library/aa142944.
+            </summary>
+            <value>
+            <c>true</c> if the the server should overwrite a non-null destination; otherwise <c>false</c>. The default value is <c>true</c>.
+            </value>
+        </member>
+        <member name="P:WebDav.CopyParameters.Headers">
+            <summary>
+            Gets or sets the collection of http request headers.
+            </summary>
+        </member>
+        <member name="P:WebDav.CopyParameters.CancellationToken">
+            <summary>
+            Gets or sets the cancellation token.
+            </summary>
+        </member>
+        <member name="T:WebDav.DeleteParameters">
+            <summary>
+            Represents parameters for the DELETE WebDAV method.
+            </summary>
+        </member>
+        <member name="M:WebDav.DeleteParameters.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.DeleteParameters"/> class.
+            </summary>
+        </member>
+        <member name="P:WebDav.DeleteParameters.LockToken">
+            <summary>
+            Gets or sets the resource lock token.
+            </summary>
+        </member>
+        <member name="P:WebDav.DeleteParameters.Headers">
+            <summary>
+            Gets or sets the collection of http request headers.
+            </summary>
+        </member>
+        <member name="P:WebDav.DeleteParameters.CancellationToken">
+            <summary>
+            Gets or sets the cancellation token.
+            </summary>
+        </member>
+        <member name="T:WebDav.GetFileParameters">
+            <summary>
+            Represents parameters for the GET WebDAV method.
+            </summary>
+        </member>
+        <member name="M:WebDav.GetFileParameters.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.GetFileParameters"/> class.
+            </summary>
+        </member>
+        <member name="P:WebDav.GetFileParameters.Headers">
+            <summary>
+            Gets or sets the collection of http request headers.
+            </summary>
+        </member>
+        <member name="P:WebDav.GetFileParameters.CancellationToken">
+            <summary>
+            Gets or sets the cancellation token.
+            </summary>
+        </member>
+        <member name="T:WebDav.LockParameters">
+            <summary>
+            Represents parameters for the LOCK WebDAV method.
+            </summary>
+        </member>
+        <member name="M:WebDav.LockParameters.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.LockParameters"/> class.
+            </summary>
+        </member>
+        <member name="P:WebDav.LockParameters.LockScope">
+            <summary>
+            Gets or sets a value indicating whether this lock is an exclusive lock or a shared lock.
+            </summary>
+        </member>
+        <member name="P:WebDav.LockParameters.Timeout">
+            <summary>
+            Gets or sets the timeout of this lock.
+            </summary>
+        </member>
+        <member name="P:WebDav.LockParameters.ApplyTo">
+            <summary>
+            Gets or sets a value indicating whether the method is to be applied only to the resource or the resource and all its members.
+            It corresponds to the WebDAV Depth header.
+            </summary>
+        </member>
+        <member name="P:WebDav.LockParameters.Owner">
+            <summary>
+            Gets or sets the owner of this lock.
+            </summary>
+        </member>
+        <member name="P:WebDav.LockParameters.ContentType">
+            <summary>
+            Gets or sets the content type of the request body.
+            The default value is application/xml; charset=utf-8.
+            </summary>
+        </member>
+        <member name="P:WebDav.LockParameters.Headers">
+            <summary>
+            Gets or sets the collection of http request headers.
+            </summary>
+        </member>
+        <member name="P:WebDav.LockParameters.CancellationToken">
+            <summary>
+            Gets or sets the cancellation token.
+            </summary>
+        </member>
+        <member name="T:WebDav.MkColParameters">
+            <summary>
+            Represents parameters for the MKCOL WebDAV method.
+            </summary>
+        </member>
+        <member name="M:WebDav.MkColParameters.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.MkColParameters"/> class.
+            </summary>
+        </member>
+        <member name="P:WebDav.MkColParameters.LockToken">
+            <summary>
+            Gets or sets the resource lock token.
+            </summary>
+        </member>
+        <member name="P:WebDav.MkColParameters.Headers">
+            <summary>
+            Gets or sets the collection of http request headers.
+            </summary>
+        </member>
+        <member name="P:WebDav.MkColParameters.CancellationToken">
+            <summary>
+            Gets or sets the cancellation token.
+            </summary>
+        </member>
+        <member name="T:WebDav.MoveParameters">
+            <summary>
+            Represents parameters for the MOVE WebDAV method.
+            </summary>
+        </member>
+        <member name="M:WebDav.MoveParameters.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.MoveParameters"/> class.
+            </summary>
+        </member>
+        <member name="P:WebDav.MoveParameters.SourceLockToken">
+            <summary>
+            Gets or sets the lock token for the moving resource.
+            </summary>
+        </member>
+        <member name="P:WebDav.MoveParameters.DestLockToken">
+            <summary>
+            Gets or sets the lock token for the destination resource.
+            </summary>
+        </member>
+        <member name="P:WebDav.MoveParameters.Overwrite">
+            <summary>
+            Gets or sets a value indicating whether the server should overwrite a non-null destination.
+            For more information see https://msdn.microsoft.com/en-us/library/aa142944.
+            </summary>
+            <value>
+            <c>true</c> if the the server should overwrite a non-null destination; otherwise <c>false</c>. The default value is <c>true</c>.
+            </value>
+        </member>
+        <member name="P:WebDav.MoveParameters.Headers">
+            <summary>
+            Gets or sets the collection of http request headers.
+            </summary>
+        </member>
+        <member name="P:WebDav.MoveParameters.CancellationToken">
+            <summary>
+            Gets or sets the cancellation token.
+            </summary>
+        </member>
+        <member name="T:WebDav.PropfindParameters">
+            <summary>
+            Represents parameters for the PROPFIND WebDAV method.
+            </summary>
+        </member>
+        <member name="M:WebDav.PropfindParameters.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.PropfindParameters"/> class.
+            </summary>
+        </member>
+        <member name="P:WebDav.PropfindParameters.RequestType">
+            <summary>
+            Gets or sets a type of PROPFIND request.
+            AllProperties: 'allprop' + 'include'.
+            NamedProperties: 'prop'.
+            </summary>
+        </member>
+        <member name="P:WebDav.PropfindParameters.CustomProperties">
+            <summary>
+            Gets or sets the collection of custom properties (or dead properties in terms of WebDav).
+            </summary>
+        </member>
+        <member name="P:WebDav.PropfindParameters.Namespaces">
+            <summary>
+            Gets or sets the collection of xml namespaces of properties.
+            </summary>
+        </member>
+        <member name="P:WebDav.PropfindParameters.ApplyTo">
+            <summary>
+            Gets or sets a value indicating whether the method is to be applied only to the resource, to the resource and its internal members only, or the resource and all its members.
+            It corresponds to the WebDAV Depth header.
+            </summary>
+        </member>
+        <member name="P:WebDav.PropfindParameters.ContentType">
+            <summary>
+            Gets or sets the content type of the request body.
+            The default value is application/xml; charset=utf-8.
+            </summary>
+        </member>
+        <member name="P:WebDav.PropfindParameters.Headers">
+            <summary>
+            Gets or sets the collection of http request headers.
+            </summary>
+        </member>
+        <member name="P:WebDav.PropfindParameters.CancellationToken">
+            <summary>
+            Gets or sets the cancellation token.
+            </summary>
+        </member>
+        <member name="T:WebDav.ProppatchParameters">
+            <summary>
+            Represents parameters for the PROPPATCH WebDAV method.
+            </summary>
+        </member>
+        <member name="M:WebDav.ProppatchParameters.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.ProppatchParameters"/> class.
+            </summary>
+        </member>
+        <member name="P:WebDav.ProppatchParameters.PropertiesToSet">
+            <summary>
+            Gets or sets properties to set on the resource.
+            </summary>
+        </member>
+        <member name="P:WebDav.ProppatchParameters.PropertiesToRemove">
+            <summary>
+            Gets or sets the collection of properties defined on the resource to remove.
+            </summary>
+        </member>
+        <member name="P:WebDav.ProppatchParameters.Namespaces">
+            <summary>
+            Gets or sets the collection of xml namespaces of properties.
+            </summary>
+        </member>
+        <member name="P:WebDav.ProppatchParameters.ContentType">
+            <summary>
+            Gets or sets the content type of the request body.
+            The default value is application/xml; charset=utf-8.
+            </summary>
+        </member>
+        <member name="P:WebDav.ProppatchParameters.Headers">
+            <summary>
+            Gets or sets the collection of http request headers.
+            </summary>
+        </member>
+        <member name="P:WebDav.ProppatchParameters.CancellationToken">
+            <summary>
+            Gets or sets the cancellation token.
+            </summary>
+        </member>
+        <member name="P:WebDav.ProppatchParameters.LockToken">
+            <summary>
+            Gets or sets the resource lock token.
+            </summary>
+        </member>
+        <member name="T:WebDav.PutFileParameters">
+            <summary>
+            Represents parameters for the PUT WebDAV method.
+            </summary>
+        </member>
+        <member name="M:WebDav.PutFileParameters.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.PutFileParameters"/> class.
+            </summary>
+        </member>
+        <member name="P:WebDav.PutFileParameters.ContentType">
+            <summary>
+            Gets or sets the content type of the request body.
+            The default value is application/octet-stream.
+            </summary>
+        </member>
+        <member name="P:WebDav.PutFileParameters.LockToken">
+            <summary>
+            Gets or sets the resource lock token.
+            </summary>
+        </member>
+        <member name="P:WebDav.PutFileParameters.Headers">
+            <summary>
+            Gets or sets the collection of http request headers.
+            </summary>
+        </member>
+        <member name="P:WebDav.PutFileParameters.CancellationToken">
+            <summary>
+            Gets or sets the cancellation token.
+            </summary>
+        </member>
+        <member name="P:WebDav.SearchParameters.Scope">
+            <summary>
+            Gets or sets a directory to search in.
+            </summary>
+        </member>
+        <member name="P:WebDav.SearchParameters.SearchProperty">
+            <summary>
+            Gets or sets the search property in the DAV:like element.
+            </summary>
+        </member>
+        <member name="P:WebDav.SearchParameters.SearchKeyword">
+            <summary>
+            Gets or sets the search keyword to be used in the DAV:like element.
+            Example: 'test%' (without quotes), results in 'LIKE test%' search.
+            </summary>
+        </member>
+        <member name="P:WebDav.SearchParameters.Namespaces">
+            <summary>
+            Gets or sets the collection of xml namespaces of properties.
+            </summary>
+        </member>
+        <member name="P:WebDav.SearchParameters.SelectProperties">
+            <summary>
+            Gets or sets the Select properties.
+            </summary>
+        </member>
+        <member name="P:WebDav.SearchParameters.Headers">
+            <summary>
+            Gets or sets the collection of the headers.
+            </summary>
+        </member>
+        <member name="P:WebDav.SearchParameters.CancellationToken">
+            <summary>
+            Gets or sets the cancellation token.
+            </summary>
+        </member>
+        <member name="T:WebDav.UnlockParameters">
+            <summary>
+            Represents parameters for the UNLOCK WebDAV method.
+            </summary>
+        </member>
+        <member name="M:WebDav.UnlockParameters.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.UnlockParameters"/> class.
+            <param name="lockToken">The resource lock token.</param>
+            </summary>
+        </member>
+        <member name="P:WebDav.UnlockParameters.LockToken">
+            <summary>
+            Gets the resource lock token.
+            </summary>
+        </member>
+        <member name="P:WebDav.UnlockParameters.Headers">
+            <summary>
+            Gets or sets the collection of http request headers.
+            </summary>
+        </member>
+        <member name="P:WebDav.UnlockParameters.CancellationToken">
+            <summary>
+            Gets or sets the cancellation token.
+            </summary>
+        </member>
+        <member name="T:WebDav.WebDavClientParams">
+            <summary>
+            Represents parameters for the <see cref="T:WebDav.WebDavClient"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavClientParams.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.WebDavClientParams"/> class.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavClientParams.UseDefaultCredentials">
+            <summary>
+            Gets or sets a value that controls whether default credentials are sent.
+            </summary>
+            <value>
+            <c>true</c> if the default credentials are used; otherwise <c>false</c>. The default value is <c>true</c>.
+            </value>
+        </member>
+        <member name="P:WebDav.WebDavClientParams.BaseAddress">
+            <summary>
+            Gets or sets the base address of the resource's URI used when sending requests.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavClientParams.Credentials">
+            <summary>
+            Gets or sets authentication information used by the WebDavClient.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavClientParams.DefaultRequestHeaders">
+            <summary>
+            Gets or sets the headers which should be sent with each request.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavClientParams.PreAuthenticate">
+            <summary>
+            Gets or sets a value that indicates whether an Authorization header should be sent with the request.
+            </summary>
+            <value>
+              <c>true</c> if an HTTP Authorization header should be send with requests after authentication has taken place; otherwise, <c>false</c>. The default value is <c>true</c>.
+            </value>
+        </member>
+        <member name="P:WebDav.WebDavClientParams.Proxy">
+            <summary>
+            Gets or sets proxy information used by the WebDavClient.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavClientParams.Timeout">
+            <summary>
+            Gets or sets a timeout for WebDAV operations.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavClientParams.UseProxy">
+            <summary>
+            Gets or sets a value indicating whether a proxy should be used for requests.
+            </summary>
+            <value>
+              <c>true</c> if a proxy should be used for requests; otherwise, <c>false</c>. The default value is <c>true</c>.
+            </value>
+        </member>
+        <member name="T:WebDav.LockResponse">
+            <summary>
+            Represents a response of the LOCK operation.
+            </summary>
+        </member>
+        <member name="M:WebDav.LockResponse.#ctor(System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.LockResponse"/> class.
+            </summary>
+            <param name="statusCode">The status code of the operation.</param>
+        </member>
+        <member name="M:WebDav.LockResponse.#ctor(System.Int32,System.Collections.Generic.IEnumerable{WebDav.ActiveLock})">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.LockResponse"/> class.
+            </summary>
+            <param name="statusCode">The status code of the response.</param>
+            <param name="activeLocks">The active locks of the resource.</param>
+        </member>
+        <member name="M:WebDav.LockResponse.#ctor(System.Int32,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.LockResponse"/> class.
+            </summary>
+            <param name="statusCode">The status code of the response.</param>
+            <param name="description">The description of the response.</param>
+        </member>
+        <member name="M:WebDav.LockResponse.#ctor(System.Int32,System.String,System.Collections.Generic.IEnumerable{WebDav.ActiveLock})">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.LockResponse"/> class.
+            </summary>
+            <param name="statusCode">The status code of the response.</param>
+            <param name="description">The description of the response.</param>
+            <param name="activeLocks">The active locks of the resource.</param>
+        </member>
+        <member name="P:WebDav.LockResponse.ActiveLocks">
+            <summary>
+            Gets a collection locks on this resource.
+            </summary>
+        </member>
+        <member name="T:WebDav.PropfindResponse">
+            <summary>
+            Represents a response of the PROPFIND operation.
+            </summary>
+        </member>
+        <member name="M:WebDav.PropfindResponse.#ctor(System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.PropfindResponse"/> class.
+            </summary>
+            <param name="statusCode">The status code of the operation.</param>
+        </member>
+        <member name="M:WebDav.PropfindResponse.#ctor(System.Int32,System.Collections.Generic.IEnumerable{WebDav.WebDavResource})">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.PropfindResponse"/> class.
+            </summary>
+            <param name="statusCode">The status code of the response.</param>
+            <param name="resources">The collection of WebDAV resources.</param>
+        </member>
+        <member name="M:WebDav.PropfindResponse.#ctor(System.Int32,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.PropfindResponse"/> class.
+            </summary>
+            <param name="statusCode">The status code of the response.</param>
+            <param name="description">The description of the response.</param>
+        </member>
+        <member name="M:WebDav.PropfindResponse.#ctor(System.Int32,System.String,System.Collections.Generic.IEnumerable{WebDav.WebDavResource})">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.PropfindResponse"/> class.
+            </summary>
+            <param name="statusCode">The status code of the response.</param>
+            <param name="description">The description of the response.</param>
+            <param name="resources">The collection of WebDAV resources.</param>
+        </member>
+        <member name="P:WebDav.PropfindResponse.Resources">
+            <summary>
+            Gets the collection of WebDAV resources.
+            </summary>
+        </member>
+        <member name="T:WebDav.ProppatchResponse">
+            <summary>
+            Represents a response of the PROPPATCH operation.
+            </summary>
+        </member>
+        <member name="M:WebDav.ProppatchResponse.#ctor(System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.ProppatchResponse"/> class.
+            </summary>
+            <param name="statusCode">The status code of the operation.</param>
+        </member>
+        <member name="M:WebDav.ProppatchResponse.#ctor(System.Int32,System.Collections.Generic.IEnumerable{WebDav.WebDavPropertyStatus})">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.ProppatchResponse"/> class.
+            </summary>
+            <param name="statusCode">The status code of the response.</param>
+            <param name="propertyStatuses">The collection of property statuses.</param>
+        </member>
+        <member name="M:WebDav.ProppatchResponse.#ctor(System.Int32,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.ProppatchResponse"/> class.
+            </summary>
+            <param name="statusCode">The status code of the response.</param>
+            <param name="description">The description of the response.</param>
+        </member>
+        <member name="M:WebDav.ProppatchResponse.#ctor(System.Int32,System.String,System.Collections.Generic.IEnumerable{WebDav.WebDavPropertyStatus})">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.ProppatchResponse"/> class.
+            </summary>
+            <param name="statusCode">The status code of the response.</param>
+            <param name="description">The description of the response.</param>
+            <param name="propertyStatuses">The collection of property statuses.</param>
+        </member>
+        <member name="P:WebDav.ProppatchResponse.PropertyStatuses">
+            <summary>
+            Gets the collection statuses of set/delete operation on the resource's properties.
+            </summary>
+        </member>
+        <member name="T:WebDav.WebDavResponse">
+            <summary>
+            Represents a response of a WebDAV operation.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavResponse.#ctor(System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.WebDavResponse"/> class.
+            </summary>
+            <param name="statusCode">The status code of the operation.</param>
+        </member>
+        <member name="M:WebDav.WebDavResponse.#ctor(System.Int32,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.WebDavResponse"/> class.
+            </summary>
+            <param name="statusCode">The status code of the response.</param>
+            <param name="description">The description of the response.</param>
+        </member>
+        <member name="P:WebDav.WebDavResponse.StatusCode">
+            <summary>
+            Gets the status code of the response.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavResponse.Description">
+            <summary>
+            Gets the description of the response.
+            </summary>
+        </member>
+        <member name="P:WebDav.WebDavResponse.IsSuccessful">
+            <summary>
+            Gets a value indicating whether the operation was successful.
+            </summary>
+            <value>
+            <c>true</c> if the operation was successful; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="T:WebDav.WebDavStreamResponse">
+            <summary>
+            Represents a response of the GET operation.
+            The class has to be properly disposed.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavStreamResponse.#ctor(System.Net.Http.HttpResponseMessage,System.IO.Stream)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.WebDavStreamResponse"/> class.
+            </summary>
+            <param name="response">The raw http response.</param>
+            <param name="stream">The stream of content of the resource.</param>
+        </member>
+        <member name="P:WebDav.WebDavStreamResponse.Stream">
+            <summary>
+            Gets the stream of content of the resource.
+            </summary>
+        </member>
+        <member name="T:WebDav.WebDavClient">
+            <summary>
+            Represents a WebDAV client that can perform WebDAV operations.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavClient.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.WebDavClient"/> class.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavClient.#ctor(WebDav.WebDavClientParams)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.WebDavClient"/> class.
+            </summary>
+            <param name="params">The parameters of the WebDAV client.</param>
+        </member>
+        <member name="M:WebDav.WebDavClient.#ctor(System.Net.Http.HttpClient)">
+            <summary>
+            Initializes a new instance of the <see cref="T:WebDav.WebDavClient"/> class.
+            </summary>
+            <param name="httpClient">The pre-configured instance of <see cref="T:System.Net.Http.HttpClient"/>.</param>
+        </member>
+        <member name="M:WebDav.WebDavClient.Propfind(System.String)">
+            <summary>
+            Retrieves properties defined on the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <returns>An instance of <see cref="T:WebDav.PropfindResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Propfind(System.Uri)">
+            <summary>
+            Retrieves properties defined on the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <returns>An instance of <see cref="T:WebDav.PropfindResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Propfind(System.String,WebDav.PropfindParameters)">
+            <summary>
+            Retrieves properties defined on the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the PROPFIND operation.</param>
+            <returns>An instance of <see cref="T:WebDav.PropfindResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Propfind(System.Uri,WebDav.PropfindParameters)">
+            <summary>
+            Retrieves properties defined on the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the PROPFIND operation.</param>
+            <returns>An instance of <see cref="T:WebDav.PropfindResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Proppatch(System.String,WebDav.ProppatchParameters)">
+            <summary>
+            Sets and/or removes properties defined on the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the PROPPATCH operation.</param>
+            <returns>An instance of <see cref="T:WebDav.ProppatchResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Proppatch(System.Uri,WebDav.ProppatchParameters)">
+            <summary>
+            Sets and/or removes properties defined on the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the PROPPATCH operation.</param>
+            <returns>An instance of <see cref="T:WebDav.ProppatchResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Mkcol(System.String)">
+            <summary>
+            Creates a new collection resource at the location specified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Mkcol(System.Uri)">
+            <summary>
+            Creates a new collection resource at the location specified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Mkcol(System.String,WebDav.MkColParameters)">
+            <summary>
+            Creates a new collection resource at the location specified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the MKCOL operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Mkcol(System.Uri,WebDav.MkColParameters)">
+            <summary>
+            Creates a new collection resource at the location specified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the MKCOL operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.GetRawFile(System.String)">
+            <summary>
+            Retrieves the file identified by the request URI telling the server to return it without processing.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavStreamResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.GetRawFile(System.Uri)">
+            <summary>
+            Retrieves the file identified by the request URI telling the server to return it without processing.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavStreamResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.GetRawFile(System.String,WebDav.GetFileParameters)">
+            <summary>
+            Retrieves the file identified by the request URI telling the server to return it without processing.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the GET operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavStreamResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.GetRawFile(System.Uri,WebDav.GetFileParameters)">
+            <summary>
+            Retrieves the file identified by the request URI telling the server to return it without processing.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the GET operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavStreamResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.GetProcessedFile(System.String)">
+            <summary>
+            Retrieves the file identified by the request URI telling the server to return a processed response, if possible.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavStreamResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.GetProcessedFile(System.Uri)">
+            <summary>
+            Retrieves the file identified by the request URI telling the server to return a processed response, if possible.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavStreamResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.GetProcessedFile(System.String,WebDav.GetFileParameters)">
+            <summary>
+            Retrieves the file identified by the request URI telling the server to return a processed response, if possible.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the GET operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavStreamResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.GetProcessedFile(System.Uri,WebDav.GetFileParameters)">
+            <summary>
+            Retrieves the file identified by the request URI telling the server to return a processed response, if possible.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the GET operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavStreamResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.GetFileResponse(System.Uri,System.Boolean,WebDav.GetFileParameters)">
+            <summary>
+            Retrieves the raw http response of a file identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="translate">A parameter indicating if the response can be processed by the web server.</param>
+            <param name="parameters">Parameters of the GET operation.</param>
+            <returns>An instance of <see cref="T:System.Net.Http.HttpResponseMessage" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Delete(System.String)">
+            <summary>
+            Deletes the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Delete(System.Uri)">
+            <summary>
+            Deletes the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Delete(System.String,WebDav.DeleteParameters)">
+            <summary>
+            Deletes the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the DELETE operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Delete(System.Uri,WebDav.DeleteParameters)">
+            <summary>
+            Deletes the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the DELETE operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.PutFile(System.String,System.IO.Stream)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="stream">The stream of content of the resource.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.PutFile(System.Uri,System.IO.Stream)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="stream">The stream of content of the resource.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.PutFile(System.String,System.IO.Stream,System.String)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="stream">The stream of content of the resource.</param>
+            <param name="contentType">The content type of the request body.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.PutFile(System.Uri,System.IO.Stream,System.String)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="stream">The stream of content of the resource.</param>
+            <param name="contentType">The content type of the request body.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.PutFile(System.String,System.IO.Stream,WebDav.PutFileParameters)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="stream">The stream of content of the resource.</param>
+            <param name="parameters">Parameters of the PUT operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.PutFile(System.Uri,System.IO.Stream,WebDav.PutFileParameters)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="stream">The stream of content of the resource.</param>
+            <param name="parameters">Parameters of the PUT operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.PutFile(System.String,System.Net.Http.HttpContent)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="content">The content to pass to the request.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.PutFile(System.Uri,System.Net.Http.HttpContent)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="content">The content to pass to the request.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.PutFile(System.String,System.Net.Http.HttpContent,WebDav.PutFileParameters)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="content">The content to pass to the request.</param>
+            <param name="parameters">Parameters of the PUT operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.PutFile(System.Uri,System.Net.Http.HttpContent,WebDav.PutFileParameters)">
+            <summary>
+            Requests the resource to be stored under the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="content">The content to pass to the request.</param>
+            <param name="parameters">Parameters of the PUT operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Copy(System.String,System.String)">
+            <summary>
+            Creates a duplicate of the source resource identified by the source URI in the destination resource identified by the destination URI.
+            </summary>
+            <param name="sourceUri">A string that represents the source URI.</param>
+            <param name="destUri">A string that represents the destination URI.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Copy(System.Uri,System.Uri)">
+            <summary>
+            Creates a duplicate of the source resource identified by the source URI in the destination resource identified by the destination URI.
+            </summary>
+            <param name="sourceUri">The source <see cref="T:System.Uri"/>.</param>
+            <param name="destUri">The destination <see cref="T:System.Uri"/>.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Copy(System.String,System.String,WebDav.CopyParameters)">
+            <summary>
+            Creates a duplicate of the source resource identified by the source URI in the destination resource identified by the destination URI.
+            </summary>
+            <param name="sourceUri">A string that represents the source URI.</param>
+            <param name="destUri">A string that represents the destination URI.</param>
+            <param name="parameters">Parameters of the COPY operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Copy(System.Uri,System.Uri,WebDav.CopyParameters)">
+            <summary>
+            Creates a duplicate of the source resource identified by the source URI in the destination resource identified by the destination URI.
+            </summary>
+            <param name="sourceUri">The source <see cref="T:System.Uri"/>.</param>
+            <param name="destUri">The destination <see cref="T:System.Uri"/>.</param>
+            <param name="parameters">Parameters of the COPY operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" /></returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Move(System.String,System.String)">
+            <summary>
+            Moves the resource identified by the source URI to the destination identified by the destination URI.
+            </summary>
+            <param name="sourceUri">A string that represents the source URI.</param>
+            <param name="destUri">A string that represents the destination URI.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Move(System.Uri,System.Uri)">
+            <summary>
+            Moves the resource identified by the source URI to the destination identified by the destination URI.
+            </summary>
+            <param name="sourceUri">The source <see cref="T:System.Uri"/>.</param>
+            <param name="destUri">The destination <see cref="T:System.Uri"/>.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" /></returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Move(System.String,System.String,WebDav.MoveParameters)">
+            <summary>
+            Moves the resource identified by the source URI to the destination identified by the destination URI.
+            </summary>
+            <param name="sourceUri">A string that represents the source URI.</param>
+            <param name="destUri">A string that represents the destination URI.</param>
+            <param name="parameters">Parameters of the MOVE operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Move(System.Uri,System.Uri,WebDav.MoveParameters)">
+            <summary>
+            Moves the resource identified by the source URI to the destination identified by the destination URI.
+            </summary>
+            <param name="sourceUri">The source <see cref="T:System.Uri"/>.</param>
+            <param name="destUri">The destination <see cref="T:System.Uri"/>.</param>
+            <param name="parameters">Parameters of the MOVE operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Lock(System.String)">
+            <summary>
+            Takes out a shared lock or refreshes an existing lock of the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <returns>An instance of <see cref="T:WebDav.LockResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Lock(System.Uri)">
+            <summary>
+            Takes out a shared lock or refreshes an existing lock of the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <returns>An instance of <see cref="T:WebDav.LockResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Lock(System.String,WebDav.LockParameters)">
+            <summary>
+            Takes out a lock of any type or refreshes an existing lock of the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the LOCK operation.</param>
+            <returns>An instance of <see cref="T:WebDav.LockResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Lock(System.Uri,WebDav.LockParameters)">
+            <summary>
+            Takes out a lock of any type or refreshes an existing lock of the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the LOCK operation.</param>
+            <returns>An instance of <see cref="T:WebDav.LockResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Unlock(System.String,System.String)">
+            <summary>
+            Removes the lock identified by the lock token from the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="lockToken">The resource lock token.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Unlock(System.Uri,System.String)">
+            <summary>
+            Removes the lock identified by the lock token from the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="lockToken">The resource lock token.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Unlock(System.String,WebDav.UnlockParameters)">
+            <summary>
+            Removes the lock identified by the lock token from the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the UNLOCK operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Unlock(System.Uri,WebDav.UnlockParameters)">
+            <summary>
+            Removes the lock identified by the lock token from the resource identified by the request URI.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the UNLOCK operation.</param>
+            <returns>An instance of <see cref="T:WebDav.WebDavResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Search(System.String,WebDav.SearchParameters)">
+            <summary>
+            Executes a SEARCH operation.
+            </summary>
+            <param name="requestUri">A string that represents the request URI.</param>
+            <param name="parameters">Parameters of the SEARCH operation.</param>
+            <returns>An instance of <see cref="T:WebDav.PropfindResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Search(System.Uri,WebDav.SearchParameters)">
+            <summary>
+            Executes a SEARCH operation.
+            </summary>
+            <param name="requestUri">The <see cref="T:System.Uri"/> to request.</param>
+            <param name="parameters">Parameters of the SEARCH operation.</param>
+            <returns>An instance of <see cref="T:WebDav.PropfindResponse" />.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.SetWebDavDispatcher(WebDav.IWebDavDispatcher)">
+            <summary>
+            Sets the dispatcher of WebDAV requests.
+            </summary>
+            <param name="dispatcher">The dispatcher of WebDAV http requests.</param>
+            <returns>This instance of <see cref="T:WebDav.WebDavClient" /> to support chain calls.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.SetPropfindResponseParser(WebDav.IResponseParser{WebDav.PropfindResponse})">
+            <summary>
+            Sets the parser of PROPFIND responses.
+            </summary>
+            <param name="responseParser">The parser of WebDAV PROPFIND responses.</param>
+            <returns>This instance of <see cref="T:WebDav.WebDavClient" /> to support chain calls.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.SetProppatchResponseParser(WebDav.IResponseParser{WebDav.ProppatchResponse})">
+            <summary>
+            Sets the parser of PROPPATCH responses.
+            </summary>
+            <param name="responseParser">The parser of WebDAV PROPPATCH responses.</param>
+            <returns>This instance of <see cref="T:WebDav.WebDavClient" /> to support chain calls.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.SetLockResponseParser(WebDav.IResponseParser{WebDav.LockResponse})">
+            <summary>
+            Sets the parser of LOCK responses.
+            </summary>
+            <param name="responseParser">The parser of WebDAV LOCK responses.</param>
+            <returns>This instance of <see cref="T:WebDav.WebDavClient" /> to support chain calls.</returns>
+        </member>
+        <member name="M:WebDav.WebDavClient.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting managed/unmanaged resources.
+            Disposes the underlying HttpClient.
+            </summary>
+        </member>
+        <member name="M:WebDav.WebDavClient.DisposeManagedResources">
+            <summary>
+            Disposes the managed resources.
+            </summary>
+        </member>
+    </members>
+</doc>

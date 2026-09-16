@@ -1,63 +1,72 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:models="using:phonetolinux.Models"
+             xmlns:vm="using:phonetolinux.ViewModels"
              x:Class="phonetolinux.Views.StorageBrowserView"
-             Background="Transparent">
+             x:DataType="vm:StorageBrowserViewModel">
 
-    <Grid RowDefinitions="Auto, *">
-        
-        <!-- HEADER / NAVIGATION BAR -->
-        <Border Grid.Row="0" Background="#1E1E1E" CornerRadius="8" Padding="12" Margin="0,0,0,10">
-            <Grid ColumnDefinitions="Auto, *, Auto">
-                
-                <!-- Back Button -->
-                <Button Grid.Column="0" Command="{Binding NavigateUpCommand}" Background="#2C2C2C" CornerRadius="6" Width="36" Height="36" Margin="0,0,12,0" ToolTip.Tip="Go Up">
-                    <PathIcon Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Foreground="White" Width="16" Height="16"/>
+    <Grid RowDefinitions="Auto, Auto, *">
+        <!-- Navigation bar and path -->
+        <Border Grid.Row="0" Background="#252526" Padding="12" CornerRadius="8" Margin="0,0,0,10">
+            <Grid ColumnDefinitions="Auto, *, Auto, Auto">
+                <Button Grid.Column="0" Command="{Binding NavigateUpCommand}" Margin="0,0,10,0" ToolTip.Tip="Katalog wyżej">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <TextBlock Text="⬆" />
+                        <TextBlock Text="W górę" />
+                    </StackPanel>
                 </Button>
-                
-                <!-- Current Path Indicator -->
-                <TextBlock Grid.Column="1" Text="{Binding CurrentPath}" VerticalAlignment="Center" Foreground="#AAAAAA" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                
-                <!-- Action Buttons (Refresh) -->
-                <Button Grid.Column="2" Command="{Binding RefreshCommand}" Background="Transparent" CornerRadius="6" Width="36" Height="36" ToolTip.Tip="Refresh">
-                    <PathIcon Data="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" Foreground="#4CAF50" Width="18" Height="18"/>
+
+                <TextBox Grid.Column="1" Text="{Binding CurrentPath}" IsReadOnly="True" VerticalAlignment="Center" Margin="0,0,10,0" />
+
+                <Button Grid.Column="2" Command="{Binding RefreshCommand}" Margin="0,0,10,0" ToolTip.Tip="Odśwież">
+                    <TextBlock Text="🔄" />
+                </Button>
+
+                <Button Grid.Column="3" Command="{Binding UploadFileAsyncCommand}" Classes="accent">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <TextBlock Text="📤" />
+                        <TextBlock Text="Send File" />
+                    </StackPanel>
                 </Button>
             </Grid>
         </Border>
 
-        <!-- FILE LIST -->
-        <Border Grid.Row="1" Background="#181818" CornerRadius="8" BorderBrush="#2A2A2A" BorderThickness="1">
-            <ListBox ItemsSource="{Binding Files}" 
-                     SelectedItem="{Binding SelectedFile}"
-                     Background="Transparent"
-                     SelectionMode="Single"
-                     Padding="5">
-                <ListBox.ItemTemplate>
-                    <DataTemplate x:DataType="models:PhoneFileItem">
-                        <Grid ColumnDefinitions="Auto, *, Auto" Background="Transparent" Margin="0,4">
-                            
-                            <!-- File/Folder Icon -->
-                            <PathIcon Grid.Column="0" Data="{Binding IconPath}" Foreground="{Binding IconColor}" Width="24" Height="24" Margin="10,0,15,0"/>
-                            
-                            <!-- File Name -->
-                            <TextBlock Grid.Column="1" Text="{Binding Name}" Foreground="White" FontSize="15" VerticalAlignment="Center"/>
-                            
-                            <!-- File Size -->
-                            <TextBlock Grid.Column="2" Text="{Binding FormattedSize}" Foreground="#888888" FontSize="12" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            
-                        </Grid>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-                <ListBox.Styles>
-                    <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
-                        <Setter Property="Background" Value="#2C2C2C"/>
-                    </Style>
-                    <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-                        <Setter Property="Background" Value="#3D3D3D"/>
-                    </Style>
-                </ListBox.Styles>
-            </ListBox>
+        <!-- List of Files and Directories -->
+        <Border Grid.Row="2" Background="#1E1E1E" CornerRadius="8" Padding="5">
+            <Grid RowDefinitions="*, Auto">
+                <DataGrid Grid.Row="0"
+                          ItemsSource="{Binding Files}"
+                          SelectedItem="{Binding SelectedFile}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          GridLinesVisibility="Horizontal">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="Typ" Width="60">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Icon}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="Nazwa" Binding="{Binding Name}" Width="*" />
+                        <DataGridTextColumn Header="Rozmiar" Binding="{Binding FormattedSize}" Width="120" />
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- Action bar for the selected file -->
+                <Border Grid.Row="1" Background="#2D2D2D" Padding="10" Margin="0,5,0,0" CornerRadius="4"
+                        IsVisible="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Grid.Column="0" Text="{Binding SelectedFile.Name}" VerticalAlignment="Center" FontWeight="Bold" />
+                        <Button Grid.Column="1" Command="{Binding DownloadFileAsyncCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBlock Text="📥" />
+                                <TextBlock Text="Pobierz plik" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Border>
+            </Grid>
         </Border>
-        
     </Grid>
 </UserControl>

@@ -10,3 +10,4 @@ pkg/opt/androidcallbridge/
 *.dll
 vendor/
 nuget.config
+debian

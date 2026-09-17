@@ -10,4 +10,7 @@ pkg/opt/androidcallbridge/
 *.dll
 vendor/
 nuget.config
-debian
+/debian/
+/Converters/
+/FodyWeavers.xml
+/FodyWeavers.xsd

@@ -10,5 +10,8 @@ pkg/opt/androidcallbridge/
 *.dll
 vendor/
 nuget.config
-debian
+debian/
 nupkgs
+Folder.DotSettings.user
+FodyWeavers.xml
+FodyWeavers.xsd

@@ -22,7 +22,7 @@ public class UpdateInfo
 public static class UpdateService
 {
     // URL to the version.json file hosted publicly on Google Drive
-    private const string VersionJsonUrl = "https://drive.google.com/uc?export=download&id=here paste id json file";
+    private const string VersionJsonUrl = "https://drive.google.com/uc?export=download&id=1ec4QizAwpoDG-YcZm58tkyjdJl4_9IGG";
 
     public static async Task<(bool hasUpdate, string newVersion, string changelog, string downloadUrl)> CheckForUpdatesAsync()
     {

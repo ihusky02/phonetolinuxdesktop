@@ -26,4 +26,4 @@ Emojis
 
 Automatic IP switching (to eliminate the need to manually enter the IP address to view files in the built-in file explorer)
 
-From now you can download a .deb file from https://drive.google.com/file/d/1eF4m9UT1mH2arVEBpeOxNP5sItiuguIU/view?usp=drive_link (because I don`t want play anymore with f***ng launchpad dependences)
+From now you can download a .deb file from  https://drive.google.com/file/d/1tB38o1Lx86xc4lshcG2FNhc0Gvw8pzOd/view?usp=drive_link (because I don`t want play anymore with f***ng launchpad dependences)

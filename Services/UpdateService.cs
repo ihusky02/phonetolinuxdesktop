@@ -1,51 +1,74 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
-using System.Threading.Tasks;
-using System.Diagnostics;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace phonetolinux.Services;
+
 public class UpdateInfo
 {
     [JsonPropertyName("version")]
-    public string Version { get; set; }
+    public string Version { get; set; } = "";
 
     [JsonPropertyName("downloadUrl")]
-    public string DownloadUrl { get; set; }
+    public string DownloadUrl { get; set; } = "";
 
     [JsonPropertyName("changelog")]
-    public string Changelog { get; set; }
+    public string Changelog { get; set; } = "";
 }
 
 public static class UpdateService
 {
-    // URL to the version.json file hosted publicly on Google Drive
-    private const string VersionJsonUrl = "https://drive.google.com/uc?export=download&id=1ec4QizAwpoDG-YcZm58tkyjdJl4_9IGG";
+    // Direct raw URL to version.json hosted on GitHub repository
+    private const string VersionJsonUrl = "https://raw.githubusercontent.com/ihusky02/phonetolinuxdesktop/refs/heads/main/version.json";
 
     public static async Task<(bool hasUpdate, string newVersion, string changelog, string downloadUrl)> CheckForUpdatesAsync()
     {
         try
         {
             using var client = new HttpClient();
-            string json = await client.GetStringAsync(VersionJsonUrl);
-            
-            var updateInfo = JsonSerializer.Deserialize<UpdateInfo>(json);
-            if (updateInfo == null) return (false, null, null, null);
+            client.DefaultRequestHeaders.Add("User-Agent", "phonetolinux-updater");
 
-            // Get the current version of the application from the assembly
-            Version currentVersion = typeof(UpdateService).Assembly.GetName().Version;
+            // Fetch the raw string from GitHub
+            string json = await client.GetStringAsync(VersionJsonUrl);
+            json = json.Trim();
+
+            // If the response accidentally starts with "JSON", clean it up to extract the valid JSON object
+            if (!json.StartsWith("{"))
+            {
+                int firstBrace = json.IndexOf('{');
+                if (firstBrace != -1)
+                {
+                    json = json.Substring(firstBrace);
+                }
+            }
+
+            Console.WriteLine($"[UPDATE DEBUG] Cleaned response: {json}");
+
+            // Deserialize JSON string into UpdateInfo object
+            var updateInfo = JsonSerializer.Deserialize<UpdateInfo>(json);
+            if (updateInfo == null || string.IsNullOrEmpty(updateInfo.Version))
+            {
+                return (false, null, null, null);
+            }
+
+            // Retrieve current assembly version and parse target version
+            Version currentVersion = typeof(UpdateService).Assembly.GetName().Version ?? new Version(1, 0, 0, 0);
             Version latestVersion = new Version(updateInfo.Version);
+
+            Console.WriteLine($"[UPDATE DEBUG] Current version: {currentVersion} | Latest version: {latestVersion}");
 
             if (latestVersion > currentVersion)
             {
                 return (true, updateInfo.Version, updateInfo.Changelog, updateInfo.DownloadUrl);
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Silently ignore network or parsing errors during startup
+            Console.WriteLine($"[UPDATE SERVICE ERROR] Exception caught during update check: {ex.Message}");
         }
 
         return (false, null, null, null);
@@ -56,16 +79,20 @@ public static class UpdateService
         try
         {
             using var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("User-Agent", "phonetolinux-updater");
+
+            Console.WriteLine($"[UPDATE DEBUG] Downloading binary package from: {downloadUrl}");
             byte[] fileBytes = await client.GetByteArrayAsync(downloadUrl);
 
             string tempFilePath = Path.Combine(Path.GetTempPath(), "phonetolinux_update.deb");
             await File.WriteAllBytesAsync(tempFilePath, fileBytes);
 
-            // Run the .deb package installation with root privileges via pkexec (prompts the user for a password)
+            Console.WriteLine($"[UPDATE DEBUG] Saved .deb to {tempFilePath}. Launching pkexec apt...");
+
             var startInfo = new ProcessStartInfo
             {
                 FileName = "pkexec",
-                Arguments = $"apt install -y {tempFilePath}",
+                Arguments = $"apt install -y \"{tempFilePath}\"",
                 UseShellExecute = true
             };
 
@@ -73,7 +100,7 @@ public static class UpdateService
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Error during update installation: {ex.Message}");
+            Console.WriteLine($"[UPDATE ERROR] Error during update installation: {ex.Message}");
         }
     }
 }

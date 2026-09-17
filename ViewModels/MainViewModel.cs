@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -73,6 +75,21 @@ namespace phonetolinux.ViewModels
         [ObservableProperty]
         private string _currentMessageText = "";
 
+        // --- UPDATE SYSTEM PROPERTIES ---
+
+        [ObservableProperty]
+        private string _updateStatusMessage = "";
+
+        [ObservableProperty]
+        private bool _isCheckingForUpdates;
+
+        /// <summary>
+        /// Reads the current application version directly from the executing assembly.
+        /// </summary>
+        public string CurrentVersion => Assembly.GetExecutingAssembly().GetName().Version?.ToString(4) ?? "1.0.0.0";
+
+        // ---------------------------------
+
         [ObservableProperty]
         private ObservableCollection<ContactItem> _contactsList = new();
 
@@ -139,6 +156,45 @@ namespace phonetolinux.ViewModels
                 SelectedTabIndex = 3;
                 _pairingListener = new PairingListenerService(this);
                 _pairingListener.StartListening(5000);
+            }
+        }
+
+        // --- UPDATE COMMAND & LOGIC ---
+
+        [RelayCommand]
+        public async Task CheckForUpdatesAsync()
+        {
+            if (IsCheckingForUpdates) return;
+
+            try
+            {
+                IsCheckingForUpdates = true;
+                UpdateStatusMessage = "Checking for updates...";
+
+                var (hasUpdate, newVersion, changelog, downloadUrl) = await UpdateService.CheckForUpdatesAsync();
+
+                if (hasUpdate && !string.IsNullOrEmpty(downloadUrl))
+                {
+                    UpdateStatusMessage = $"Downloading v{newVersion}...";
+                    
+                    // Download .deb package and invoke installer via pkexec
+                    await UpdateService.DownloadAndInstallUpdateAsync(downloadUrl);
+                    
+                    UpdateStatusMessage = "Installer launched. Confirm privileges to update.";
+                }
+                else
+                {
+                    UpdateStatusMessage = "You are using the latest version.";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[UPDATE ERROR] Failed to check or install updates: {ex.Message}");
+                UpdateStatusMessage = "Update check failed.";
+            }
+            finally
+            {
+                IsCheckingForUpdates = false;
             }
         }
 

@@ -1,2 +1,4 @@
 site:
-  root: ./
+  structure:
+    - space: phonetolinux Docs
+      path: ./

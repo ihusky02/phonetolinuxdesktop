@@ -1,4 +1,5 @@
 site:
+  title: PhoneToLinux
   structure:
     - space: phonetolinux Docs
       path: ./

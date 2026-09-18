@@ -5,4 +5,4 @@ site: phonetolinux
     - type: space
       key: phonetolinux-docs
       title: "PhoneToLinux Docs"
-      path: /docs
+      path: ./docs

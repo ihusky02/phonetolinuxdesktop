@@ -1,0 +1,6 @@
+site:
+  title: "PhoneToLinux Documentation"
+  structure:
+    - space:
+        title: "PhoneToLinux Docs"
+        root: "./"

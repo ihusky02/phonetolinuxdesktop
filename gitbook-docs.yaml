@@ -1,8 +1,0 @@
-$schema: https://api.gitbook.com/gitbook-docs.yaml
-site: phonetolinux
-  title: "PhoneToLinux Documentation"
-  structure:
-    - type: space
-      key: phonetolinux-docs
-      title: "PhoneToLinux Docs"
-      path: ./docs

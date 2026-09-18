@@ -2,4 +2,6 @@ site:
   title: PhoneToLinux
   structure:
     - space: phonetolinux Docs
-      path: ./
+      routes:
+        - page: README.md
+          path: ./README.md

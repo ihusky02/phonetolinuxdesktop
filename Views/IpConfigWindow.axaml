@@ -20,7 +20,7 @@
         <TextBox x:Name="IpTextBox" 
                  Watermark="np. 192.168.X.XX" 
                  Background="#2C2C2C" 
-                 Foreground="Black" 
+                 Foreground="White" 
                  CaretBrush="Black"
                  BorderBrush="#444444"
                  CornerRadius="8"

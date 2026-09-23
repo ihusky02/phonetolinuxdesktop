@@ -22,7 +22,7 @@ public partial class ContactItem : ObservableObject
     { 
         set 
         { 
-            if (string.IsNullOrEmpty(_phoneNumber)) 
+            if (string.IsNullOrEmpty(PhoneNumber)) 
                 PhoneNumber = value; 
         } 
     }
@@ -33,7 +33,7 @@ public partial class ContactItem : ObservableObject
     { 
         set 
         { 
-            if (string.IsNullOrEmpty(_phoneNumber)) 
+            if (string.IsNullOrEmpty(PhoneNumber)) 
                 PhoneNumber = value; 
         } 
     }

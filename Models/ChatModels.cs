@@ -32,7 +32,7 @@ public partial class ChatMessageItem : ObservableObject
     { 
         set 
         { 
-            if (string.IsNullOrEmpty(_text)) 
+            if (string.IsNullOrEmpty(Text)) 
             {
                 Text = value ?? ""; 
             }

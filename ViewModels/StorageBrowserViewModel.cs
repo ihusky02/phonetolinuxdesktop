@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WebDav;
 using phonetolinux.Models;
+using phonetolinux.Services;
 
 namespace phonetolinux.ViewModels;
 
@@ -20,19 +21,29 @@ public partial class StorageBrowserViewModel : ViewModelBase
 
     /// <summary>
     /// Automatically retrieves the active device IP address. 
-    /// Checks the cached session variable first or prompts the user.
+    /// Checks cached session/paired config first, performs local subnet auto-discovery, or prompts user as fallback.
     /// </summary>
     private async Task<string> GetDeviceIpAsync()
     {
-        if (!string.IsNullOrEmpty(_activeDeviceIp))
+        if (!string.IsNullOrEmpty(_activeDeviceIp) && await DeviceIpResolver.TestPortAsync(_activeDeviceIp, 5001, 300))
         {
             return _activeDeviceIp;
         }
 
+        // Auto-detect IP from cached config, paired credentials, or subnet scanning
+        string autoIp = await DeviceIpResolver.ResolvePhoneIpAsync();
+        if (!string.IsNullOrWhiteSpace(autoIp))
+        {
+            _activeDeviceIp = autoIp;
+            return _activeDeviceIp;
+        }
+
+        // Prompt user only if auto-detection fails to find phone
         var manualIp = await PromptForIpAddressAsync();
         if (!string.IsNullOrWhiteSpace(manualIp))
         {
             _activeDeviceIp = manualIp.Trim();
+            PhoneConfig.SaveIp(_activeDeviceIp);
         }
 
         return _activeDeviceIp;
@@ -290,7 +301,7 @@ public partial class StorageBrowserViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Helper method for Drag & Drop: Downloads selected file to a specific local temp path.
+    /// Helper method for Drag &amp; Drop: Downloads selected file to a specific local temp path.
     /// </summary>
     public async Task DownloadSelectedFileToPathAsync(string destinationPath)
     {
@@ -323,7 +334,7 @@ public partial class StorageBrowserViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Helper method for Drag & Drop: Uploads a file from local path directly to the phone.
+    /// Helper method for Drag &amp; Drop: Uploads a file from local path directly to the phone.
     /// </summary>
     public async Task UploadFileFromPathAsync(string localFilePath)
     {
@@ -354,7 +365,7 @@ public partial class StorageBrowserViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[DragDrop Error] Upload failed: {ex.Message}");
+            Console.WriteLine($"[DragDrop Error] Upload failure: {ex.Message}");
         }
     }
 

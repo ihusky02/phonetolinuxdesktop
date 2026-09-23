@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using phonetolinux.Services;
-using ReactiveUI; 
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 

@@ -12,7 +12,7 @@ namespace phonetolinux.Plugins
     /// <summary>
     /// Secure dynamic plugin for handling MMS attachments implementing:
     /// 1. Strict MIME-type whitelisting
-    /// 2. Path Traversal protection & filename sanitization
+    /// 2. Path Traversal protection &amp; filename sanitization
     /// 3. Strict 15MB file size enforcement (header check and stream-level guard)
     /// </summary>
     public class MmsPlugin : IPhonePlugin

@@ -32,10 +32,10 @@ mkdir -p %{buildroot}%{_datadir}/icons/hicolor/512x512/apps
 cp -r out/* %{buildroot}%{_datadir}/%{name}/
 
 # Create an executable symlink in /usr/bin
-ln -s %{_datadir}/%{name}/PhoneToLinuxDesktop %{buildroot}%{_bindir}/phonetolinuxdesktop
+ln -s %{_datadir}/%{name}/phonetolinux %{buildroot}%{_bindir}/phonetolinuxdesktop
 
-# Copy system desktop entry and PNG icon
-cp Assets/phonetolinuxdesktop.desktop %{buildroot}%{_datadir}/applications/
+# Copy system desktop entry from root directory and PNG icon from Assets
+cp phonetolinuxdesktop.desktop %{buildroot}%{_datadir}/applications/
 cp Assets/icon.png %{buildroot}%{_datadir}/icons/hicolor/512x512/apps/phonetolinuxdesktop.png
 
 %files
@@ -45,5 +45,5 @@ cp Assets/icon.png %{buildroot}%{_datadir}/icons/hicolor/512x512/apps/phonetolin
 %{_datadir}/icons/hicolor/512x512/apps/phonetolinuxdesktop.png
 
 %changelog
-* Wed Sep 23 2026 Stanisław Tlołka <stanislawtlolka@gmail.com> - 1.0.0-1
+* Wed Sep 23 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.1-1
 - Initial release with autodetect IP address in File Browser feature.

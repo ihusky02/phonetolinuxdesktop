@@ -1,11 +1,11 @@
 Name:           phonetolinuxdesktop
-Version:        1.0.0
+Version:        1.0.1
 Release:        1%{?dist}
 Summary:        Desktop client for PhoneToLinux integration
 
 License:        GPL-3.0-only
 URL:            https://github.com/ihusky02/phonetolinuxdesktop
-Source0:        %{name}-%{version}.tar.gz
+Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz
 
 BuildRequires:  dotnet-sdk-8.0
 Requires:       dotnet-runtime-8.0
@@ -46,4 +46,4 @@ cp Assets/icon.png %{buildroot}%{_datadir}/icons/hicolor/512x512/apps/phonetolin
 
 %changelog
 * Wed Sep 23 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.1-1
-- Initial release with autodetect IP address in File Browser feature.
+- Switch to GitHub tag source tarball and bump version to 1.0.1.

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=PhoneToLinux Desktop
+Comment=Desktop client for Android phone integration, calls, SMS, and file browsing
+Exec=phonetolinuxdesktop
+Icon=phonetolinuxdesktop
+Terminal=false
+Type=Application
+Categories=Utility;Network;Telephony;
+Keywords=Android;Phone;SMS;Calls;WebDAV;Linux;
+StartupWMClass=phonetolinux

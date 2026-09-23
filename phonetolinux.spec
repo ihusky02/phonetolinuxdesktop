@@ -45,5 +45,5 @@ cp assets/phonetolinuxdesktop.svg %{buildroot}%{_datadir}/icons/hicolor/scalable
 %{_datadir}/icons/hicolor/scalable/apps/phonetolinuxdesktop.svg
 
 %changelog
-* Wed Sep 23 2026 Stanisław Tlołka <stanisław@example.com> - 1.0.0-1
-- Initial official RPM release for Fedora.
+* Wed Sep 23 2026 Stanisław Tlołka <stanislawtlolka@gmail.com> - 1.0.1
+- Add autodetect IP Adress in File Browser

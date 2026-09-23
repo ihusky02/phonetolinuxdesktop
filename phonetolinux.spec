@@ -1,5 +1,9 @@
+#Disable build-id checks for SkiaSharp prebuilt libraries
+%global _build_id_links none
+%define debug_package %{nil}
+
 Name:           phonetolinuxdesktop
-Version:        1.0.1
+Version:        1.0.2
 Release:        1%{?dist}
 Summary:        Desktop client for PhoneToLinux integration
 
@@ -45,5 +49,9 @@ cp Assets/icon.png %{buildroot}%{_datadir}/icons/hicolor/512x512/apps/phonetolin
 %{_datadir}/icons/hicolor/512x512/apps/phonetolinuxdesktop.png
 
 %changelog
+%changelog
+* Wed Sep 23 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.2-1
+- Bump version to 1.0.2 and disable build-id generation for prebuilt libraries.
+
 * Wed Sep 23 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.1-1
 - Switch to GitHub tag source tarball and bump version to 1.0.1.

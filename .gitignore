@@ -15,3 +15,4 @@ nupkgs
 Folder.DotSettings.user
 FodyWeavers.xml
 FodyWeavers.xsd
+.codex/

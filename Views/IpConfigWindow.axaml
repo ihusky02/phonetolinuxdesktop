@@ -9,7 +9,8 @@
         WindowStartupLocation="CenterScreen"
         Topmost="True"
         SystemDecorations="BorderOnly"
-        Background="#121212">
+        TransparencyLevelHint="AcrylicBlur, Blur, Transparent"
+        Background="#CC121212">
     
     <StackPanel Margin="20" VerticalAlignment="Center" Spacing="12">
         <TextBlock Text="Write IP Adress:" 
@@ -19,7 +20,7 @@
         
         <TextBox x:Name="IpTextBox" 
                  Watermark="np. 192.168.X.XX" 
-                 Background="#2C2C2C" 
+                 Background="#CC2C2C2C" 
                  Foreground="White" 
                  CaretBrush="Black"
                  BorderBrush="#444444"

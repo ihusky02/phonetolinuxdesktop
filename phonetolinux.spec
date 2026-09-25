@@ -1,9 +1,9 @@
-#Disable build-id checks for SkiaSharp prebuilt libraries
+# Disable build-id checks for SkiaSharp prebuilt libraries
 %global _build_id_links none
 %define debug_package %{nil}
 
 Name:           phonetolinuxdesktop
-Version:        1.0.2
+Version:        1.0.3
 Release:        1%{?dist}
 Summary:        Desktop client for PhoneToLinux integration
 
@@ -22,8 +22,24 @@ calls, messages, and phone notifications directly with your Linux desktop.
 %autosetup -n %{name}-%{version}
 
 %build
-# Publish the .NET application as a framework-dependent Release build
-dotnet publish -c Release -o out/
+# Dynamically match the .NET RID based on the RPM build architecture
+case "%{_arch}" in
+    x86_64)
+        dotnet_rid="linux-x64"
+        ;;
+    aarch64)
+        dotnet_rid="linux-arm64"
+        ;;
+    armv7hl)
+        dotnet_rid="linux-arm"
+        ;;
+    *)
+        dotnet_rid="linux-%{_arch}"
+        ;;
+esac
+
+# Publish the application with support for the selected architecture
+dotnet publish -c Release -r $dotnet_rid --self-contained true -o out/
 
 %install
 # Create target system directory structure
@@ -49,7 +65,9 @@ cp Assets/icon.png %{buildroot}%{_datadir}/icons/hicolor/512x512/apps/phonetolin
 %{_datadir}/icons/hicolor/512x512/apps/phonetolinuxdesktop.png
 
 %changelog
-%changelog
+* Fri Sep 25 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.3-1
+- Bump version to 1.0.3 and add dynamic architecture mapping with English comments.
+
 * Wed Sep 23 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.2-1
 - Bump version to 1.0.2 and disable build-id generation for prebuilt libraries.
 

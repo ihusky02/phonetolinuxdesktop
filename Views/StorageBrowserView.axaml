@@ -7,7 +7,7 @@
 
     <Grid RowDefinitions="Auto, *">
         <!-- Navigation Bar and Path Input -->
-        <Border Grid.Row="0" Background="#252526" Padding="12" CornerRadius="8" Margin="0,0,0,10">
+        <Border Grid.Row="0" Background="#CC252526" Padding="12" CornerRadius="8" Margin="0,0,0,10">
             <Grid ColumnDefinitions="Auto, *, Auto, Auto">
                 <Button Grid.Column="0" Command="{Binding NavigateUpCommand}" Margin="0,0,10,0" ToolTip.Tip="Directory Up">
                     <StackPanel Orientation="Horizontal" Spacing="5">
@@ -32,7 +32,7 @@
         </Border>
 
         <!-- Main Content Area: DataGrid and Bottom Toolbar -->
-        <Border Grid.Row="1" Background="#1E1E1E" CornerRadius="8" Padding="5">
+        <Border Grid.Row="1" Background="#CC1E1E1E" CornerRadius="8" Padding="5">
             <Grid RowDefinitions="*, Auto">
                 <!-- DataGrid View -->
                 <dg:DataGrid Grid.Row="0"
@@ -59,7 +59,7 @@
                 </dg:DataGrid>
 
                 <!-- Action Toolbar for Selected Resource -->
-                <Border Grid.Row="1" Background="#2D2D2D" Padding="10" Margin="0,5,0,0" CornerRadius="4"
+                <Border Grid.Row="1" Background="#CC2D2D2D" Padding="10" Margin="0,5,0,0" CornerRadius="4"
                         IsVisible="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <Grid ColumnDefinitions="*, Auto">
                         <TextBlock Grid.Column="0" Text="{Binding SelectedFile.Name}" VerticalAlignment="Center" FontWeight="Bold" Foreground="White" />

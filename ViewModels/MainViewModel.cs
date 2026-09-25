@@ -60,6 +60,14 @@ namespace phonetolinux.ViewModels
         [ObservableProperty]
         private ChatConversationItem? _selectedConversation;
 
+        partial void OnSelectedConversationChanged(ChatConversationItem? value)
+        {
+            if (value != null)
+            {
+                _ = SelectConversation(value);
+            }
+        }
+
         [ObservableProperty]
         private bool _isInCall = false;
 
@@ -298,12 +306,25 @@ namespace phonetolinux.ViewModels
                 var fetchedThreads = await _conversationsPlugin.GetConversationsFromServerAsync();
                 if (fetchedThreads != null && fetchedThreads.Count > 0)
                 {
+                    var prevSelected = SelectedConversation;
                     RecentConversations.Clear();
+                    ChatConversationItem? toSelect = null;
                     foreach (var thread in fetchedThreads)
                     {
                         string rawAddr = !string.IsNullOrWhiteSpace(thread.PhoneNumber) ? thread.PhoneNumber : thread.ContactName ?? "";
                         string displayName = ResolveContactName(rawAddr, thread.ContactName);
-                        RecentConversations.Add(new ChatConversationItem { ContactName = displayName, LastMessage = thread.lastMessage ?? "...", PhoneNumber = rawAddr });
+                        var item = new ChatConversationItem { ContactName = displayName, LastMessage = thread.lastMessage ?? "...", PhoneNumber = rawAddr };
+                        RecentConversations.Add(item);
+
+                        if (prevSelected != null && (item.PhoneNumber == prevSelected.PhoneNumber || item.ContactName == prevSelected.ContactName))
+                        {
+                            toSelect = item;
+                        }
+                    }
+
+                    if (toSelect != null)
+                    {
+                        SelectedConversation = toSelect;
                     }
                     return;
                 }
@@ -347,7 +368,19 @@ namespace phonetolinux.ViewModels
                 SelectedTabIndex = 2;
                 PhoneNumber = phoneNumber;
                 ContactName = ResolveContactName(phoneNumber, null);
-                _ = LoadMessagesForNumberAsync(phoneNumber);
+
+                var matchingConv = RecentConversations.FirstOrDefault(c =>
+                    (!string.IsNullOrEmpty(c.PhoneNumber) && c.PhoneNumber == phoneNumber) ||
+                    (!string.IsNullOrEmpty(c.ContactName) && c.ContactName.Equals(ContactName, StringComparison.OrdinalIgnoreCase)));
+
+                if (matchingConv != null)
+                {
+                    SelectedConversation = matchingConv;
+                }
+                else
+                {
+                    _ = LoadMessagesForNumberAsync(phoneNumber);
+                }
             }
         }
 
@@ -386,6 +419,11 @@ namespace phonetolinux.ViewModels
         {
             if (conversation != null)
             {
+                if (SelectedConversation != conversation)
+                {
+                    SelectedConversation = conversation;
+                }
+
                 string targetAddress = !string.IsNullOrWhiteSpace(conversation.PhoneNumber) ? conversation.PhoneNumber : conversation.ContactName;
                 ContactName = string.IsNullOrWhiteSpace(conversation.ContactName) ? targetAddress : conversation.ContactName;
                 PhoneNumber = targetAddress;
@@ -416,6 +454,8 @@ namespace phonetolinux.ViewModels
                 }
             }
         }
+
+        public IRelayCommand DeleteChatCommand => DeleteConversationCommand;
 
         /// <summary>
         /// Highly resilient JSON message parser with exhaustive error logging.

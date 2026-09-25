@@ -52,21 +52,27 @@
                             <Button Width="48" Height="48" CornerRadius="12" ToolTip.Tip="Dialer"
                                     Command="{Binding SelectTabCommand}" CommandParameter="0"
                                     Background="{Binding SelectedTabIndex, Converter={StaticResource TabHighlightConverter}, ConverterParameter=0}">
-                                <TextBlock Text="📱" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <PathIcon Data="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" 
+                                          Foreground="#4CAF50" 
+                                          Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Button>
 
-                            <!-- Contacts Button (Index 1) -->
+                            <!-- Contacts / Address Book Button (Index 1) -->
                             <Button Width="48" Height="48" CornerRadius="12" ToolTip.Tip="Contacts"
                                     Command="{Binding SelectTabCommand}" CommandParameter="1"
                                     Background="{Binding SelectedTabIndex, Converter={StaticResource TabHighlightConverter}, ConverterParameter=1}">
-                                <TextBlock Text="📇" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <PathIcon Data="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm6 12H6v-1c0-2 4-3.1 6-3.1s6 1.1 6 3.1v1z" 
+                                          Foreground="#42A5F5" 
+                                          Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Button>
 
                             <!-- Chat Button (Index 2) -->
                             <Button Width="48" Height="48" CornerRadius="12" ToolTip.Tip="Chat"
                                     Command="{Binding SelectTabCommand}" CommandParameter="2"
                                     Background="{Binding SelectedTabIndex, Converter={StaticResource TabHighlightConverter}, ConverterParameter=2}">
-                                <TextBlock Text="💬" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <PathIcon Data="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" 
+                                          Foreground="#29B6F6" 
+                                          Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Button>
                             
                             <!-- Storage / Device Storage Button (Index 4) -->
@@ -75,7 +81,7 @@
                                     Background="{Binding SelectedTabIndex, Converter={StaticResource TabHighlightConverter}, ConverterParameter=4}">
                                 <PathIcon Data="M10 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V8C22 6.9 21.1 6 20 6H12L10 4Z" 
                                           Foreground="Orange" 
-                                          Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                          Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Button>
                         </StackPanel>
 
@@ -83,8 +89,10 @@
                         <Button Grid.Row="1" Width="48" Height="48" CornerRadius="12" Margin="0,0,0,12" ToolTip.Tip="Settings"
                                 HorizontalAlignment="Center"
                                 Command="{Binding SelectTabCommand}" CommandParameter="3"
-                                Background="Transparent">
-                            <TextBlock Text="⚙️" FontSize="22" Foreground="#9CA3AF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                Background="{Binding SelectedTabIndex, Converter={StaticResource TabHighlightConverter}, ConverterParameter=3}">
+                            <PathIcon Data="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" 
+                                      Foreground="#9CA3AF" 
+                                      Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Button>
                     </Grid>
                 </Border>
@@ -180,42 +188,51 @@
                     <!-- TAB 2: CHAT -->
                     <Grid ColumnDefinitions="320, *" Margin="10">
                         <Border Grid.Column="0" BorderBrush="#333333" BorderThickness="0,0,1,0" Margin="0,0,10,0">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{Binding RecentConversations}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Background="#CC1E1E1E" CornerRadius="8" Margin="0,3" Padding="2" HorizontalAlignment="Stretch">
-                                                <Button Command="{Binding #RootWindow.DataContext.SelectConversationCommand}" 
-                                                        CommandParameter="{Binding}"
-                                                        HorizontalAlignment="Stretch" 
-                                                        HorizontalContentAlignment="Stretch" 
-                                                        Background="Transparent" 
-                                                        Padding="10,8">
-                                                    <Button.ContextMenu>
-                                                        <ContextMenu>
-                                                            <MenuItem Header="Delete Chat" Command="{Binding #RootWindow.DataContext.DeleteChatCommand}" CommandParameter="{Binding}" />
-                                                        </ContextMenu>
-                                                    </Button.ContextMenu>
-                                                    
-                                                    <StackPanel Spacing="4" HorizontalAlignment="Stretch">
-                                                        <TextBlock Text="{Binding ContactName, FallbackValue='Nieznany'}" 
-                                                                   Foreground="#64B5F6" 
-                                                                   FontWeight="Bold" 
-                                                                   FontSize="14" 
-                                                                   TextTrimming="CharacterEllipsis"/>
-                                                        
-                                                        <TextBlock Text="{Binding LastMessage, FallbackValue=''}" 
-                                                                   Foreground="#CCCCCC" 
-                                                                   FontSize="12" 
-                                                                   TextTrimming="CharacterEllipsis" 
-                                                                   MaxLines="1"/>
-                                                    </StackPanel>
-                                                </Button>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
+                            <ListBox ItemsSource="{Binding RecentConversations}"
+                                     SelectedItem="{Binding SelectedConversation}"
+                                     Background="Transparent">
+                                <ListBox.Styles>
+                                    <Style Selector="ListBoxItem">
+                                        <Setter Property="CornerRadius" Value="8"/>
+                                        <Setter Property="Padding" Value="10,8"/>
+                                        <Setter Property="Margin" Value="0,2,6,2"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                    </Style>
+                                    <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                        <Setter Property="Background" Value="#1AFFFFFF"/>
+                                    </Style>
+                                    <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+                                        <Setter Property="Background" Value="#253545"/>
+                                    </Style>
+                                </ListBox.Styles>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Background="Transparent">
+                                            <Grid.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Header="Delete Chat" 
+                                                              Command="{Binding #RootWindow.DataContext.DeleteConversationCommand}" 
+                                                              CommandParameter="{Binding}" />
+                                                </ContextMenu>
+                                            </Grid.ContextMenu>
+                                            
+                                            <StackPanel Spacing="4" HorizontalAlignment="Stretch">
+                                                <TextBlock Text="{Binding ContactName, FallbackValue='Nieznany'}" 
+                                                           Foreground="#64B5F6" 
+                                                           FontWeight="Bold" 
+                                                           FontSize="14" 
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                
+                                                <TextBlock Text="{Binding LastMessage, FallbackValue=''}" 
+                                                           Foreground="#CCCCCC" 
+                                                           FontSize="12" 
+                                                           TextTrimming="CharacterEllipsis" 
+                                                           MaxLines="1"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
                         </Border>
 
                         <Grid Grid.Column="1" RowDefinitions="*, Auto">
@@ -284,7 +301,7 @@
                                     <Grid ColumnDefinitions="Auto, *, Auto" HorizontalAlignment="Stretch">
                                         <!-- Left side: Theme icon + Description -->
                                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                            <TextBlock Text="🌘" FontSize="20" VerticalAlignment="Center"/>
+                                            <TextBlock Text="🌗" FontSize="20" VerticalAlignment="Center"/>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="App Theme" FontWeight="Bold" Foreground="White"/>
                                                 <TextBlock Text="Toggle Dark / Light mode (Coming soon)" Foreground="#888888" FontSize="12"/>

@@ -19,7 +19,7 @@ An Avalonia UI and .NET 8 desktop application for integrating and synchronizing
 calls, messages, and phone notifications directly with your Linux desktop.
 
 %prep
-%autosetup -n %{name}-%{version}
+%autosetup -n phonetolinuxdesktop
 
 %build
 # Dynamically match the .NET RID based on the RPM build architecture

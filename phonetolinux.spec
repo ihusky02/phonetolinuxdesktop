@@ -2,6 +2,9 @@
 %global _build_id_links none
 %define debug_package %{nil}
 
+# Exclude unwanted automatic requirements (like missing lttng-ust in newer Fedora versions)
+%global __requires_exclude ^liblttng-ust\\.so\\.0.*$
+
 Name:           phonetolinuxdesktop
 Version:        1.0.3
 Release:        1%{?dist}
@@ -12,7 +15,14 @@ URL:            https://github.com/ihusky02/phonetolinuxdesktop
 Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz
 
 BuildRequires:  dotnet-sdk-8.0
+
+# System runtime & GUI dependencies required by Avalonia UI / SkiaSharp on Linux
 Requires:       dotnet-runtime-8.0
+Requires:       fontconfig
+Requires:       libX11
+Requires:       mesa-libGL
+Requires:       libICE
+Requires:       libSM
 
 %description
 An Avalonia UI and .NET 8 desktop application for integrating and synchronizing
@@ -52,8 +62,8 @@ mkdir -p %{buildroot}%{_datadir}/icons/hicolor/512x512/apps
 # Copy published binaries to the application directory
 cp -r out/* %{buildroot}%{_datadir}/%{name}/
 
-# Create an executable symlink in /usr/bin
-ln -s %{_datadir}/%{name}/phonetolinux %{buildroot}%{_bindir}/phonetolinuxdesktop
+# Create a relative executable symlink in /usr/bin (fixing the absolute symlink warning)
+ln -s ../share/%{name}/phonetolinux %{buildroot}%{_bindir}/phonetolinuxdesktop
 
 # Copy system desktop entry from root directory and PNG icon from Assets
 cp phonetolinuxdesktop.desktop %{buildroot}%{_datadir}/applications/
@@ -67,4 +77,4 @@ cp Assets/icon.png %{buildroot}%{_datadir}/icons/hicolor/512x512/apps/phonetolin
 
 %changelog
 * Fri Sep 25 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.3-1
-- Clean rebuild setup with online NuGet restore and dynamic architecture support.
+- Clean rebuild setup with online NuGet restore, filtered lttng-ust dependency, and added graphics/font system requirements.

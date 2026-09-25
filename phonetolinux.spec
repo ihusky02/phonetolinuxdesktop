@@ -38,9 +38,14 @@ case "%{_arch}" in
         ;;
 esac
 
-# Add local NuGet packages directory as a source and publish offline
+# Add local NuGet packages directory as a source
 dotnet nuget add source $PWD/nupkgs --name local-packages
-dotnet publish -c Release -r $dotnet_rid --self-contained true --offline -o out/
+
+# Restore packages offline first
+dotnet restore --offline
+
+# Publish the application without the invalid --offline flag
+dotnet publish -c Release -r $dotnet_rid --self-contained true --no-restore -o out/
 
 %install
 # Create target system directory structure

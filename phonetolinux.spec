@@ -38,13 +38,13 @@ case "%{_arch}" in
         ;;
 esac
 
-# Add local NuGet packages directory as a source
+# Clear default sources and add only the local NuGet packages directory
 dotnet nuget add source $PWD/nupkgs --name local-packages
 
-# Restore packages offline first
-dotnet restore --offline
+# Restore packages pointing directly to the local source without failing on offline switch
+dotnet restore --source $PWD/nupkgs
 
-# Publish the application without the invalid --offline flag
+# Publish the application for the selected architecture
 dotnet publish -c Release -r $dotnet_rid --self-contained true --no-restore -o out/
 
 %install

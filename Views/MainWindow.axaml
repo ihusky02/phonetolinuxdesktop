@@ -102,7 +102,7 @@
                     
                     <!-- TAB 0: DIALER -->
                     <Grid RowDefinitions="Auto, *, Auto" Margin="10">
-                        <TextBlock Grid.Row="0" Text="{Binding PhoneNumber}" FontSize="38" Foreground="White"
+                        <TextBlock Grid.Row="0" Text="{Binding DialerPhoneNumber}" FontSize="38" Foreground="White"
                                    TextAlignment="Center" Margin="0,20,0,10" MinHeight="50"/>
 
                         <UniformGrid Grid.Row="1" Columns="3" Rows="4" Margin="10">

@@ -78,6 +78,9 @@ namespace phonetolinux.ViewModels
         private string _contactName = "Unknown";
 
         [ObservableProperty]
+        private string _dialerPhoneNumber = "";
+
+        [ObservableProperty]
         private string _phoneNumber = "";
 
         [ObservableProperty]
@@ -587,23 +590,25 @@ namespace phonetolinux.ViewModels
         }
 
         [RelayCommand]
-        public void AppendNumber(string number) => PhoneNumber += number;
+        public void AppendNumber(string number) => DialerPhoneNumber += number;
 
         [RelayCommand]
         public void Backspace()
         {
-            if (!string.IsNullOrEmpty(PhoneNumber)) PhoneNumber = PhoneNumber.Substring(0, PhoneNumber.Length - 1);
+            if (!string.IsNullOrEmpty(DialerPhoneNumber)) DialerPhoneNumber = DialerPhoneNumber.Substring(0, DialerPhoneNumber.Length - 1);
         }
 
         [RelayCommand]
         public async Task Call()
         {
-            if (!string.IsNullOrEmpty(PhoneNumber))
+            if (!string.IsNullOrEmpty(DialerPhoneNumber))
             {
+                string numberToCall = DialerPhoneNumber;
                 IsInCall = true;
                 IsIncomingCall = false;
-                ContactName = ResolveContactName(PhoneNumber, null);
-                await _phoneCallPlugin.StartCallAsync(PhoneNumber);
+                PhoneNumber = numberToCall;
+                ContactName = ResolveContactName(numberToCall, null);
+                await _phoneCallPlugin.StartCallAsync(numberToCall);
             }
         }
 

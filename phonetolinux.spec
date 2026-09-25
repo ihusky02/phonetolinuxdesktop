@@ -38,13 +38,8 @@ case "%{_arch}" in
         ;;
 esac
 
-# Clear default sources and add only the local NuGet packages directory
-dotnet nuget add source $PWD/nupkgs --name local-packages
-
-# Restore packages pointing directly to the local source without failing on offline switch
-dotnet restore --source $PWD/nupkgs
-
-# Publish the application for the selected architecture
+# Restore packages with architecture mapping and publish application
+dotnet restore -r $dotnet_rid
 dotnet publish -c Release -r $dotnet_rid --self-contained true --no-restore -o out/
 
 %install
@@ -72,10 +67,4 @@ cp Assets/icon.png %{buildroot}%{_datadir}/icons/hicolor/512x512/apps/phonetolin
 
 %changelog
 * Fri Sep 25 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.3-1
-- Bump version to 1.0.3, add offline local NuGet packages source support.
-
-* Wed Sep 23 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.2-1
-- Bump version to 1.0.2 and disable build-id generation for prebuilt libraries.
-
-* Wed Sep 23 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.1-1
-- Switch to GitHub tag source tarball and bump version to 1.0.1.
+- Clean rebuild setup with online NuGet restore and dynamic architecture support.

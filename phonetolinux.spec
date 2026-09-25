@@ -38,8 +38,9 @@ case "%{_arch}" in
         ;;
 esac
 
-# Publish the application with support for the selected architecture
-dotnet publish -c Release -r $dotnet_rid --self-contained true -o out/
+# Add local NuGet packages directory as a source and publish offline
+dotnet nuget add source $PWD/nupkgs --name local-packages
+dotnet publish -c Release -r $dotnet_rid --self-contained true --offline -o out/
 
 %install
 # Create target system directory structure
@@ -66,7 +67,7 @@ cp Assets/icon.png %{buildroot}%{_datadir}/icons/hicolor/512x512/apps/phonetolin
 
 %changelog
 * Fri Sep 25 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.3-1
-- Bump version to 1.0.3 and add dynamic architecture mapping with English comments.
+- Bump version to 1.0.3, add offline local NuGet packages source support.
 
 * Wed Sep 23 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.2-1
 - Bump version to 1.0.2 and disable build-id generation for prebuilt libraries.

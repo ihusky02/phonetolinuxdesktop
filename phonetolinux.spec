@@ -6,7 +6,7 @@
 %global __requires_exclude ^liblttng-ust\\.so\\.0.*$
 
 Name:           phonetolinuxdesktop
-Version:        1.0.3
+Version:        1.0.4
 Release:        1%{?dist}
 Summary:        Desktop client for PhoneToLinux integration
 
@@ -76,5 +76,9 @@ cp Assets/icon.png %{buildroot}%{_datadir}/icons/hicolor/512x512/apps/phonetolin
 %{_datadir}/icons/hicolor/512x512/apps/phonetolinuxdesktop.png
 
 %changelog
+* Sat Sep 26 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.4-1
+- Improved application stability and performance.
+- Added modern vector icons for chat window, address book, and settings navigation.
+
 * Fri Sep 25 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.3-1
 - Clean rebuild setup with online NuGet restore, filtered lttng-ust dependency, and added graphics/font system requirements.

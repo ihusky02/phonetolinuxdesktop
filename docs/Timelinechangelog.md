@@ -2,6 +2,24 @@
 
 ---
 
+## [2026-09-28] - Comprehensive Emoji Integration & Twemoji CDN Caching
+
+### 🇵🇱 Wersja Polska
+- **Integracja pełnej bazy emoji:**
+  - Wdrożono wczytywanie i parsowanie pełnej bazy emoji z pliku `emoji.json` w wtyczce `EmojiPlugin`.
+- **Dynamiczne pobieranie i buforowanie Twemoji (CDN):**
+  - Dodano automatyczne pobieranie i lokalne buforowanie w `~/.phonetolinux/cache/emojis/` w wysokiej jakości kolorowych grafikach PNG (standard Twemoji 14.0.2) na podstawie kodów Unicode.
+  - Zastosowano inteligentny system warstwowy w `MainWindow.axaml` (`Panel` łączący `Image` oraz `TextBlock` jako zapasowy fallback tekstowy), eliminując problem monochromatycznych lub brakujących białych znaków.
+
+### 🇬🇧 English Version
+- **Comprehensive Emoji Database Integration:**
+  - Implemented loading and parsing of the complete emoji database from `emoji.json` in `EmojiPlugin`.
+- **Dynamic Twemoji CDN Caching:**
+  - Added automatic downloading and local caching (`~/.phonetolinux/cache/emojis/`) of full-color Twemoji PNG assets based on Unicode code points.
+  - Implemented layered rendering in `MainWindow.axaml` combining high-resolution `Image` graphics with a robust `TextBlock` text fallback.
+
+---
+
 ## [2026-09-25] - UI & UX Improvements: Chat Conversation Selection & Navigation Rail Vector Icons
 
 ### 🇵🇱 Wersja Polska

@@ -5,7 +5,7 @@
         <Nullable>enable</Nullable>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <NoWarn>$(NoWarn);1591</NoWarn>
+        <NoWarn>$(NoWarn);1591;0436</NoWarn>
         <Version>1.0.4</Version>
         <AssemblyVersion>1.0.4</AssemblyVersion>
         <FileVersion>1.0.4</FileVersion>
@@ -16,17 +16,24 @@
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**" />
+        <None Include="emoji.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <Compile Remove="plugins\EmojiPlugin\**" />
+        <None Include="plugins\EmojiPlugin\**" />
+        <ProjectReference Include="plugins\EmojiPlugin\EmojiPlugin.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.2.3" />
-        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.3" />
-        <PackageReference Include="Avalonia.Desktop" Version="11.2.3" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.3" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.3" />
+        <PackageReference Include="Avalonia" Version="11.2.5" />
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.5" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.2.5" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.5" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.5" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
-        <PackageReference Include="ReactiveUI" Version="24.2.0" />
+        <PackageReference Include="FluentIcons.Avalonia" Version="2.0.316.1" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
+        <PackageReference Include="ReactiveUI" Version="20.1.63" />
         <PackageReference Include="ReactiveUI.Fody" Version="19.5.41" />
         <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
         <PackageReference Include="WebDav.Client" Version="2.9.0" />

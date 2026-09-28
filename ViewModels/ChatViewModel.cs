@@ -3,12 +3,17 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using phonetolinux.Models;
 using phonetolinux.Services;
+using phonetolinux.Plugins;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Avalonia.Threading;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 
 namespace phonetolinux.ViewModels;
 
@@ -22,6 +27,7 @@ public partial class ChatViewModel : ObservableObject
     private readonly ChatHistoryPlugin _historyService;
     private readonly SmsHistoryPlugin _smsHistoryService;
     private readonly ConversationsPlugin _conversationsService;
+    private readonly EmojiPlugin _emojiPlugin = new();
 
     [ObservableProperty]
     private string _phoneNumber = "";
@@ -41,6 +47,32 @@ public partial class ChatViewModel : ObservableObject
     [ObservableProperty]
     private ChatConversationItem? _selectedConversation;
 
+    [ObservableProperty]
+    private ObservableCollection<EmojiItemModel> _availableEmojis = new();
+
+    private static FluentIcons.Common.Symbol GetFluentSymbol(string name)
+    {
+        return name.ToLowerInvariant() switch
+        {
+            "smile" => FluentIcons.Common.Symbol.Emoji,
+            "blush" => FluentIcons.Common.Symbol.Emoji,
+            "laugh" => FluentIcons.Common.Symbol.EmojiLaugh,
+            "heart" => FluentIcons.Common.Symbol.Heart,
+            "thumbsup" => FluentIcons.Common.Symbol.ThumbLike,
+            "fire" => FluentIcons.Common.Symbol.Fire,
+            "rocket" => FluentIcons.Common.Symbol.Rocket,
+            "dog" => FluentIcons.Common.Symbol.AnimalDog,
+            "sparkles" => FluentIcons.Common.Symbol.Sparkle,
+            "shiba_happy" => FluentIcons.Common.Symbol.AnimalDog,
+            "shiba_love" => FluentIcons.Common.Symbol.Heart,
+            "shiba_cool" => FluentIcons.Common.Symbol.Emoji,
+            "shiba_sleep" => FluentIcons.Common.Symbol.EmojiMeh,
+            "shiba_wow" => FluentIcons.Common.Symbol.EmojiSurprise,
+            "shiba_paws" => FluentIcons.Common.Symbol.Sparkle,
+            _ => FluentIcons.Common.Symbol.Emoji
+        };
+    }
+
     public ChatViewModel()
     {
         _smsService = new SmsPlugin();
@@ -48,8 +80,59 @@ public partial class ChatViewModel : ObservableObject
         _smsHistoryService = new SmsHistoryPlugin();
         _conversationsService = new ConversationsPlugin();
 
+        LoadEmojisFromPlugin();
         StartRealtimeSmsListener();
         _ = LoadConversationsAndSyncAsync();
+    }
+
+    private void LoadEmojisFromPlugin()
+    {
+        try
+        {
+            var jsonAssets = _emojiPlugin.Execute("assets");
+            var assets = JsonSerializer.Deserialize<List<EmojiPlugin.EmojiAssetItem>>(jsonAssets);
+            if (assets != null)
+            {
+                foreach (var a in assets)
+                {
+                    AvailableEmojis.Add(new EmojiItemModel
+                    {
+                        Name = a.Name,
+                        Symbol = a.Unicode,
+                        Shortcode = a.Shortcode,
+                        AssetPath = a.AssetPath,
+                        FluentSymbol = GetFluentSymbol(a.Name)
+                    });
+                }
+            }
+        }
+        catch
+        {
+            AvailableEmojis.Add(new EmojiItemModel { Name = "smile", Symbol = "😄", Shortcode = ":smile:", AssetPath = "avares://phonetolinux/Assets/Emojis/smile.png", FluentSymbol = FluentIcons.Common.Symbol.Emoji });
+            AvailableEmojis.Add(new EmojiItemModel { Name = "blush", Symbol = "😊", Shortcode = ":blush:", AssetPath = "avares://phonetolinux/Assets/Emojis/blush.png", FluentSymbol = FluentIcons.Common.Symbol.Emoji });
+            AvailableEmojis.Add(new EmojiItemModel { Name = "laugh", Symbol = "😂", Shortcode = ":laugh:", AssetPath = "avares://phonetolinux/Assets/Emojis/laugh.png", FluentSymbol = FluentIcons.Common.Symbol.EmojiLaugh });
+            AvailableEmojis.Add(new EmojiItemModel { Name = "heart", Symbol = "❤️", Shortcode = ":heart:", AssetPath = "avares://phonetolinux/Assets/Emojis/heart.png", FluentSymbol = FluentIcons.Common.Symbol.Heart });
+            AvailableEmojis.Add(new EmojiItemModel { Name = "thumbsup", Symbol = "👍", Shortcode = ":thumbsup:", AssetPath = "avares://phonetolinux/Assets/Emojis/thumbsup.png", FluentSymbol = FluentIcons.Common.Symbol.ThumbLike });
+            AvailableEmojis.Add(new EmojiItemModel { Name = "fire", Symbol = "🔥", Shortcode = ":fire:", AssetPath = "avares://phonetolinux/Assets/Emojis/fire.png", FluentSymbol = FluentIcons.Common.Symbol.Fire });
+            AvailableEmojis.Add(new EmojiItemModel { Name = "rocket", Symbol = "🚀", Shortcode = ":rocket:", AssetPath = "avares://phonetolinux/Assets/Emojis/rocket.png", FluentSymbol = FluentIcons.Common.Symbol.Rocket });
+            AvailableEmojis.Add(new EmojiItemModel { Name = "dog", Symbol = "🐶", Shortcode = ":dog:", AssetPath = "avares://phonetolinux/Assets/Emojis/dog.png", FluentSymbol = FluentIcons.Common.Symbol.AnimalDog });
+            AvailableEmojis.Add(new EmojiItemModel { Name = "sparkles", Symbol = "✨", Shortcode = ":sparkles:", AssetPath = "avares://phonetolinux/Assets/Emojis/sparkles.png", FluentSymbol = FluentIcons.Common.Symbol.Sparkle });
+            AvailableEmojis.Add(new EmojiItemModel { Name = "shiba_happy", Symbol = "🐕😊", Shortcode = ":shiba_happy:", AssetPath = "avares://phonetolinux/Assets/Emojis/dog.png", FluentSymbol = FluentIcons.Common.Symbol.AnimalDog });
+            AvailableEmojis.Add(new EmojiItemModel { Name = "shiba_love", Symbol = "🐶💖", Shortcode = ":shiba_love:", AssetPath = "avares://phonetolinux/Assets/Emojis/heart.png", FluentSymbol = FluentIcons.Common.Symbol.Heart });
+            AvailableEmojis.Add(new EmojiItemModel { Name = "shiba_cool", Symbol = "😎🐕", Shortcode = ":shiba_cool:", AssetPath = "avares://phonetolinux/Assets/Emojis/dog.png", FluentSymbol = FluentIcons.Common.Symbol.Emoji });
+            AvailableEmojis.Add(new EmojiItemModel { Name = "shiba_sleep", Symbol = "💤🐶", Shortcode = ":shiba_sleep:", AssetPath = "avares://phonetolinux/Assets/Emojis/dog.png", FluentSymbol = FluentIcons.Common.Symbol.EmojiMeh });
+            AvailableEmojis.Add(new EmojiItemModel { Name = "shiba_wow", Symbol = "😲🐕", Shortcode = ":shiba_wow:", AssetPath = "avares://phonetolinux/Assets/Emojis/dog.png", FluentSymbol = FluentIcons.Common.Symbol.EmojiSurprise });
+            AvailableEmojis.Add(new EmojiItemModel { Name = "shiba_paws", Symbol = "🐾🐾", Shortcode = ":shiba_paws:", AssetPath = "avares://phonetolinux/Assets/Emojis/sparkles.png", FluentSymbol = FluentIcons.Common.Symbol.Sparkle });
+        }
+    }
+
+    /// <summary>
+    /// Inserts selected emoji into current message text.
+    /// </summary>
+    [RelayCommand]
+    private void InsertEmoji(string emoji)
+    {
+        CurrentMessageText = (CurrentMessageText ?? "") + emoji;
     }
 
     partial void OnSelectedConversationChanged(ChatConversationItem? value)
@@ -226,7 +309,8 @@ public partial class ChatViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(CurrentMessageText)) return;
         if (string.IsNullOrEmpty(PhoneNumber)) return;
 
-        string textToSend = CurrentMessageText;
+        // Process emoji shortcodes through Android Emoji Engine plugin
+        string textToSend = _emojiPlugin.Execute(CurrentMessageText);
 
         bool success = await _smsService.SendSmsAsync(PhoneNumber, textToSend);
         

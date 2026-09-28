@@ -1,7 +1,136 @@
+using System;
+using System.IO;
+using System.Net.Http;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 
 namespace phonetolinux.Models;
+
+/// <summary>
+/// Represents an emoji item in the emoji picker with automatic Twemoji graphic loading and caching.
+/// </summary>
+public partial class EmojiItemModel : ObservableObject
+{
+    public string Name { get; set; } = "";
+
+    [ObservableProperty]
+    private string _symbol = "";
+
+    public string Shortcode { get; set; } = "";
+    public string AssetPath { get; set; } = "";
+    public FluentIcons.Common.Symbol FluentSymbol { get; set; } = FluentIcons.Common.Symbol.Emoji;
+
+    private static readonly string CacheDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".phonetolinux", "cache", "emojis");
+    private static readonly HttpClient HttpClient = new();
+    private static readonly HashSet<string> Downloading = new();
+
+    public IImage? ImageSource
+    {
+        get
+        {
+            try
+            {
+                var fileName = "";
+                if (!string.IsNullOrEmpty(AssetPath))
+                {
+                    fileName = Path.GetFileName(AssetPath);
+                }
+                else if (!string.IsNullOrEmpty(Name))
+                {
+                    fileName = $"{Name}.png";
+                }
+
+                if (!string.IsNullOrEmpty(fileName))
+                {
+                    var diskPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Emojis", fileName);
+                    if (File.Exists(diskPath)) return new Bitmap(diskPath);
+
+                    var relativePath = Path.Combine("Assets", "Emojis", fileName);
+                    if (File.Exists(relativePath)) return new Bitmap(relativePath);
+
+                    try
+                    {
+                        return new Bitmap(AssetLoader.Open(new Uri($"avares://phonetolinux/Assets/Emojis/{fileName}")));
+                    }
+                    catch { }
+                }
+
+                if (!string.IsNullOrEmpty(Symbol))
+                {
+                    string hexCode = GetEmojiHexCode(Symbol);
+                    if (!string.IsNullOrEmpty(hexCode))
+                    {
+                        Directory.CreateDirectory(CacheDir);
+                        string cacheFilePath = Path.Combine(CacheDir, $"{hexCode}.png");
+                        if (File.Exists(cacheFilePath))
+                        {
+                            return new Bitmap(cacheFilePath);
+                        }
+
+                        lock (Downloading)
+                        {
+                            if (!Downloading.Contains(hexCode))
+                            {
+                                Downloading.Add(hexCode);
+                                _ = Task.Run(async () =>
+                                {
+                                    try
+                                    {
+                                        string url = $"https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/{hexCode}.png";
+                                        var bytes = await HttpClient.GetByteArrayAsync(url);
+                                        await File.WriteAllBytesAsync(cacheFilePath, bytes);
+                                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                                        {
+                                            OnPropertyChanged(nameof(ImageSource));
+                                        });
+                                    }
+                                    catch
+                                    {
+                                    }
+                                    finally
+                                    {
+                                        lock (Downloading)
+                                        {
+                                            Downloading.Remove(hexCode);
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ImageSource Error for {Name}] {ex.Message}");
+            }
+            return null;
+        }
+    }
+
+    private static string GetEmojiHexCode(string emoji)
+    {
+        var codePoints = new List<string>();
+        foreach (var rune in emoji.EnumerateRunes())
+        {
+            int value = rune.Value;
+            if (value != 0xFE0F && value != 0x200D)
+            {
+                codePoints.Add(value.ToString("x"));
+            }
+            else if (value == 0x200D)
+            {
+                codePoints.Add("200d");
+            }
+        }
+        return string.Join("-", codePoints);
+    }
+}
 
 /// <summary>
 /// Represents a single chat message within a conversation thread.

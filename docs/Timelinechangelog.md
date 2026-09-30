@@ -2,6 +2,24 @@
 
 ---
 
+## [2026-09-30] - Real-Time Chat Message Delivery & Auto-Scroll
+
+### 🇵🇱 Wersja Polska
+- **Naprawa dostarczania wiadomości w czasie rzeczywistym:**
+  - Wdrożono inteligentną normalizację numerów telefonów (`IsSenderActiveChat`) z uwzględnieniem prefiksów (`+48`), spacji oraz myślników w zdarzeniach SSE przychodzących SMS-ów.
+  - Dodano asynchroniczne odpytywanie w tle (`PollActiveChatMessagesAsync`) synchronizujące wiadomości aktywnego czatu co 2 sekundy.
+- **Automatyczne przewijanie czatu (Auto-Scroll):**
+  - Skonfigurowano automatyczne przewijanie `ScrollViewer` do najnowszej wiadomości przy każdej zmianie listy wiadomości.
+
+### 🇬🇧 English Version
+- **Real-Time Chat Message Delivery Fix:**
+  - Implemented robust phone number normalization (`IsSenderActiveChat`) handling country codes (`+48`), spaces, and dashes for incoming SSE SMS events.
+  - Added background chat polling (`PollActiveChatMessagesAsync`) synchronizing active conversation messages every 2 seconds.
+- **Automatic Chat Auto-Scroll:**
+  - Configured automatic scrolling of the chat `ScrollViewer` to the bottom (latest message) whenever message list updates occur.
+
+---
+
 ## [2026-09-28] - Comprehensive Emoji Integration & Twemoji CDN Caching
 
 ### 🇵🇱 Wersja Polska

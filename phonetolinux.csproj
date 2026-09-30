@@ -6,9 +6,9 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>$(NoWarn);1591;0436</NoWarn>
-        <Version>1.0.5</Version>
-        <AssemblyVersion>1.0.5</AssemblyVersion>
-        <FileVersion>1.0.5</FileVersion>
+        <Version>1.0.6</Version>
+        <AssemblyVersion>1.0.6</AssemblyVersion>
+        <FileVersion>1.0.6</FileVersion>
         <RuntimeIdentifiers>linux-x64;linux-arm64</RuntimeIdentifiers>
         <EventSourceSupport>false</EventSourceSupport>
         <TracingSupport>false</TracingSupport>

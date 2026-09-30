@@ -1,6 +1,6 @@
 # Dokumentacja Techniczna Projektu: PhoneToLinux Desktop
 
-**Wersja:** 1.0.1 
+**Wersja:** 1.0.6 
 **Platforma:** .NET 8.0 (`net8.0`) / Linux (x64)  
 **Środowisko graficzne:** Avalonia UI 11  
 **Plik projektu:** `phonetolinux.csproj`  
@@ -103,4 +103,4 @@ W celu wyeliminowania konieczności ręcznego podawania IP przed przeglądaniem 
 - **Szyfrowanie AES-256-CBC**: Dane parowania i klucze sesyjne są szyfrowane na dysku kluczem derywowanym z PIN-u i adresów MAC (`DevicePairingService`).
 
 ---
-*Dokumentacja wygenerowana dla projektu PhoneToLinux Desktop (wersja 1.1.5.3).*
+*Dokumentacja wygenerowana dla projektu PhoneToLinux Desktop (wersja 1.0.6).*

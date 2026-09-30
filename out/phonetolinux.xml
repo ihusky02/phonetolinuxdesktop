@@ -1,0 +1,1393 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>phonetolinux</name>
+    </assembly>
+    <members>
+        <member name="T:phonetolinux.TabHighlightConverter">
+            <summary>
+            Converts current selected tab index to active background highlight brush.
+            </summary>
+        </member>
+        <member name="T:phonetolinux.Models.EmojiItemModel">
+            <summary>
+            Represents an emoji item in the emoji picker with automatic Twemoji graphic loading and caching.
+            </summary>
+            <inheritdoc/>
+        </member>
+        <member name="P:phonetolinux.Models.EmojiItemModel.Symbol">
+            <inheritdoc cref="F:phonetolinux.Models.EmojiItemModel._symbol"/>
+        </member>
+        <member name="T:phonetolinux.Models.ChatMessageItem">
+            <summary>
+            Represents a single chat message within a conversation thread.
+            </summary>
+            <inheritdoc/>
+        </member>
+        <member name="F:phonetolinux.Models.ChatMessageItem._text">
+            <summary>
+            The actual text content of the message.
+            </summary>
+        </member>
+        <member name="F:phonetolinux.Models.ChatMessageItem._isOutgoing">
+            <summary>
+            Indicates whether the message was sent by the user (true) or received (false).
+            </summary>
+        </member>
+        <member name="P:phonetolinux.Models.ChatMessageItem.ServerBody">
+            <summary>
+            Fallback property to handle Android's native SMS database column "body".
+            Maps the incoming JSON "body" to the "Text" property if it wasn't provided directly.
+            </summary>
+        </member>
+        <member name="P:phonetolinux.Models.ChatMessageItem.ServerType">
+            <summary>
+            Fallback property to handle Android's native SMS database column "type".
+            Maps the incoming JSON "type" (1 = Received/Inbox, 2 = Sent/Outbox) to the "IsOutgoing" boolean flag.
+            </summary>
+        </member>
+        <member name="P:phonetolinux.Models.ChatMessageItem.Text">
+            <inheritdoc cref="F:phonetolinux.Models.ChatMessageItem._text"/>
+        </member>
+        <member name="P:phonetolinux.Models.ChatMessageItem.IsOutgoing">
+            <inheritdoc cref="F:phonetolinux.Models.ChatMessageItem._isOutgoing"/>
+        </member>
+        <member name="T:phonetolinux.Models.ChatConversationItem">
+            <summary>
+            Represents a summarized conversation thread in the recent chats list (left panel).
+            </summary>
+            <inheritdoc/>
+        </member>
+        <member name="F:phonetolinux.Models.ChatConversationItem._contactName">
+            <summary>
+            Display name of the contact, or the raw phone number if the name is not in the address book.
+            </summary>
+        </member>
+        <member name="F:phonetolinux.Models.ChatConversationItem._phoneNumber">
+            <summary>
+            The phone number or alphanumeric sender ID associated with the conversation.
+            </summary>
+        </member>
+        <member name="F:phonetolinux.Models.ChatConversationItem._lastMessage">
+            <summary>
+            Preview snippet of the most recent message in the thread.
+            </summary>
+        </member>
+        <member name="P:phonetolinux.Models.ChatConversationItem.ContactName">
+            <inheritdoc cref="F:phonetolinux.Models.ChatConversationItem._contactName"/>
+        </member>
+        <member name="P:phonetolinux.Models.ChatConversationItem.PhoneNumber">
+            <inheritdoc cref="F:phonetolinux.Models.ChatConversationItem._phoneNumber"/>
+        </member>
+        <member name="P:phonetolinux.Models.ChatConversationItem.LastMessage">
+            <inheritdoc cref="F:phonetolinux.Models.ChatConversationItem._lastMessage"/>
+        </member>
+        <member name="T:phonetolinux.Models.ContactItem">
+            <inheritdoc/>
+        </member>
+        <member name="P:phonetolinux.Models.ContactItem.Name">
+            <inheritdoc cref="F:phonetolinux.Models.ContactItem._name"/>
+        </member>
+        <member name="P:phonetolinux.Models.ContactItem.PhoneNumber">
+            <inheritdoc cref="F:phonetolinux.Models.ContactItem._phoneNumber"/>
+        </member>
+        <member name="T:phonetolinux.Models.MmsAttachment">
+            <summary>
+            Represents an MMS attachment (image, audio, or document) with its metadata.
+            </summary>
+        </member>
+        <member name="T:phonetolinux.Services.ChatHistoryPlugin">
+            <summary>
+            Plugin responsible for fetching chat history from the phone server 
+            and managing local persistence in JSON files.
+            </summary>
+        </member>
+        <member name="P:phonetolinux.Services.ChatHistoryPlugin.Endpoint">
+            <inheritdoc />
+        </member>
+        <member name="M:phonetolinux.Services.ChatHistoryPlugin.Execute(System.String)">
+            <summary>
+            Executes the main plugin task for a given query parameter.
+            </summary>
+            <param name="queryParams">Query parameters containing target phone number (e.g., "number=+48500100200").</param>
+            <returns>Response in JSON format.</returns>
+        </member>
+        <member name="M:phonetolinux.Services.ChatHistoryPlugin.FetchRemoteHistoryAsync(System.Net.Http.HttpClient,System.String)">
+            <summary>
+            Asynchronously fetches chat history from the remote phone server via HTTP endpoint.
+            </summary>
+            <param name="httpClient">Active HttpClient instance connected to the phone.</param>
+            <param name="number">Phone number to retrieve messages for.</param>
+            <returns>A list of deduplicated chat messages.</returns>
+        </member>
+        <member name="M:phonetolinux.Services.ChatHistoryPlugin.LoadHistoryAsync(System.String)">
+            <summary>
+            Asynchronously loads message history for the specified identifier from local storage.
+            </summary>
+            <param name="identifier">Contact name or phone number.</param>
+            <returns>A list of deduplicated chat message items.</returns>
+        </member>
+        <member name="M:phonetolinux.Services.ChatHistoryPlugin.SaveHistoryAsync(System.String,System.Collections.Generic.IEnumerable{phonetolinux.Models.ChatMessageItem})">
+            <summary>
+            Asynchronously saves message history for the specified identifier to a local JSON file.
+            Deduplicates items before persisting.
+            </summary>
+            <param name="identifier">Contact name or phone number.</param>
+            <param name="messages">Collection of messages to save.</param>
+        </member>
+        <member name="T:phonetolinux.Services.ContactsPlugin">
+            <summary>
+            Plugin responsible for fetching the list of contacts from the mobile device
+            via an HTTP request to the server, deserializing the JSON response, and deduplicating entries.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Services.ContactsPlugin.#ctor(System.Net.Http.HttpClient)">
+            <summary>
+            Initializes a new instance of the <see cref="T:phonetolinux.Services.ContactsPlugin"/> class.
+            </summary>
+            <param name="httpClient">Optional custom HttpClient instance. Uses a default client if none provided.</param>
+        </member>
+        <member name="P:phonetolinux.Services.ContactsPlugin.Endpoint">
+            <inheritdoc />
+        </member>
+        <member name="M:phonetolinux.Services.ContactsPlugin.Execute(System.String)">
+            <summary>
+            Executes the plugin operation for a given query.
+            </summary>
+            <param name="queryParams">Query parameters.</param>
+            <returns>Response in JSON format.</returns>
+        </member>
+        <member name="M:phonetolinux.Services.ContactsPlugin.GetContactsAsync">
+            <summary>
+            Asynchronously fetches the list of contacts from the phone server and deduplicates them by unique contact names.
+            </summary>
+            <returns>A list of deduplicated contact item objects.</returns>
+        </member>
+        <member name="M:phonetolinux.Services.ContactsPlugin.NormalizePhoneNumber(System.String)">
+            <summary>
+            Normalizes phone numbers to standard 9-digit format for comparison.
+            </summary>
+        </member>
+        <member name="T:phonetolinux.Services.ConversationDto">
+            <summary>
+            DTO object representing data for a single conversation fetched from the server.
+            Supports mapping for multiple field names (number/address) emitted by the Android server.
+            </summary>
+        </member>
+        <member name="T:phonetolinux.Services.ConversationsPlugin">
+            <summary>
+            Plugin responsible for fetching and managing recent conversations from the mobile device
+            via HTTP requests, deserializing JSON responses, and handling deletion commands.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Services.ConversationsPlugin.DeleteConversationAsync(System.String)">
+            <summary>
+            Asynchronously sends an HTTP DELETE request to the Android server to remove an SMS thread by address.
+            </summary>
+        </member>
+        <member name="T:phonetolinux.Services.LinuxNotificationPlugin">
+            <summary>
+            Plugin responsible for displaying native Linux desktop notifications (using notify-send)
+            triggered by incoming phone events such as SMS messages or phone calls.
+            </summary>
+        </member>
+        <member name="P:phonetolinux.Services.LinuxNotificationPlugin.Endpoint">
+            <inheritdoc />
+        </member>
+        <member name="M:phonetolinux.Services.LinuxNotificationPlugin.Execute(System.String)">
+            <summary>
+            Executes the plugin operation for a given query parameter.
+            </summary>
+            <param name="queryParams">Query parameters.</param>
+            <returns>Response in JSON format.</returns>
+        </member>
+        <member name="M:phonetolinux.Services.LinuxNotificationPlugin.ShowNotification(System.String,System.String,System.String,System.String)">
+            <summary>
+            Displays a native desktop notification on the Linux system using notify-send.
+            </summary>
+            <param name="title">Notification title (e.g., sender name or phone number).</param>
+            <param name="message">Notification body content (e.g., SMS text).</param>
+            <param name="icon">Optional system icon name (e.g., "mail-unread", "call-start", "dialog-information").</param>
+            <param name="urgency">Urgency level: "low", "normal", or "critical". Default is "normal".</param>
+        </member>
+        <member name="M:phonetolinux.Services.LinuxNotificationPlugin.SanitizeShellArgument(System.String)">
+            <summary>
+            Sanitizes text strings to be safely passed as command-line arguments to shell utilities.
+            </summary>
+        </member>
+        <member name="T:phonetolinux.Services.PhoneCallPlugin">
+            <summary>
+            Plugin responsible for managing phone calls (initiating, answering, and ending calls)
+            via HTTP POST requests to the mobile device server.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Services.PhoneCallPlugin.#ctor(System.Net.Http.HttpClient)">
+            <summary>
+            Initializes a new instance of the <see cref="T:phonetolinux.Services.PhoneCallPlugin"/> class.
+            </summary>
+            <param name="httpClient">Optional custom HttpClient instance. Uses a default client if none provided.</param>
+        </member>
+        <member name="P:phonetolinux.Services.PhoneCallPlugin.Endpoint">
+            <inheritdoc />
+        </member>
+        <member name="M:phonetolinux.Services.PhoneCallPlugin.Execute(System.String)">
+            <summary>
+            Executes the plugin action based on provided query parameters.
+            </summary>
+            <param name="queryParams">Query parameters (e.g., "action=start&amp;number=+48500100200").</param>
+            <returns>Response in JSON format indicating result.</returns>
+        </member>
+        <member name="M:phonetolinux.Services.PhoneCallPlugin.StartCallAsync(System.String)">
+            <summary>
+            Asynchronously initiates a new phone call to the specified destination number.
+            </summary>
+            <param name="phoneNumber">Destination phone number.</param>
+            <returns>True if the request succeeded; otherwise false.</returns>
+        </member>
+        <member name="M:phonetolinux.Services.PhoneCallPlugin.EndCallAsync">
+            <summary>
+            Asynchronously ends or rejects an active phone call.
+            </summary>
+            <returns>True if the request succeeded; otherwise false.</returns>
+        </member>
+        <member name="M:phonetolinux.Services.PhoneCallPlugin.AnswerCallAsync">
+            <summary>
+            Asynchronously answers an incoming phone call.
+            </summary>
+            <returns>True if the request succeeded; otherwise false.</returns>
+        </member>
+        <member name="T:phonetolinux.Services.SmsHistoryPlugin">
+            <summary>
+            Plugin responsible for fetching SMS conversation history for a specific phone number 
+            from the mobile server via HTTP requests.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Services.SmsHistoryPlugin.#ctor(System.Net.Http.HttpClient)">
+            <summary>
+            Initializes a new instance of the <see cref="T:phonetolinux.Services.SmsHistoryPlugin"/> class.
+            </summary>
+            <param name="httpClient">Optional custom HttpClient instance. Uses a default client if none provided.</param>
+        </member>
+        <member name="P:phonetolinux.Services.SmsHistoryPlugin.Endpoint">
+            <inheritdoc />
+        </member>
+        <member name="M:phonetolinux.Services.SmsHistoryPlugin.Execute(System.String)">
+            <summary>
+            Executes the plugin operation for a given query parameter.
+            </summary>
+            <param name="queryParams">Query parameters.</param>
+            <returns>Response in JSON format.</returns>
+        </member>
+        <member name="M:phonetolinux.Services.SmsHistoryPlugin.GetChatHistoryFromServerAsync(System.String)">
+            <summary>
+            Asynchronously fetches chat history from the phone server for the specified phone number
+            and removes potential duplicate entries.
+            </summary>
+            <param name="phoneNumber">Target phone number to fetch history for.</param>
+            <returns>A deduplicated list of chat message items.</returns>
+        </member>
+        <member name="T:phonetolinux.Services.SmsPlugin">
+            <summary>
+            Plugin responsible for dispatching outgoing SMS messages via HTTP GET requests 
+            to the mobile device's endpoint.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Services.SmsPlugin.#ctor(System.Net.Http.HttpClient)">
+            <summary>
+            Initializes a new instance of the <see cref="T:phonetolinux.Services.SmsPlugin"/> class.
+            </summary>
+            <param name="httpClient">Optional custom HttpClient instance. Uses a default client with 5s timeout if none provided.</param>
+        </member>
+        <member name="P:phonetolinux.Services.SmsPlugin.Endpoint">
+            <inheritdoc />
+        </member>
+        <member name="M:phonetolinux.Services.SmsPlugin.Execute(System.String)">
+            <summary>
+            Executes the plugin operation for a given query parameter.
+            </summary>
+            <param name="queryParams">Query parameters.</param>
+            <returns>Response in JSON format indicating execution status.</returns>
+        </member>
+        <member name="M:phonetolinux.Services.SmsPlugin.SendSmsAsync(System.String,System.String)">
+            <summary>
+            Asynchronously sends an SMS message to the specified destination number via HTTP GET.
+            </summary>
+            <param name="phoneNumber">Recipient's phone number.</param>
+            <param name="message">SMS message text content.</param>
+            <returns>True if the message was dispatched successfully by the mobile device; otherwise, false.</returns>
+        </member>
+        <member name="T:phonetolinux.Services.DeviceIpResolver">
+            <summary>
+            Service providing dynamic auto-detection and resolution of the phone's IP address on the local network.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Services.DeviceIpResolver.ResolvePhoneIpAsync">
+            <summary>
+            Attempts to automatically resolve the phone's IP address.
+            Checks cached config, paired device credentials, and scans local subnets for ports 5001 (WebDAV) or 5000 (API).
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Services.DeviceIpResolver.LoadPairedDeviceIp">
+            <summary>
+            Reads and decrypts paired_device.dat to extract phoneIp if available.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Services.DeviceIpResolver.TestPortAsync(System.String,System.Int32,System.Int32)">
+            <summary>
+            Tests TCP connection to host on specified port with a timeout.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Services.DeviceIpResolver.ScanSubnetForPhoneAsync">
+            <summary>
+            Scans local IPv4 network subnets (/24) concurrently for port 5001 (WebDAV) or 5000 (API).
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Services.DeviceIpResolver.GetLocalIpv4Addresses">
+            <summary>
+            Gets active local IPv4 addresses of non-loopback network interfaces.
+            </summary>
+        </member>
+        <member name="T:phonetolinux.Services.DnnPluginLoader">
+            <summary>
+            Dynamic plugin loader supporting runtime Roslyn compilation for C# source files 
+            and direct assembly loading for precompiled binaries.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Services.DnnPluginLoader.ExecutePlugin(System.String,System.String,System.String,System.Object)">
+            <summary>
+            Compiles or loads a plugin file and executes the specified target method.
+            </summary>
+            <param name="dnnFilePath">Path to the C# source script (.cs) or assembly binary (.dll).</param>
+            <param name="className">Target class name implementing the plugin logic.</param>
+            <param name="methodName">Target method name to execute.</param>
+            <param name="contextData">Context payload passed as an argument to the method.</param>
+            <returns>Execution result object or null on failure.</returns>
+        </member>
+        <member name="T:phonetolinux.Services.PairingListenerService">
+            <summary>
+            Lightweight HTTP Listener service handling incoming pairing requests from the Android device.
+            Verifies the 6-digit PIN and 256-bit credentials, encrypts session data, and triggers UI state transition.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Services.PairingListenerService.StartListening(System.Int32)">
+            <summary>
+            Starts asynchronously listening for incoming HTTP pairing requests on the specified port.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Services.PairingListenerService.ListenLoopAsync(System.Threading.CancellationToken)">
+            <summary>
+            Main execution loop listening for inbound HTTP requests.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Services.PairingListenerService.ProcessPairingRequestAsync(System.Net.HttpListenerContext)">
+            <summary>
+            Processes inbound pairing request payload, verifies the 6-digit PIN, and encrypts credentials.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Services.PairingListenerService.SendJsonResponseAsync(System.Net.HttpListenerResponse,System.Net.HttpStatusCode,System.String,System.String)">
+            <summary>
+            Utility helper to format and send JSON HTTP responses.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Services.PairingListenerService.StopListening">
+            <summary>
+            Stops the listener service and cleans up resources.
+            </summary>
+        </member>
+        <member name="T:phonetolinux.Plugins.MmsPlugin">
+            <summary>
+            Secure dynamic plugin for handling MMS attachments implementing:
+            1. Strict MIME-type whitelisting
+            2. Path Traversal protection &amp; filename sanitization
+            3. Strict 15MB file size enforcement (header check and stream-level guard)
+            </summary>
+        </member>
+        <member name="P:phonetolinux.Plugins.MmsPlugin.Endpoint">
+            <inheritdoc />
+        </member>
+        <member name="M:phonetolinux.Plugins.MmsPlugin.#ctor(System.Net.Http.HttpClient)">
+            <summary>
+            Initializes a new instance of the <see cref="T:phonetolinux.Plugins.MmsPlugin"/> class.
+            </summary>
+            <param name="httpClient">Optional custom HttpClient instance. Uses a default client if none provided.</param>
+        </member>
+        <member name="M:phonetolinux.Plugins.MmsPlugin.Execute(System.String)">
+            <summary>
+            Execution method required by the <see cref="T:PhoneToLinux.Core.IPhonePlugin"/> interface.
+            </summary>
+            <param name="queryParams">Query parameters.</param>
+            <returns>Response in JSON format.</returns>
+        </member>
+        <member name="M:phonetolinux.Plugins.MmsPlugin.DownloadAttachmentAsync(System.String,System.String,System.String)">
+            <summary>
+            Asynchronously downloads an MMS attachment from the remote phone server.
+            </summary>
+            <param name="remoteUrl">Remote attachment URL.</param>
+            <param name="fileName">Original file name.</param>
+            <param name="contentType">MIME Content-Type of the attachment.</param>
+            <returns>An instance of <see cref="T:phonetolinux.Models.MmsAttachment"/> if successful; otherwise, null.</returns>
+        </member>
+        <member name="T:phonetolinux.Plugins.PhoneEventDto">
+            <summary>
+            Data Transfer Object representing incoming events from the Android SSE stream.
+            </summary>
+        </member>
+        <member name="T:phonetolinux.Plugins.PhoneSsePlugin">
+            <summary>
+            Plugin implementation responsible for maintaining the Server-Sent Events (SSE) stream 
+            connection with the Android device and bridging calls and messages.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Plugins.PhoneSsePlugin.Initialize(System.String,System.Int32)">
+            <summary>
+            Initializes the SSE background listener loop connecting to the phone.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Plugins.PhoneSsePlugin.ReadSseStreamAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Continuously reads the SSE stream from the Android server with automatic reconnection handling.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Plugins.PhoneSsePlugin.DispatchEvent(phonetolinux.Plugins.PhoneEventDto)">
+            <summary>
+            Dispatches incoming parsed events to their respective registered event handlers.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Plugins.PhoneSsePlugin.AnswerCallAsync">
+            <summary>
+            Sends an HTTP POST command to the phone to answer the active incoming call.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Plugins.PhoneSsePlugin.RejectCallAsync">
+            <summary>
+            Sends an HTTP POST command to the phone to reject the active incoming call.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Plugins.PhoneSsePlugin.Shutdown">
+            <summary>
+            Shuts down the background listener and cancels active network tasks.
+            </summary>
+        </member>
+        <member name="T:phonetolinux.PluginSource.StoragePlugin">
+            <summary>
+            Storage integration plugin implementation for desktop file manager mounting and bookmarks.
+            Implements full IPhonetolinuxPlugin contract.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.PluginSource.StoragePlugin.OnDeviceConnected(System.String)">
+            <summary>
+            Triggered when phone connects/pairs with desktop application.
+            Compatible with DnnPluginLoader single-string parameter signature.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.PluginSource.StoragePlugin.OnDeviceDisconnected(System.String)">
+            <summary>
+            Triggered when phone disconnects.
+            </summary>
+        </member>
+        <member name="T:phonetolinux.Security.AutochangeIP">
+            <summary>
+            Authenticated IP discovery service protecting against IP injection/spoofing.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Security.AutochangeIP.DiscoverPhoneIpAsync(System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Sends a signed UDP broadcast request to locate the Android device safely.
+            </summary>
+        </member>
+        <member name="T:phonetolinux.ViewModels.ChatViewModel">
+            <summary>
+            ViewModel responsible for managing chat state, active conversation selection,
+            loading message history, and real-time messaging updates.
+            </summary>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+        </member>
+        <member name="M:phonetolinux.ViewModels.ChatViewModel.InsertEmoji(System.String)">
+            <summary>
+            Inserts selected emoji into current message text.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.ViewModels.ChatViewModel.LoadConversationsAndSyncAsync">
+            <summary>
+            Asynchronously fetches recent conversations from the phone server or falls back to local storage.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.ViewModels.ChatViewModel.InitializeChatAsync(phonetolinux.Models.ChatContext)">
+            <summary>
+            Initializes active chat context and triggers message history loading.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.ViewModels.ChatViewModel.SendMessage">
+            <summary>
+            Sends a new SMS message and updates local history storage.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.ViewModels.ChatViewModel.AddIncomingSms(phonetolinux.Models.ChatContext)">
+            <summary>
+            Handles incoming real-time SMS pushes from background services.
+            </summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.ChatViewModel.PhoneNumber">
+            <inheritdoc cref="F:phonetolinux.ViewModels.ChatViewModel._phoneNumber"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.ChatViewModel.ContactName">
+            <inheritdoc cref="F:phonetolinux.ViewModels.ChatViewModel._contactName"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.ChatViewModel.CurrentMessageText">
+            <inheritdoc cref="F:phonetolinux.ViewModels.ChatViewModel._currentMessageText"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.ChatViewModel.MessagesList">
+            <inheritdoc cref="F:phonetolinux.ViewModels.ChatViewModel._messagesList"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.ChatViewModel.RecentConversations">
+            <inheritdoc cref="F:phonetolinux.ViewModels.ChatViewModel._recentConversations"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.ChatViewModel.SelectedConversation">
+            <inheritdoc cref="F:phonetolinux.ViewModels.ChatViewModel._selectedConversation"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.ChatViewModel.AvailableEmojis">
+            <inheritdoc cref="F:phonetolinux.ViewModels.ChatViewModel._availableEmojis"/>
+        </member>
+        <member name="M:phonetolinux.ViewModels.ChatViewModel.OnSelectedConversationChanged(phonetolinux.Models.ChatConversationItem)">
+            <summary>Executes the logic for when <see cref="P:phonetolinux.ViewModels.ChatViewModel.SelectedConversation"/> just changed.</summary>
+            <param name="value">The new property value that was set.</param>
+            <remarks>This method is invoked right after the value of <see cref="P:phonetolinux.ViewModels.ChatViewModel.SelectedConversation"/> is changed.</remarks>
+        </member>
+        <member name="F:phonetolinux.ViewModels.ChatViewModel.insertEmojiCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.ChatViewModel.InsertEmojiCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.ChatViewModel.InsertEmojiCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IRelayCommand`1"/> instance wrapping <see cref="M:phonetolinux.ViewModels.ChatViewModel.InsertEmoji(System.String)"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.ChatViewModel.sendMessageCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.ChatViewModel.SendMessageCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.ChatViewModel.SendMessageCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IAsyncRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.ChatViewModel.SendMessage"/>.</summary>
+        </member>
+        <member name="T:phonetolinux.ViewModels.DialerViewModel">
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.DialerViewModel.PhoneNumber">
+            <inheritdoc cref="F:phonetolinux.ViewModels.DialerViewModel._phoneNumber"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.DialerViewModel.IsInCall">
+            <inheritdoc cref="F:phonetolinux.ViewModels.DialerViewModel._isInCall"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.DialerViewModel.IsIncomingCall">
+            <inheritdoc cref="F:phonetolinux.ViewModels.DialerViewModel._isIncomingCall"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.DialerViewModel.ContactName">
+            <inheritdoc cref="F:phonetolinux.ViewModels.DialerViewModel._contactName"/>
+        </member>
+        <member name="F:phonetolinux.ViewModels.DialerViewModel.appendNumberCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.DialerViewModel.AppendNumberCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.DialerViewModel.AppendNumberCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IRelayCommand`1"/> instance wrapping <see cref="M:phonetolinux.ViewModels.DialerViewModel.AppendNumber(System.String)"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.DialerViewModel.backspaceCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.DialerViewModel.BackspaceCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.DialerViewModel.BackspaceCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.DialerViewModel.Backspace"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.DialerViewModel.callCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.DialerViewModel.CallCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.DialerViewModel.CallCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IAsyncRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.DialerViewModel.Call"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.DialerViewModel.endCallCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.DialerViewModel.EndCallCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.DialerViewModel.EndCallCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IAsyncRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.DialerViewModel.EndCall"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.DialerViewModel.answerCallCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.DialerViewModel.AnswerCallCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.DialerViewModel.AnswerCallCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IAsyncRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.DialerViewModel.AnswerCall"/>.</summary>
+        </member>
+        <member name="T:phonetolinux.ViewModels.MainViewModel">
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.CurrentVersion">
+            <summary>
+            Reads the current application version directly from the executing assembly.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.ViewModels.MainViewModel.LoadMessagesForNumberAsync(System.String)">
+            <summary>
+            Highly resilient JSON message parser with exhaustive error logging.
+            </summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.IsPaired">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._isPaired"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.StorageViewModel">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._storageViewModel"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.SelectedTabIndex">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._selectedTabIndex"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.Pairing">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._pairing"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.Dialer">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._dialer"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.ActiveChat">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._activeChat"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.CurrentTheme">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._currentTheme"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.SelectedConversation">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._selectedConversation"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.AvailableEmojis">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._availableEmojis"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.IsInCall">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._isInCall"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.IsIncomingCall">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._isIncomingCall"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.ContactName">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._contactName"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.DialerPhoneNumber">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._dialerPhoneNumber"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.PhoneNumber">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._phoneNumber"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.CurrentMessageText">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._currentMessageText"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.UpdateStatusMessage">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._updateStatusMessage"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.IsCheckingForUpdates">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._isCheckingForUpdates"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.ContactsList">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._contactsList"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.RecentConversations">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._recentConversations"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.MessagesList">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._messagesList"/>
+        </member>
+        <member name="M:phonetolinux.ViewModels.MainViewModel.OnSelectedConversationChanged(phonetolinux.Models.ChatConversationItem)">
+            <summary>Executes the logic for when <see cref="P:phonetolinux.ViewModels.MainViewModel.SelectedConversation"/> just changed.</summary>
+            <param name="value">The new property value that was set.</param>
+            <remarks>This method is invoked right after the value of <see cref="P:phonetolinux.ViewModels.MainViewModel.SelectedConversation"/> is changed.</remarks>
+        </member>
+        <member name="F:phonetolinux.ViewModels.MainViewModel.insertEmojiCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.MainViewModel.InsertEmojiCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.InsertEmojiCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IRelayCommand`1"/> instance wrapping <see cref="M:phonetolinux.ViewModels.MainViewModel.InsertEmoji(System.String)"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.MainViewModel.checkForUpdatesCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.MainViewModel.CheckForUpdatesCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.CheckForUpdatesCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IAsyncRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.MainViewModel.CheckForUpdatesAsync"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.MainViewModel.selectTabCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.MainViewModel.SelectTabCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.SelectTabCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IRelayCommand`1"/> instance wrapping <see cref="M:phonetolinux.ViewModels.MainViewModel.SelectTab(System.Object)"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.MainViewModel.sendMessageToContactCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.MainViewModel.SendMessageToContactCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.SendMessageToContactCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IRelayCommand`1"/> instance wrapping <see cref="M:phonetolinux.ViewModels.MainViewModel.SendMessageToContact(System.String)"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.MainViewModel.callSpecificNumberCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.MainViewModel.CallSpecificNumberCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.CallSpecificNumberCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IAsyncRelayCommand`1"/> instance wrapping <see cref="M:phonetolinux.ViewModels.MainViewModel.CallSpecificNumber(System.String)"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.MainViewModel.sendMessageCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.MainViewModel.SendMessageCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.SendMessageCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IAsyncRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.MainViewModel.SendMessage"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.MainViewModel.selectConversationCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.MainViewModel.SelectConversationCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.SelectConversationCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IAsyncRelayCommand`1"/> instance wrapping <see cref="M:phonetolinux.ViewModels.MainViewModel.SelectConversation(phonetolinux.Models.ChatConversationItem)"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.MainViewModel.deleteConversationCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.MainViewModel.DeleteConversationCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.DeleteConversationCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IAsyncRelayCommand`1"/> instance wrapping <see cref="M:phonetolinux.ViewModels.MainViewModel.DeleteConversation(phonetolinux.Models.ChatConversationItem)"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.MainViewModel.pairingCompletedCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.MainViewModel.PairingCompletedCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.PairingCompletedCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.MainViewModel.OnPairingCompleted"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.MainViewModel.unpairDeviceCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.MainViewModel.UnpairDeviceCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.UnpairDeviceCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.MainViewModel.UnpairDevice"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.MainViewModel.appendNumberCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.MainViewModel.AppendNumberCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.AppendNumberCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IRelayCommand`1"/> instance wrapping <see cref="M:phonetolinux.ViewModels.MainViewModel.AppendNumber(System.String)"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.MainViewModel.backspaceCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.MainViewModel.BackspaceCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.BackspaceCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.MainViewModel.Backspace"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.MainViewModel.callCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.MainViewModel.CallCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.CallCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IAsyncRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.MainViewModel.Call"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.MainViewModel.endCallCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.MainViewModel.EndCallCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.EndCallCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IAsyncRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.MainViewModel.EndCall"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.MainViewModel.answerCallCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.MainViewModel.AnswerCallCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.AnswerCallCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IAsyncRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.MainViewModel.AnswerCall"/>.</summary>
+        </member>
+        <member name="T:phonetolinux.ViewModels.PairingViewModel">
+            <summary>
+            ViewModel responsible for managing initial device handshake and PIN generation logic.
+            </summary>
+            <inheritdoc/>
+            <inheritdoc/>
+        </member>
+        <member name="M:phonetolinux.ViewModels.PairingViewModel.GeneratePairingPinCode">
+            <summary>
+            Generates a fresh 6-digit PIN code and calculates the active network endpoint.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.ViewModels.PairingViewModel.GetActiveLocalIpAddress">
+            <summary>
+            Resolves the primary local IPv4 address of the host machine.
+            </summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.PairingViewModel.PairingPin">
+            <inheritdoc cref="F:phonetolinux.ViewModels.PairingViewModel._pairingPin"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.PairingViewModel.StatusMessage">
+            <inheritdoc cref="F:phonetolinux.ViewModels.PairingViewModel._statusMessage"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.PairingViewModel.IpAddress">
+            <inheritdoc cref="F:phonetolinux.ViewModels.PairingViewModel._ipAddress"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.PairingViewModel.CanGeneratePin">
+            <inheritdoc cref="F:phonetolinux.ViewModels.PairingViewModel._canGeneratePin"/>
+        </member>
+        <member name="F:phonetolinux.ViewModels.PairingViewModel.generatePairingPinCodeCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.PairingViewModel.GeneratePairingPinCodeCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.PairingViewModel.GeneratePairingPinCodeCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.PairingViewModel.GeneratePairingPinCode"/>.</summary>
+        </member>
+        <member name="T:phonetolinux.ViewModels.StorageBrowserViewModel">
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+            <inheritdoc/>
+        </member>
+        <member name="M:phonetolinux.ViewModels.StorageBrowserViewModel.GetDeviceIpAsync">
+            <summary>
+            Automatically retrieves the active device IP address. 
+            Checks cached session/paired config first, performs local subnet auto-discovery, or prompts user as fallback.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.ViewModels.StorageBrowserViewModel.PromptForIpAddressAsync">
+            <summary>
+            Helper method to display a lightweight dark-themed input dialog for manual IP entry.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.ViewModels.StorageBrowserViewModel.LoadFilesAsync(System.String)">
+            <summary>
+            Asynchronously fetches files and directories via WebDAV PROPFIND (Port 5001).
+            </summary>
+        </member>
+        <member name="M:phonetolinux.ViewModels.StorageBrowserViewModel.DownloadFileAsync">
+            <summary>
+            Downloads selected file using WebDAV GET (Port 5001).
+            </summary>
+        </member>
+        <member name="M:phonetolinux.ViewModels.StorageBrowserViewModel.UploadFileAsync">
+            <summary>
+            Uploads a local file using WebDAV PUT (Port 5001).
+            </summary>
+        </member>
+        <member name="M:phonetolinux.ViewModels.StorageBrowserViewModel.DownloadSelectedFileToPathAsync(System.String)">
+            <summary>
+            Helper method for Drag &amp; Drop: Downloads selected file to a specific local temp path.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.ViewModels.StorageBrowserViewModel.UploadFileFromPathAsync(System.String)">
+            <summary>
+            Helper method for Drag &amp; Drop: Uploads a file from local path directly to the phone.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.ViewModels.StorageBrowserViewModel.NavigateUp">
+            <summary>
+            Navigates one directory level up in the hierarchy.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.ViewModels.StorageBrowserViewModel.Refresh">
+            <summary>
+            Refreshes the contents of the current directory.
+            </summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.StorageBrowserViewModel.CurrentPath">
+            <inheritdoc cref="F:phonetolinux.ViewModels.StorageBrowserViewModel._currentPath"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.StorageBrowserViewModel.Files">
+            <inheritdoc cref="F:phonetolinux.ViewModels.StorageBrowserViewModel._files"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.StorageBrowserViewModel.SelectedFile">
+            <inheritdoc cref="F:phonetolinux.ViewModels.StorageBrowserViewModel._selectedFile"/>
+        </member>
+        <member name="M:phonetolinux.ViewModels.StorageBrowserViewModel.OnSelectedFileChanged(phonetolinux.Models.PhoneFileItem)">
+            <summary>
+            Handles item selection. Navigates into selected directories automatically.
+            </summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.StorageBrowserViewModel.loadFilesCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.StorageBrowserViewModel.LoadFilesCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.StorageBrowserViewModel.LoadFilesCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IAsyncRelayCommand`1"/> instance wrapping <see cref="M:phonetolinux.ViewModels.StorageBrowserViewModel.LoadFilesAsync(System.String)"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.StorageBrowserViewModel.downloadFileCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.StorageBrowserViewModel.DownloadFileCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.StorageBrowserViewModel.DownloadFileCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IAsyncRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.StorageBrowserViewModel.DownloadFileAsync"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.StorageBrowserViewModel.uploadFileCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.StorageBrowserViewModel.UploadFileCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.StorageBrowserViewModel.UploadFileCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IAsyncRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.StorageBrowserViewModel.UploadFileAsync"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.StorageBrowserViewModel.navigateUpCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.StorageBrowserViewModel.NavigateUpCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.StorageBrowserViewModel.NavigateUpCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.StorageBrowserViewModel.NavigateUp"/>.</summary>
+        </member>
+        <member name="F:phonetolinux.ViewModels.StorageBrowserViewModel.refreshCommand">
+            <summary>The backing field for <see cref="P:phonetolinux.ViewModels.StorageBrowserViewModel.RefreshCommand"/>.</summary>
+        </member>
+        <member name="P:phonetolinux.ViewModels.StorageBrowserViewModel.RefreshCommand">
+            <summary>Gets an <see cref="T:CommunityToolkit.Mvvm.Input.IRelayCommand"/> instance wrapping <see cref="M:phonetolinux.ViewModels.StorageBrowserViewModel.Refresh"/>.</summary>
+        </member>
+        <member name="M:phonetolinux.Views.IpConfigWindow.InitializeComponent(System.Boolean)">
+            <summary>
+            Wires up the controls and optionally loads XAML markup and attaches dev tools (if Avalonia.Diagnostics package is referenced).
+            </summary>
+            <param name="loadXaml">Should the XAML be loaded into the component.</param>
+        </member>
+        <member name="T:phonetolinux.Views.MainWindow">
+            <summary>
+            Code-behind logic for the main application window.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Views.MainWindow.TitleBar_PointerPressed(System.Object,Avalonia.Input.PointerPressedEventArgs)">
+            <summary>
+            Handles drag-and-drop window movement using the custom title bar.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Views.MainWindow.Minimize_Click(System.Object,Avalonia.Interactivity.RoutedEventArgs)">
+            <summary>
+            Minimizes the application window.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Views.MainWindow.Maximize_Click(System.Object,Avalonia.Interactivity.RoutedEventArgs)">
+            <summary>
+            Toggles between maximized and normal window state.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Views.MainWindow.Close_Click(System.Object,Avalonia.Interactivity.RoutedEventArgs)">
+            <summary>
+            Closes the application.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Views.MainWindow.Window_KeyDown(System.Object,Avalonia.Input.KeyEventArgs)">
+            <summary>
+            Triggers the phone call command when the Enter or Return key is pressed while on the Dialer tab.
+            </summary>
+        </member>
+        <member name="M:phonetolinux.Views.MainWindow.InitializeComponent(System.Boolean)">
+            <summary>
+            Wires up the controls and optionally loads XAML markup and attaches dev tools (if Avalonia.Diagnostics package is referenced).
+            </summary>
+            <param name="loadXaml">Should the XAML be loaded into the component.</param>
+        </member>
+        <member name="M:phonetolinux.Views.PairingView.InitializeComponent(System.Boolean)">
+            <summary>
+            Wires up the controls and optionally loads XAML markup and attaches dev tools (if Avalonia.Diagnostics package is referenced).
+            </summary>
+            <param name="loadXaml">Should the XAML be loaded into the component.</param>
+        </member>
+        <member name="M:phonetolinux.Views.SettingsView.InitializeComponent(System.Boolean)">
+            <summary>
+            Wires up the controls and optionally loads XAML markup and attaches dev tools (if Avalonia.Diagnostics package is referenced).
+            </summary>
+            <param name="loadXaml">Should the XAML be loaded into the component.</param>
+        </member>
+        <member name="M:phonetolinux.Views.StorageBrowserView.InitializeComponent(System.Boolean)">
+            <summary>
+            Wires up the controls and optionally loads XAML markup and attaches dev tools (if Avalonia.Diagnostics package is referenced).
+            </summary>
+            <param name="loadXaml">Should the XAML be loaded into the component.</param>
+        </member>
+        <member name="T:PhoneToLinux.Compiler.CompilerArchiveModifier">
+            <summary>
+            Narzędzie kompilatora odpowiedzialne za automatyczne przenoszenie skompilowanych 
+            bibliotek wtyczek (.dll) do głównego folderu Library w projekcie.
+            </summary>
+        </member>
+        <member name="M:PhoneToLinux.Compiler.CompilerArchiveModifier.StartSilentWatcher(System.String,System.String)">
+            <summary>
+            Uruchamia monitorowanie folderu wyjściowego kompilatora w tle. 
+            Gdy pojawia się nowa biblioteka .dll, automatycznie kopiuje ją do folderu Library.
+            </summary>
+            <param name="buildOutputDir">Folder, do którego kompilator zapisuje pliki .dll (np. bin/Debug/net8.0).</param>
+            <param name="libraryTargetDir">Katalog docelowy Library w głównym folderze projektu.</param>
+        </member>
+        <member name="M:PhoneToLinux.Compiler.CompilerArchiveModifier.CopyDllToLibrary(System.String,System.String)">
+            <summary>
+            Kopiuje skompilowaną bibliotekę DLL bezpośrednio do folderu Library.
+            </summary>
+        </member>
+        <member name="T:PhoneToLinux.Core.IPhonePlugin">
+            <summary>
+            Reprezentuje wspólny interfejs dla wszystkich wtyczek (.dnn) po stronie desktopowej.
+            Każda nowa funkcja ładowana dynamicznie musi implementować ten kontrakt.
+            </summary>
+        </member>
+        <member name="P:PhoneToLinux.Core.IPhonePlugin.Endpoint">
+            <summary>
+            Ścieżka endpointu obsługiwana przez wtyczkę (np. "/conversations").
+            </summary>
+        </member>
+        <member name="M:PhoneToLinux.Core.IPhonePlugin.Execute(System.String)">
+            <summary>
+            Wykonuje główną logikę wtyczki na podstawie przekazanych parametrów żądania.
+            </summary>
+            <param name="queryParams">Parametry wejściowe przekazane w adresie URL.</param>
+            <returns>Odpowiedź w formacie JSON lub tekstowym.</returns>
+        </member>
+        <member name="T:PhoneToLinux.Plugins.PhoneConfigPlugin">
+            <summary>
+            Wtyczka odpowiedzialna za zarządzanie konfiguracją połączenia z telefonem (adres IP i port),
+            w tym odczyt i zapis stanu do pliku konfiguracyjnego w katalogu użytkownika.
+            </summary>
+        </member>
+        <member name="F:PhoneToLinux.Plugins.PhoneConfigPlugin.ConfigDir">
+            <summary>Ścieżka do katalogu konfiguracyjnego w profilu użytkownika.</summary>
+        </member>
+        <member name="F:PhoneToLinux.Plugins.PhoneConfigPlugin.ConfigFilePath">
+            <summary>Pełna ścieżka do pliku konfiguracyjnego config.json.</summary>
+        </member>
+        <member name="F:PhoneToLinux.Plugins.PhoneConfigPlugin.Port">
+            <summary>Numer portu nasłuchiwania serwera na telefonie.</summary>
+        </member>
+        <member name="P:PhoneToLinux.Plugins.PhoneConfigPlugin.PhoneIp">
+            <summary>Aktualny adres IP telefonu.</summary>
+        </member>
+        <member name="P:PhoneToLinux.Plugins.PhoneConfigPlugin.Endpoint">
+            <inheritdoc />
+        </member>
+        <member name="T:PhoneToLinux.Plugins.PhoneConfigPlugin.ConfigModel">
+            <summary>
+            Model danych dla deserializacji i serializacji konfiguracji JSON.
+            </summary>
+        </member>
+        <member name="M:PhoneToLinux.Plugins.PhoneConfigPlugin.Execute(System.String)">
+            <summary>
+            Wykonuje operacje wtyczki w zależności od przekazanych parametrów (np. pobranie lub ustawienie IP).
+            </summary>
+            <param name="queryParams">Parametry zapytania (np. akcja lub nowe IP).</param>
+            <returns>Odpowiedź w formacie JSON.</returns>
+        </member>
+        <member name="M:PhoneToLinux.Plugins.PhoneConfigPlugin.GetBaseUrl">
+            <summary>
+            Zwraca pełny adres bazowy URL do komunikacji z serwerem na telefonie.
+            </summary>
+        </member>
+        <member name="M:PhoneToLinux.Plugins.PhoneConfigPlugin.LoadSavedIp">
+            <summary>
+            Łagodzi i wczytuje zapisany adres IP z pliku konfiguracyjnego na dysku.
+            </summary>
+        </member>
+        <member name="M:PhoneToLinux.Plugins.PhoneConfigPlugin.SaveIp(System.String)">
+            <summary>
+            Zapisuje nowy adres IP telefonu do pliku konfiguracyjnego JSON.
+            </summary>
+            <param name="newIp">Nowy adres IP.</param>
+        </member>
+        <member name="T:PhoneToLinux.Plugins.ChatSyncPlugin">
+            <summary>
+            Plugin responsible for selecting, filtering, and synchronizing 
+            active conversations in the chat list.
+            </summary>
+        </member>
+        <member name="M:PhoneToLinux.Plugins.ChatSyncPlugin.GetDefaultOrFirstConversation(phonetolinux.Models.ChatContext)">
+            <summary>
+            Retrieves the default or first available conversation from the context,
+            ensuring thread deduplication.
+            </summary>
+            <param name="context">The active chat context containing recent conversations.</param>
+            <returns>The first valid conversation item, or null if empty.</returns>
+        </member>
+        <member name="M:PhoneToLinux.Plugins.ChatSyncPlugin.DeduplicateConversations(System.Collections.Generic.IEnumerable{phonetolinux.Models.ChatConversationItem})">
+            <summary>
+            Filters a collection of conversation items by unique phone number.
+            </summary>
+            <param name="conversations">Input list of conversations.</param>
+            <returns>Deduplicated list of conversation items.</returns>
+        </member>
+        <member name="M:PhoneToLinux.Plugins.ChatSyncPlugin.NormalizePhoneNumber(System.String)">
+            <summary>
+            Normalizes phone numbers to standard 9-digit format for robust comparison.
+            </summary>
+        </member>
+        <member name="T:PhoneToLinux.Desktop.PluginManager">
+            <summary>
+            Scans the specified directory, dynamically loads plugin libraries (.dll),
+            and routes incoming requests to the appropriate plugin handlers.
+            </summary>
+        </member>
+        <member name="M:PhoneToLinux.Desktop.PluginManager.LoadPlugins(System.String)">
+            <summary>
+            Searches the specified library directory for plugin files with the .dll extension
+            and registers them in application memory.
+            Ignores subdirectories to prevent interference with secure storage paths.
+            </summary>
+            <param name="libraryDirectoryPath">Path to the Library directory containing plugins.</param>
+        </member>
+        <member name="M:PhoneToLinux.Desktop.PluginManager.ExecutePlugin(System.String,System.String)">
+            <summary>
+            Handles incoming queries by routing them to the corresponding plugin based on the endpoint.
+            </summary>
+        </member>
+        <member name="T:PhoneToLinux.Security.DevicePairingService">
+            <summary>
+            Service responsible for establishing a secure pairing mechanism between Desktop and Android.
+            Generates secure 6-digit PIN payloads and derives a unique 256-bit AES master key.
+            Includes graceful fallbacks for systems without accessible physical MAC addresses.
+            </summary>
+        </member>
+        <member name="M:PhoneToLinux.Security.DevicePairingService.GetDesktopMacAddress">
+            <summary>
+            Retrieves the MAC address of the first operational network interface on the Linux desktop.
+            Falls back to a deterministic machine key if no active physical interface is reported.
+            </summary>
+        </member>
+        <member name="M:PhoneToLinux.Security.DevicePairingService.GeneratePairingPin">
+            <summary>
+            Generates a cryptographically secure 6-digit pairing PIN formatted as "xxx xxx".
+            </summary>
+        </member>
+        <member name="M:PhoneToLinux.Security.DevicePairingService.GeneratePairingPayload(System.String,System.Int32,System.String)">
+            <summary>
+            Generates the connection string payload containing IP, port, MAC, and the secure pairing PIN.
+            </summary>
+            <param name="desktopIpAddress">The local IP address of the Linux desktop.</param>
+            <param name="port">The port number the desktop app is listening on.</param>
+            <param name="pairingPin">The 6-digit pairing PIN displayed to the user.</param>
+        </member>
+        <member name="M:PhoneToLinux.Security.DevicePairingService.DeriveAesKey(System.String,System.String)">
+            <summary>
+            Derives a 256-bit (32-byte) AES key by combining the desktop MAC, Android MAC, and pairing PIN.
+            Uses SHA-256 to ensure the resulting key is exactly 256 bits long.
+            </summary>
+            <param name="androidMacAddress">The MAC address received from the Android device during the pairing handshake.</param>
+            <param name="pairingPin">The 6-digit pairing PIN used during the handshake.</param>
+        </member>
+        <member name="T:PhoneToLinux.Security.DynamicFolderManager">
+            <summary>
+            Implements Moving Target Defense pattern by periodically changing 
+            the physical directory location of encrypted local data.
+            </summary>
+        </member>
+        <member name="M:PhoneToLinux.Security.DynamicFolderManager.StartPeriodicRelocation(System.TimeSpan)">
+            <summary>
+            Starts the background timer to periodically relocate data files.
+            </summary>
+            <param name="interval">Relocation interval (e.g., 1 hour).</param>
+        </member>
+        <member name="T:PhoneToLinux.Security.SecureStorageService">
+            <summary>
+            Service responsible for encrypting and decrypting local sensitive data using AES-256.
+            </summary>
+        </member>
+        <member name="M:PhoneToLinux.Security.SecureStorageService.EncryptAndWrite(System.String,System.String)">
+            <summary>
+            Encrypts plain text data and writes it to the specified file path along with the generated Initialization Vector (IV).
+            </summary>
+        </member>
+        <member name="M:PhoneToLinux.Security.SecureStorageService.ReadAndDecrypt(System.String)">
+            <summary>
+            Reads an encrypted file, extracts the IV, and decrypts the content back to plain text.
+            </summary>
+        </member>
+        <member name="T:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs">
+            <summary>
+            A helper type providing cached, reusable <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instances
+            for all properties generated with <see cref="T:CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute"/>.
+            </summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.Symbol">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "Symbol" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.Text">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "Text" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.IsOutgoing">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "IsOutgoing" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.ContactName">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "ContactName" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.PhoneNumber">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "PhoneNumber" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.LastMessage">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "LastMessage" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.Name">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "Name" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.CurrentMessageText">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "CurrentMessageText" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.MessagesList">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "MessagesList" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.RecentConversations">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "RecentConversations" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.SelectedConversation">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "SelectedConversation" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.AvailableEmojis">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "AvailableEmojis" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.IsInCall">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "IsInCall" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.IsIncomingCall">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "IsIncomingCall" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.IsPaired">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "IsPaired" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.StorageViewModel">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "StorageViewModel" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.SelectedTabIndex">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "SelectedTabIndex" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.Pairing">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "Pairing" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.Dialer">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "Dialer" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.ActiveChat">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "ActiveChat" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.CurrentTheme">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "CurrentTheme" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.DialerPhoneNumber">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "DialerPhoneNumber" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.UpdateStatusMessage">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "UpdateStatusMessage" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.IsCheckingForUpdates">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "IsCheckingForUpdates" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.ContactsList">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "ContactsList" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.PairingPin">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "PairingPin" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.StatusMessage">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "StatusMessage" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.IpAddress">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "IpAddress" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.CanGeneratePin">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "CanGeneratePin" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.CurrentPath">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "CurrentPath" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.Files">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "Files" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.SelectedFile">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "SelectedFile" generated properties.</summary>
+        </member>
+        <member name="T:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs">
+            <summary>
+            A helper type providing cached, reusable <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instances
+            for all properties generated with <see cref="T:CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute"/>.
+            </summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.Symbol">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "Symbol" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.Text">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "Text" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.IsOutgoing">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "IsOutgoing" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.ContactName">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "ContactName" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.PhoneNumber">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "PhoneNumber" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.LastMessage">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "LastMessage" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.Name">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "Name" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.CurrentMessageText">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "CurrentMessageText" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.MessagesList">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "MessagesList" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.RecentConversations">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "RecentConversations" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.SelectedConversation">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "SelectedConversation" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.AvailableEmojis">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "AvailableEmojis" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.IsInCall">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "IsInCall" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.IsIncomingCall">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "IsIncomingCall" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.IsPaired">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "IsPaired" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.StorageViewModel">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "StorageViewModel" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.SelectedTabIndex">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "SelectedTabIndex" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.Pairing">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "Pairing" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.Dialer">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "Dialer" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.ActiveChat">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "ActiveChat" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.CurrentTheme">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "CurrentTheme" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.DialerPhoneNumber">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "DialerPhoneNumber" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.UpdateStatusMessage">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "UpdateStatusMessage" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.IsCheckingForUpdates">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "IsCheckingForUpdates" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.ContactsList">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "ContactsList" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.PairingPin">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "PairingPin" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.StatusMessage">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "StatusMessage" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.IpAddress">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "IpAddress" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.CanGeneratePin">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "CanGeneratePin" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.CurrentPath">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "CurrentPath" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.Files">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "Files" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.SelectedFile">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "SelectedFile" generated properties.</summary>
+        </member>
+    </members>
+</doc>

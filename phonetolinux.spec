@@ -6,7 +6,7 @@
 %global __requires_exclude ^liblttng-ust\\.so\\.0.*$
 
 Name:           phonetolinuxdesktop
-Version:        1.0.5
+Version:        1.0.6
 Release:        1%{?dist}
 Summary:        Desktop client for PhoneToLinux integration
 
@@ -76,6 +76,10 @@ cp Assets/icon.png %{buildroot}%{_datadir}/icons/hicolor/512x512/apps/phonetolin
 %{_datadir}/icons/hicolor/512x512/apps/phonetolinuxdesktop.png
 
 %changelog
+* Wed Sep 30 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.6-1
+- Fixed real-time chat message delivery with robust phone number normalization and background polling.
+- Added automatic scrolling to the latest message in the chat window.
+
 * Mon Sep 28 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.5-1
 - Integrated full emoji database (emoji.json) and dynamic Twemoji CDN caching with text fallback.
 

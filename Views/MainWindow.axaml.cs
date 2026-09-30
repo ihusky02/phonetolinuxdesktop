@@ -1,7 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using phonetolinux.ViewModels;
+using System.Collections.Specialized;
 
 namespace phonetolinux.Views;
 
@@ -10,9 +12,35 @@ namespace phonetolinux.Views;
 /// </summary>
 public partial class MainWindow : Window
 {
+    private MainViewModel? _viewModel;
+
     public MainWindow()
     {
         InitializeComponent();
+        DataContextChanged += OnDataContextChanged;
+    }
+
+    private void OnDataContextChanged(object? sender, System.EventArgs e)
+    {
+        if (_viewModel != null)
+        {
+            _viewModel.MessagesList.CollectionChanged -= OnMessagesListChanged;
+        }
+
+        _viewModel = DataContext as MainViewModel;
+
+        if (_viewModel != null)
+        {
+            _viewModel.MessagesList.CollectionChanged += OnMessagesListChanged;
+        }
+    }
+
+    private void OnMessagesListChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            ChatScrollViewer?.ScrollToEnd();
+        }, DispatcherPriority.Loaded);
     }
 
     /// <summary>

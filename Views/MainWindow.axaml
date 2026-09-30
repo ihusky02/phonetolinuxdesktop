@@ -237,7 +237,7 @@
                         </Border>
 
                         <Grid Grid.Column="1" RowDefinitions="*, Auto">
-                            <ScrollViewer Grid.Row="0" Margin="0,0,0,10" VerticalScrollBarVisibility="Auto">
+                            <ScrollViewer x:Name="ChatScrollViewer" Grid.Row="0" Margin="0,0,0,10" VerticalScrollBarVisibility="Auto">
                                 <ItemsControl ItemsSource="{Binding MessagesList}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>

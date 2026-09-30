@@ -161,6 +161,7 @@ namespace phonetolinux.ViewModels
             LoadEmojisFromPlugin();
             _pairing = new PairingViewModel();
             CheckPairingStatus();
+            StartRealtimeChatPolling();
         }
 
         private void LoadEmojisFromPlugin()
@@ -339,12 +340,119 @@ namespace phonetolinux.ViewModels
 
             Dispatcher.UIThread.Post(() =>
             {
-                if (PhoneNumber == sender || ContactName == sender)
+                if (IsSenderActiveChat(sender))
                 {
                     MessagesList.Add(new ChatMessageItem { Text = message, IsOutgoing = false });
                 }
                 _ = LoadConversationsAsync();
             });
+        }
+
+        private bool IsSenderActiveChat(string sender)
+        {
+            if (string.IsNullOrWhiteSpace(sender)) return false;
+
+            string cleanSender = GetLast9Digits(sender);
+            string cleanPhone = GetLast9Digits(PhoneNumber);
+            if (!string.IsNullOrEmpty(cleanPhone) && cleanPhone == cleanSender) return true;
+
+            if (SelectedConversation != null)
+            {
+                string cleanConvPhone = GetLast9Digits(SelectedConversation.PhoneNumber);
+                if (!string.IsNullOrEmpty(cleanConvPhone) && cleanConvPhone == cleanSender) return true;
+                if (!string.IsNullOrEmpty(SelectedConversation.ContactName) && string.Equals(SelectedConversation.ContactName.Trim(), sender.Trim(), StringComparison.OrdinalIgnoreCase)) return true;
+            }
+
+            if (!string.IsNullOrEmpty(ContactName) && string.Equals(ContactName.Trim(), sender.Trim(), StringComparison.OrdinalIgnoreCase)) return true;
+
+            foreach (var contact in ContactsList)
+            {
+                if (string.Equals(contact.Name?.Trim(), ContactName?.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    string cleanContactPhone = GetLast9Digits(contact.PhoneNumber);
+                    if (!string.IsNullOrEmpty(cleanContactPhone) && cleanContactPhone == cleanSender) return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void StartRealtimeChatPolling()
+        {
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    await Task.Delay(2000);
+                    try
+                    {
+                        if (IsPaired && SelectedTabIndex == 2 && !string.IsNullOrEmpty(PhoneNumber) && PhoneNumber != "Select contact")
+                        {
+                            await PollActiveChatMessagesAsync();
+                        }
+                    }
+                    catch { }
+                }
+            });
+        }
+
+        private async Task PollActiveChatMessagesAsync()
+        {
+            if (string.IsNullOrWhiteSpace(PhoneNumber)) return;
+
+            List<string> candidates = new List<string> { PhoneNumber.Trim() };
+            string last9 = GetLast9Digits(PhoneNumber);
+            if (!string.IsNullOrEmpty(last9) && !candidates.Contains(last9)) candidates.Add(last9);
+            string withPlus48 = "+48" + last9;
+            if (!candidates.Contains(withPlus48)) candidates.Add(withPlus48);
+
+            foreach (var target in candidates.Distinct())
+            {
+                try
+                {
+                    string url = $"{PhoneConfig.GetBaseUrl()}/messages?address={Uri.EscapeDataString(target)}";
+                    HttpResponseMessage response = await SharedHttpClient.GetAsync(url);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string json = await response.Content.ReadAsStringAsync();
+                        List<ChatMessageItem>? fetchedMessages = null;
+                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+                        using (JsonDocument doc = JsonDocument.Parse(json))
+                        {
+                            if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                            {
+                                fetchedMessages = JsonSerializer.Deserialize<List<ChatMessageItem>>(json, options);
+                            }
+                            else if (doc.RootElement.ValueKind == JsonValueKind.Object)
+                            {
+                                if (doc.RootElement.TryGetProperty("messages", out var msgs) && msgs.ValueKind == JsonValueKind.Array)
+                                {
+                                    fetchedMessages = JsonSerializer.Deserialize<List<ChatMessageItem>>(msgs.GetRawText(), options);
+                                }
+                                else if (doc.RootElement.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Array)
+                                {
+                                    fetchedMessages = JsonSerializer.Deserialize<List<ChatMessageItem>>(data.GetRawText(), options);
+                                }
+                            }
+                        }
+
+                        if (fetchedMessages != null)
+                        {
+                            await Dispatcher.UIThread.InvokeAsync(() =>
+                            {
+                                if (fetchedMessages.Count != MessagesList.Count)
+                                {
+                                    MessagesList.Clear();
+                                    foreach (var msg in fetchedMessages) MessagesList.Add(msg);
+                                }
+                            });
+                            return;
+                        }
+                    }
+                }
+                catch { }
+            }
         }
 
         // --------------------------

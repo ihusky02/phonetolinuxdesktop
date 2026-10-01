@@ -132,6 +132,19 @@ namespace phonetolinux.ViewModels
         // ---------------------------------
 
         [ObservableProperty]
+        private string _searchQuery = "";
+
+        partial void OnSearchQueryChanged(string value)
+        {
+            FilterContacts();
+        }
+
+        [ObservableProperty]
+        private bool _isSearchActive = false;
+
+        private List<ContactItem> _allContacts = new();
+
+        [ObservableProperty]
         private ObservableCollection<ContactItem> _contactsList = new();
 
         [ObservableProperty]
@@ -475,14 +488,37 @@ namespace phonetolinux.ViewModels
                 var fetchedContacts = await _contactsPlugin.GetContactsAsync();
                 if (fetchedContacts != null && fetchedContacts.Count > 0)
                 {
-                    ContactsList.Clear();
-                    foreach (var contact in fetchedContacts) ContactsList.Add(contact);
+                    _allContacts.Clear();
+                    foreach (var contact in fetchedContacts)
+                    {
+                        if (!string.IsNullOrEmpty(contact.Name) && !_allContacts.Any(x => x.Name == contact.Name))
+                        {
+                            _allContacts.Add(contact);
+                        }
+                    }
+                    FilterContacts();
                     return;
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[CONTACTS ERROR] {ex.Message}");
+            }
+        }
+
+        public void FilterContacts()
+        {
+            IsSearchActive = !string.IsNullOrEmpty(SearchQuery);
+            var query = SearchQuery?.ToLower() ?? "";
+
+            var filtered = string.IsNullOrEmpty(query)
+                ? _allContacts
+                : _allContacts.Where(c => !string.IsNullOrEmpty(c.Name) && c.Name.ToLower().Contains(query)).ToList();
+
+            ContactsList.Clear();
+            foreach (var c in filtered)
+            {
+                ContactsList.Add(c);
             }
         }
 

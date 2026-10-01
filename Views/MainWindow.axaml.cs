@@ -78,18 +78,45 @@ public partial class MainWindow : Window
         Close();
     }
 
+    protected override void OnTextInput(TextInputEventArgs e)
+    {
+        if (DataContext is MainViewModel vm && vm.SelectedTabIndex == 1)
+        {
+            if (!string.IsNullOrEmpty(e.Text) && char.IsLetterOrDigit(e.Text[0]))
+            {
+                vm.SearchQuery += e.Text;
+                vm.FilterContacts();
+                e.Handled = true;
+            }
+        }
+        
+        base.OnTextInput(e);
+    }
+
     /// <summary>
     /// Triggers the phone call command when the Enter or Return key is pressed while on the Dialer tab.
     /// </summary>
     private void Window_KeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter || e.Key == Key.Return)
+        if (DataContext is MainViewModel vm)
         {
-            if (DataContext is MainViewModel vm && vm.SelectedTabIndex == 0)
+            if (vm.SelectedTabIndex == 1)
             {
-                if (vm.CallCommand.CanExecute(null))
+                if (e.Key == Key.Back && vm.SearchQuery.Length > 0)
                 {
-                    vm.CallCommand.Execute(null);
+                    vm.SearchQuery = vm.SearchQuery.Substring(0, vm.SearchQuery.Length - 1);
+                    vm.FilterContacts();
+                    e.Handled = true;
+                }
+            }
+            else if (vm.SelectedTabIndex == 0)
+            {
+                if (e.Key == Key.Enter || e.Key == Key.Return)
+                {
+                    if (vm.CallCommand.CanExecute(null))
+                    {
+                        vm.CallCommand.Execute(null);
+                    }
                 }
             }
         }

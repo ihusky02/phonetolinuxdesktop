@@ -696,6 +696,12 @@
         <member name="P:phonetolinux.ViewModels.MainViewModel.IsCheckingForUpdates">
             <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._isCheckingForUpdates"/>
         </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.SearchQuery">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._searchQuery"/>
+        </member>
+        <member name="P:phonetolinux.ViewModels.MainViewModel.IsSearchActive">
+            <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._isSearchActive"/>
+        </member>
         <member name="P:phonetolinux.ViewModels.MainViewModel.ContactsList">
             <inheritdoc cref="F:phonetolinux.ViewModels.MainViewModel._contactsList"/>
         </member>
@@ -709,6 +715,11 @@
             <summary>Executes the logic for when <see cref="P:phonetolinux.ViewModels.MainViewModel.SelectedConversation"/> just changed.</summary>
             <param name="value">The new property value that was set.</param>
             <remarks>This method is invoked right after the value of <see cref="P:phonetolinux.ViewModels.MainViewModel.SelectedConversation"/> is changed.</remarks>
+        </member>
+        <member name="M:phonetolinux.ViewModels.MainViewModel.OnSearchQueryChanged(System.String)">
+            <summary>Executes the logic for when <see cref="P:phonetolinux.ViewModels.MainViewModel.SearchQuery"/> just changed.</summary>
+            <param name="value">The new property value that was set.</param>
+            <remarks>This method is invoked right after the value of <see cref="P:phonetolinux.ViewModels.MainViewModel.SearchQuery"/> is changed.</remarks>
         </member>
         <member name="F:phonetolinux.ViewModels.MainViewModel.insertEmojiCommand">
             <summary>The backing field for <see cref="P:phonetolinux.ViewModels.MainViewModel.InsertEmojiCommand"/>.</summary>
@@ -1263,6 +1274,12 @@
         <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.IsCheckingForUpdates">
             <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "IsCheckingForUpdates" generated properties.</summary>
         </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.SearchQuery">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "SearchQuery" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.IsSearchActive">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "IsSearchActive" generated properties.</summary>
+        </member>
         <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangingArgs.ContactsList">
             <summary>The cached <see cref="T:System.ComponentModel.PropertyChangingEventArgs"/> instance for all "ContactsList" generated properties.</summary>
         </member>
@@ -1364,6 +1381,12 @@
         </member>
         <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.IsCheckingForUpdates">
             <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "IsCheckingForUpdates" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.SearchQuery">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "SearchQuery" generated properties.</summary>
+        </member>
+        <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.IsSearchActive">
+            <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "IsSearchActive" generated properties.</summary>
         </member>
         <member name="F:CommunityToolkit.Mvvm.ComponentModel.__Internals.__KnownINotifyPropertyChangedArgs.ContactsList">
             <summary>The cached <see cref="T:System.ComponentModel.PropertyChangedEventArgs"/> instance for all "ContactsList" generated properties.</summary>

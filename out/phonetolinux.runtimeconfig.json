@@ -1,12 +1,10 @@
 {
   "runtimeOptions": {
     "tfm": "net8.0",
-    "includedFrameworks": [
-      {
-        "name": "Microsoft.NETCore.App",
-        "version": "8.0.31"
-      }
-    ],
+    "framework": {
+      "name": "Microsoft.NETCore.App",
+      "version": "8.0.0"
+    },
     "configProperties": {
       "MVVMTOOLKIT_ENABLE_INOTIFYPROPERTYCHANGING_SUPPORT": true,
       "System.Diagnostics.Tracing.EventSource.IsSupported": false,

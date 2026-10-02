@@ -6,7 +6,7 @@
 %global __requires_exclude ^liblttng-ust\\.so\\.0.*$
 
 Name:           phonetolinuxdesktop
-Version:        1.0.6
+Version:        1.0.7
 Release:        1%{?dist}
 Summary:        Desktop client for PhoneToLinux integration
 
@@ -79,6 +79,10 @@ cp io.github.stanislawtlolka.phonetolinuxdesktop.metainfo.xml %{buildroot}%{_dat
 %{_datadir}/metainfo/io.github.stanislawtlolka.phonetolinuxdesktop.metainfo.xml
 
 %changelog
+* Fri Oct 02 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.7-1
+- Added dynamic contact search and keyboard autocomplete in the contacts view.
+- Integrated Fedora AppStream metainfo for software center support.
+
 * Wed Sep 30 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.6-1
 - Fixed real-time chat message delivery with robust phone number normalization and background polling.
 - Added automatic scrolling to the latest message in the chat window.

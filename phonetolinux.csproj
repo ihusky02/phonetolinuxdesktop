@@ -24,6 +24,54 @@
         <ProjectReference Include="plugins\EmojiPlugin\EmojiPlugin.csproj" />
     </ItemGroup>
 
+    <Target Name="GenerateMetainfo" BeforeTargets="BeforeBuild;BeforePublish;PrepareForBuild">
+        <PropertyGroup>
+            <MetainfoXmlContent><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.stanislawtlolka.phonetolinuxdesktop</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <name>PhoneToLinux Desktop</name>
+  <summary>Connect your Android phone to Linux</summary>
+  <description>
+    <p>
+      PhoneToLinux Desktop is a modern Avalonia UI application for Linux that seamlessly integrates your computer with your Android smartphone.
+    </p>
+    <ul>
+      <li>Make and receive voice calls directly from your desktop.</li>
+      <li>Send and receive SMS/MMS messages with real-time conversation synchronization.</li>
+      <li>Sync contacts and browse your phone storage securely via WebDAV.</li>
+      <li>Receive native Linux desktop notifications for calls and messages.</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">phonetolinuxdesktop.desktop</launchable>
+  <url type="homepage">https://github.com/ihusky02/PhoneToLinuxDesktop</url>
+  <url type="bugtracker">https://github.com/ihusky02/PhoneToLinuxDesktop/issues</url>
+  <releases>
+    <release version="$(Version)" date="2026-10-02">
+      <description>
+        <p>Added dynamic contact search and keyboard autocomplete in the contacts view, and Fedora AppStream metainfo integration for software centers.</p>
+      </description>
+    </release>
+    <release version="1.0.6" date="2026-09-25">
+      <description>
+        <p>Current stable release featuring enhanced D-Bus security, instant IP auto-discovery, dynamic Roslyn plugin engine, and improved UI navigation.</p>
+      </description>
+    </release>
+    <release version="1.0.5" date="2026-08-15">
+      <description>
+        <p>Added storage browser, secure pairing enhancements, and improved SMS real-time streaming.</p>
+      </description>
+    </release>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>]]></MetainfoXmlContent>
+        </PropertyGroup>
+        <WriteLinesToFile File="io.github.stanislawtlolka.phonetolinuxdesktop.metainfo.xml" Lines="$(MetainfoXmlContent)" Overwrite="true" Encoding="UTF-8" />
+        <WriteLinesToFile File="$(PublishDir)io.github.stanislawtlolka.phonetolinuxdesktop.metainfo.xml" Lines="$(MetainfoXmlContent)" Overwrite="true" Encoding="UTF-8" Condition="'$(PublishDir)' != ''" />
+        <WriteLinesToFile File="$(OutDir)io.github.stanislawtlolka.phonetolinuxdesktop.metainfo.xml" Lines="$(MetainfoXmlContent)" Overwrite="true" Encoding="UTF-8" Condition="'$(OutDir)' != ''" />
+    </Target>
+
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="11.2.5" />
         <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.5" />

@@ -58,6 +58,7 @@ mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_datadir}/%{name}
 mkdir -p %{buildroot}%{_datadir}/applications
 mkdir -p %{buildroot}%{_datadir}/icons/hicolor/512x512/apps
+mkdir -p %{buildroot}%{_datadir}/metainfo
 
 # Copy published binaries to the application directory
 cp -r out/* %{buildroot}%{_datadir}/%{name}/
@@ -65,15 +66,17 @@ cp -r out/* %{buildroot}%{_datadir}/%{name}/
 # Create a relative executable symlink in /usr/bin (fixing the absolute symlink warning)
 ln -s ../share/%{name}/phonetolinux %{buildroot}%{_bindir}/phonetolinuxdesktop
 
-# Copy system desktop entry from root directory and PNG icon from Assets
+# Copy system desktop entry, PNG icon, and AppStream metainfo
 cp phonetolinuxdesktop.desktop %{buildroot}%{_datadir}/applications/
 cp Assets/icon.png %{buildroot}%{_datadir}/icons/hicolor/512x512/apps/phonetolinuxdesktop.png
+cp io.github.stanislawtlolka.phonetolinuxdesktop.metainfo.xml %{buildroot}%{_datadir}/metainfo/
 
 %files
 %{_bindir}/phonetolinuxdesktop
 %{_datadir}/%{name}/
 %{_datadir}/applications/phonetolinuxdesktop.desktop
 %{_datadir}/icons/hicolor/512x512/apps/phonetolinuxdesktop.png
+%{_datadir}/metainfo/io.github.stanislawtlolka.phonetolinuxdesktop.metainfo.xml
 
 %changelog
 * Wed Sep 30 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.6-1

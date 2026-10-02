@@ -2,6 +2,26 @@
 
 ---
 
+## [2026-10-01] - Contact Autocomplete / Filter & Fedora AppStream Metainfo Integration
+
+### 🇵🇱 Wersja Polska
+- **Filtrowanie i autouzupełnianie kontaktów z klawiatury:**
+  - Wdrożono dynamiczne wyszukiwanie i filtrowanie kontaktów podczas wpisywania liter z klawiatury w zakładce kontaktów (Tab 1).
+  - Dodano obsługę zdarzeń `OnTextInput` oraz `OnKeyDown` (w tym cofanie znaku przez `Backspace`) w oknie głównym.
+- **Integracja z Centrum Oprogramowania w Fedorze (AppStream Metainfo):**
+  - Utworzono plik `io.github.stanislawtlolka.phonetolinuxdesktop.metainfo.xml` zgodny ze standardem freedesktop.
+  - Zaktualizowano specyfikację RPM (`phonetolinux.spec`) w celu instalacji pliku metainfo, co pozwala menedżerom oprogramowania (GNOME Software, Discover) na wyświetlanie opisu, zrzutów ekranu oraz historii zmian (changelog).
+
+### 🇬🇧 English Version
+- **Contact Search & Keyboard Autocomplete:**
+  - Implemented dynamic contact search and filtering while typing on the keyboard in the Contacts tab (Tab 1).
+  - Added `OnTextInput` and `OnKeyDown` event handlers (including `Backspace` support) in the main window.
+- **Fedora Software Center Integration (AppStream Metainfo):**
+  - Created `io.github.stanislawtlolka.phonetolinuxdesktop.metainfo.xml` adhering to freedesktop standards.
+  - Updated the RPM spec file (`phonetolinux.spec`) to install the metainfo file, enabling software centers (GNOME Software, Discover) to display rich descriptions, screenshots, and release changelogs.
+
+---
+
 ## [2026-09-30] - Real-Time Chat Message Delivery & Auto-Scroll
 
 ### 🇵🇱 Wersja Polska

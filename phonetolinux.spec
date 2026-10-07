@@ -6,7 +6,7 @@
 %global __requires_exclude ^liblttng-ust\\.so\\.0.*$
 
 Name:           phonetolinuxdesktop
-Version:        1.0.7
+Version:        1.0.8
 Release:        1%{?dist}
 Summary:        Desktop client for PhoneToLinux integration
 
@@ -14,10 +14,10 @@ License:        GPL-3.0-only
 URL:            https://github.com/ihusky02/phonetolinuxdesktop
 Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz
 
-BuildRequires:  dotnet-sdk-8.0
+BuildRequires:  dotnet-sdk-10.0
 
 # System runtime & GUI dependencies required by Avalonia UI / SkiaSharp on Linux
-Requires:       dotnet-runtime-8.0
+Requires:       dotnet-runtime-10.0
 Requires:       fontconfig
 Requires:       libX11
 Requires:       mesa-libGL
@@ -25,7 +25,7 @@ Requires:       libICE
 Requires:       libSM
 
 %description
-An Avalonia UI and .NET 8 desktop application for integrating and synchronizing
+An Avalonia UI and .NET 10 desktop application for integrating and synchronizing
 calls, messages, and phone notifications directly with your Linux desktop.
 
 %prep
@@ -63,6 +63,36 @@ mkdir -p %{buildroot}%{_datadir}/metainfo
 # Copy published binaries to the application directory
 cp -r out/* %{buildroot}%{_datadir}/%{name}/
 
+# Dynamically determine the matching .NET RID for the target architecture
+case "%{_arch}" in
+    x86_64)
+        keep_rid="linux-x64"
+        ;;
+    aarch64)
+        keep_rid="linux-arm64"
+        ;;
+    armv7hl)
+        keep_rid="linux-arm"
+        ;;
+    *)
+        keep_rid="linux-%{_arch}"
+        ;;
+esac
+
+# Remove unused multi-platform runtimes to prevent bogus RPM automatic requirements
+if [ -d "%{buildroot}%{_datadir}/%{name}/runtimes" ]; then
+    for d in %{buildroot}%{_datadir}/%{name}/runtimes/*; do
+        if [ -d "$d" ]; then
+            dirname=$(basename "$d")
+            if [ "$dirname" != "$keep_rid" ]; then
+                rm -rf "$d"
+            fi
+        fi
+    done
+fi
+rm -rf %{buildroot}%{_datadir}/%{name}/runtimes/osx
+rm -rf %{buildroot}%{_datadir}/%{name}/runtimes/win-*
+
 # Create a relative executable symlink in /usr/bin (fixing the absolute symlink warning)
 ln -s ../share/%{name}/phonetolinux %{buildroot}%{_bindir}/phonetolinuxdesktop
 
@@ -79,6 +109,10 @@ cp io.github.stanislawtlolka.phonetolinuxdesktop.metainfo.xml %{buildroot}%{_dat
 %{_datadir}/metainfo/io.github.stanislawtlolka.phonetolinuxdesktop.metainfo.xml
 
 %changelog
+* Wed Oct 07 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.8-1
+- Fixed RPM transaction error by filtering out multi-platform native runtimes during packaging.
+- Fully transitioned to .NET 10 runtime and SDK.
+
 * Fri Oct 02 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.7-1
 - Added dynamic contact search and keyboard autocomplete in the contacts view.
 - Integrated Fedora AppStream metainfo for software center support.

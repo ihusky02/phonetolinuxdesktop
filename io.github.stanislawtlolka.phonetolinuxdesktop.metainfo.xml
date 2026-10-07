@@ -20,6 +20,11 @@
   <url type="homepage">https://github.com/ihusky02/PhoneToLinuxDesktop</url>
   <url type="bugtracker">https://github.com/ihusky02/PhoneToLinuxDesktop/issues</url>
   <releases>
+    <release version="1.0.8" date="2026-10-07">
+      <description>
+        <p>Fixed RPM transaction failure by filtering out multi-platform native runtimes during packaging, and fully transitioned to .NET 10 runtime.</p>
+      </description>
+    </release>
     <release version="1.0.7" date="2026-10-02">
       <description>
         <p>Added dynamic contact search and keyboard autocomplete in the contacts view, and Fedora AppStream metainfo integration for software centers.</p>

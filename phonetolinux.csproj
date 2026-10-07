@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>$(NoWarn);1591;0436</NoWarn>
-        <Version>1.0.7</Version>
-        <AssemblyVersion>1.0.7</AssemblyVersion>
-        <FileVersion>1.0.7</FileVersion>
+        <Version>1.0.8</Version>
+        <AssemblyVersion>1.0.8</AssemblyVersion>
+        <FileVersion>1.0.8</FileVersion>
         <RuntimeIdentifiers>linux-x64;linux-arm64</RuntimeIdentifiers>
         <EventSourceSupport>false</EventSourceSupport>
         <TracingSupport>false</TracingSupport>
@@ -48,7 +48,12 @@
   <url type="homepage">https://github.com/ihusky02/PhoneToLinuxDesktop</url>
   <url type="bugtracker">https://github.com/ihusky02/PhoneToLinuxDesktop/issues</url>
   <releases>
-    <release version="$(Version)" date="2026-10-02">
+    <release version="1.0.8" date="2026-10-07">
+      <description>
+        <p>Fixed RPM transaction failure by filtering out multi-platform native runtimes during packaging, and fully transitioned to .NET 10 runtime.</p>
+      </description>
+    </release>
+    <release version="1.0.7" date="2026-10-02">
       <description>
         <p>Added dynamic contact search and keyboard autocomplete in the contacts view, and Fedora AppStream metainfo integration for software centers.</p>
       </description>

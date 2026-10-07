@@ -15,7 +15,7 @@ namespace PhoneToLinux.Compiler
         /// Uruchamia monitorowanie folderu wyjściowego kompilatora w tle. 
         /// Gdy pojawia się nowa biblioteka .dll, automatycznie kopiuje ją do folderu Library.
         /// </summary>
-        /// <param name="buildOutputDir">Folder, do którego kompilator zapisuje pliki .dll (np. bin/Debug/net8.0).</param>
+        /// <param name="buildOutputDir">Folder, do którego kompilator zapisuje pliki .dll (np. bin/Debug/net10.0).</param>
         /// <param name="libraryTargetDir">Katalog docelowy Library w głównym folderze projektu.</param>
         public static void StartSilentWatcher(string buildOutputDir, string libraryTargetDir)
         {

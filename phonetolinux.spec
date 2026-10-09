@@ -6,7 +6,7 @@
 %global __requires_exclude ^liblttng-ust\\.so\\.0.*$
 
 Name:           phonetolinuxdesktop
-Version:        1.0.8
+Version:        1.0.9
 Release:        1%{?dist}
 Summary:        Desktop client for PhoneToLinux integration
 
@@ -109,6 +109,9 @@ cp io.github.stanislawtlolka.phonetolinuxdesktop.metainfo.xml %{buildroot}%{_dat
 %{_datadir}/metainfo/io.github.stanislawtlolka.phonetolinuxdesktop.metainfo.xml
 
 %changelog
+* Thu Oct 09 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.9-1
+- Added multi-number contact support via dropdown list and fixed interactive contact search.
+
 * Wed Oct 07 2026 Stanisław Tłołka <stanislawtlolka@gmail.com> - 1.0.8-1
 - Fixed RPM transaction error by filtering out multi-platform native runtimes during packaging.
 - Fully transitioned to .NET 10 runtime and SDK.

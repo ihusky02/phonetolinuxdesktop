@@ -1,6 +1,6 @@
 # Technical Documentation: PhoneToLinux Desktop
 
-**Version:** 1.0.8
+**Version:** 1.0.9
 **Target Framework:** .NET 10.0 (`net10.0`) / Linux (x64)  
 **UI Framework:** Avalonia UI 11  
 **Project File:** `phonetolinux.csproj`  
@@ -101,4 +101,4 @@ To eliminate manual IP prompt dialogs during storage browsing, `DeviceIpResolver
 - **AES-256-CBC Encryption**: Session credentials and pairing data are secured using AES-256 with key derivation from device MAC addresses and pairing PINs (`DevicePairingService`).
 
 ---
-*Technical documentation for PhoneToLinux Desktop (Version 1.0.8).*
+*Technical documentation for PhoneToLinux Desktop (Version 1.0.9).*

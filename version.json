@@ -1,5 +1,5 @@
 {
-  "version": "1.0.8",
-  "downloadUrl": "https://github.com/ihusky02/phonetolinuxdesktop/releases/tag/v1.0.8",
-  "changelog": "Fixed RPM runtime transaction error and transitioned to .NET 10"
+  "version": "1.0.9",
+  "downloadUrl": "https://github.com/ihusky02/phonetolinuxdesktop/releases/tag/v1.0.9",
+  "changelog": "Added multi-number contact support via dropdown list and fixed interactive contact search"
 }

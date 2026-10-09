@@ -18,6 +18,9 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
+
+        AddHandler(TextInputEvent, OnWindowTextInput, RoutingStrategies.Tunnel);
+        AddHandler(KeyDownEvent, OnWindowKeyDown, RoutingStrategies.Tunnel);
     }
 
     private void OnDataContextChanged(object? sender, System.EventArgs e)
@@ -78,7 +81,7 @@ public partial class MainWindow : Window
         Close();
     }
 
-    protected override void OnTextInput(TextInputEventArgs e)
+    private void OnWindowTextInput(object? sender, TextInputEventArgs e)
     {
         if (DataContext is MainViewModel vm && vm.SelectedTabIndex == 1)
         {
@@ -89,14 +92,9 @@ public partial class MainWindow : Window
                 e.Handled = true;
             }
         }
-        
-        base.OnTextInput(e);
     }
 
-    /// <summary>
-    /// Triggers the phone call command when the Enter or Return key is pressed while on the Dialer tab.
-    /// </summary>
-    private void Window_KeyDown(object? sender, KeyEventArgs e)
+    private void OnWindowKeyDown(object? sender, KeyEventArgs e)
     {
         if (DataContext is MainViewModel vm)
         {
@@ -116,6 +114,7 @@ public partial class MainWindow : Window
                     if (vm.CallCommand.CanExecute(null))
                     {
                         vm.CallCommand.Execute(null);
+                        e.Handled = true;
                     }
                 }
             }

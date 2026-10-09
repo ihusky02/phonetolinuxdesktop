@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -12,7 +13,7 @@ namespace phonetolinux.Services
 {
     /// <summary>
     /// Plugin responsible for fetching the list of contacts from the mobile device
-    /// via an HTTP request to the server, deserializing the JSON response, and deduplicating entries.
+    /// via an HTTP request to the server, deserializing the JSON response, and aggregating multiple numbers per contact.
     /// </summary>
     public class ContactsPlugin : IPhonePlugin
     {
@@ -41,9 +42,9 @@ namespace phonetolinux.Services
         }
 
         /// <summary>
-        /// Asynchronously fetches the list of contacts from the phone server and deduplicates them by unique contact names.
+        /// Asynchronously fetches the list of contacts from the phone server and aggregates all phone numbers per unique contact name.
         /// </summary>
-        /// <returns>A list of deduplicated contact item objects.</returns>
+        /// <returns>A list of contact item objects with aggregated phone numbers.</returns>
         public async Task<List<ContactItem>> GetContactsAsync()
         {
             try
@@ -58,16 +59,37 @@ namespace phonetolinux.Services
                 string json = await _httpClient.GetStringAsync(url);
                 
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var contacts = JsonSerializer.Deserialize<List<ContactItem>>(json, options) 
-                               ?? new List<ContactItem>();
+                var rawContacts = JsonSerializer.Deserialize<List<ContactItem>>(json, options) 
+                                ?? new List<ContactItem>();
 
-                // Aggressive deduplication: Keep only unique contact names to clean up the UI list completely
-                return contacts
+                // Group by contact name and collect all unique phone numbers for each contact
+                var groupedContacts = rawContacts
                     .Where(c => !string.IsNullOrWhiteSpace(c.Name))
-                    .GroupBy(c => c.Name.Trim().ToLowerInvariant())
-                    .Select(g => g.First())
-                    .OrderBy(c => c.Name)
-                    .ToList();
+                    .GroupBy(c => c.Name.Trim().ToLowerInvariant());
+
+                var result = new List<ContactItem>();
+                foreach (var g in groupedContacts)
+                {
+                    var contactName = g.First().Name.Trim();
+                    var numbers = g
+                        .Select(c => c.PhoneNumber ?? "")
+                        .Where(n => !string.IsNullOrWhiteSpace(n))
+                        .Distinct()
+                        .ToList();
+
+                    if (numbers.Count == 0) continue;
+
+                    var item = new ContactItem
+                    {
+                        Name = contactName,
+                        PhoneNumber = numbers.First(),
+                        PhoneNumbers = new ObservableCollection<string>(numbers),
+                        SelectedPhoneNumber = numbers.First()
+                    };
+                    result.Add(item);
+                }
+
+                return result.OrderBy(c => c.Name).ToList();
             }
             catch
             {

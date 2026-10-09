@@ -12,6 +12,7 @@ A modern desktop application built with Avalonia UI and .NET 8 for integrating A
 - **Voice Calls**: Place and receive phone calls directly from Linux with real-time notification overlays and built-in dialer.
 - **SMS Integration**: Send and receive SMS messages with real-time conversation synchronization.
 - **Contact Search & Filtering**: Keyboard typing autocomplete and dynamic search filtering directly in the Contacts tab.
+- **Multi-Number Contacts**: Support for displaying and selecting from all phone numbers assigned to a single contact via dropdown lists.
 - **IP Auto-Detection**: Seamless automatic IP resolution (`DeviceIpResolver`) for remote file storage browsing without manual IP entry.
 - **Remote File Browser**: Browse internal phone storage, upload, and download files over WebDAV.
 - **Native Notifications**: Linux desktop notifications via `notify-send`.
@@ -55,6 +56,7 @@ You can install `phonetolinuxdesktop` directly from the Fedora Copr repository:
 - **Połączenia głosowe**: Wykonywanie i odbieranie połączeń telefonicznych z nakładką powiadomień i wbudowanym dialerem.
 - **Wiadomości SMS**: Wysyłanie i odbieranie wiadomości z pełną synchronizacją wątków w czasie rzeczywistym.
 - **Wyszukiwanie i filtrowanie kontaktów**: Dynamiczne podpowiadanie i filtrowanie kontaktów z klawiatury w zakładce kontaktów.
+- **Kontakty z wieloma numerami**: Obsługa wyświetlania i wyboru spośród wszystkich numerów telefonów przypisanych do pojedynczego kontaktu za pomocą rozwijanej listy.
 - **Automatyczne wykrywanie IP**: Moduł `DeviceIpResolver` automatycznie wykrywa i łączy się z telefonem w sieci lokalnej bez konieczności ręcznego podawania IP.
 - **Eksplorator plików**: Przeglądanie pamięci telefonu, pobieranie oraz wysyłanie plików przez protokół WebDAV.
 - **Powiadomienia natywne**: Powiadomienia w systemie Linux przy użyciu `notify-send`.

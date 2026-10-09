@@ -2,6 +2,22 @@
 
 ---
 
+## [2026-10-09] - Multi-Number Contact Dropdown List
+
+### 🇵🇱 Wersja Polska
+- **Obsługa wielu numerów telefonów w kontaktach (rozwijalna lista):**
+  - Zaktualizowano model `ContactItem` oraz wtyczkę `ContactsPlugin`, aby agregować wszystkie numery telefonów przypisane do pojedynczego kontaktu (grupowanie po nazwie kontaktu i zbieranie unikalnych numerów).
+  - Dodano rozwijalną listę (`ComboBox`) w zakładce kontaktów (`MainWindow.axaml`), która pojawia się automatycznie (`HasMultipleNumbers`), gdy do kontaktu jest przypisany więcej niż jeden numer telefonu.
+  - Zintegrowano pole wyboru `SelectedPhoneNumber`, dzięki czemu operacje wykonywania połączeń oraz wysyłania wiadomości SMS korzystają z aktualnie wybranego numeru z listy rozwijanej.
+
+### 🇬🇧 English Version
+- **Multi-Number Contact Support via Dropdown List:**
+  - Updated `ContactItem` model and `ContactsPlugin` to aggregate all phone numbers assigned to a single contact (grouping by contact name and collecting unique numbers).
+  - Added a dropdown list (`ComboBox`) in the Contacts tab (`MainWindow.axaml`) that automatically appears (`HasMultipleNumbers`) when a contact has more than one phone number assigned.
+  - Integrated `SelectedPhoneNumber`, ensuring that voice calls and SMS message dispatch commands utilize the currently selected number from the dropdown list.
+
+---
+
 ## [2026-10-01] - Contact Autocomplete / Filter & Fedora AppStream Metainfo Integration
 
 ### 🇵🇱 Wersja Polska
